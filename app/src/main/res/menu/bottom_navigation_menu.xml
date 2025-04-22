@@ -2,11 +2,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/booksFragment"
+        android:enabled="true"
+        android:icon="@color/black"
         android:title="找书" />
     <item
         android:id="@+id/readerFragment"
+        android:enabled="true"
+        android:icon="@color/blue"
         android:title="阅读器" />
     <item
         android:id="@+id/profileFragment"
+        android:enabled="true"
+        android:icon="@color/red"
         android:title="我的" />
 </menu>

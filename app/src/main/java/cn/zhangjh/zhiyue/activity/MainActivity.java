@@ -1,7 +1,6 @@
-package cn.zhangjh.zhiyue;
+package cn.zhangjh.zhiyue.activity;
 
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
@@ -9,6 +8,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import cn.zhangjh.zhiyue.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,10 +26,5 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = navHostFragment.getNavController();
 
         NavigationUI.setupWithNavController(bottomNavigation, navController);
-
-        bottomNavigation.setOnItemSelectedListener(item -> {
-            Log.d("NavigationClick", "Item selected: " + item.getItemId());
-            return false; // Don't consume the event here, let NavigationUI handle it
-        });
     }
 }
