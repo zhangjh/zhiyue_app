@@ -3,16 +3,16 @@
     <item
         android:id="@+id/booksFragment"
         android:enabled="true"
-        android:icon="@color/black"
+        android:icon="@drawable/search"
         android:title="找书" />
     <item
         android:id="@+id/readerFragment"
         android:enabled="true"
-        android:icon="@color/blue"
+        android:icon="@drawable/book"
         android:title="阅读器" />
     <item
         android:id="@+id/profileFragment"
         android:enabled="true"
-        android:icon="@color/red"
+        android:icon="@drawable/account"
         android:title="我的" />
 </menu>
