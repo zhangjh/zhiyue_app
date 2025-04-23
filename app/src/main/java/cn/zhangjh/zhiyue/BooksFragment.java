@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.model.SearchResponse;
 import cn.zhangjh.zhiyue.pojo.Book;
@@ -276,9 +277,9 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     @Override
     public void onReadButtonClick(Book book) {
-        // TODO: Implement navigation to reader activity
-        // For now, just print to console
-        System.out.println("Navigate to reader for book: " + book.getTitle());
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).navigateToReader(book.getId());
+        }
     }
 
     // 简单的TextWatcher实现，只需要afterTextChanged方法
