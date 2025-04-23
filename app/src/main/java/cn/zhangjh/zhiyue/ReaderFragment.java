@@ -15,6 +15,7 @@ import cn.zhangjh.zhiyue.activity.MainActivity;
 public class ReaderFragment extends Fragment {
 
     private String bookId;
+    private boolean isNavigationVisible = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -32,6 +33,9 @@ public class ReaderFragment extends Fragment {
         TextView textView = view.findViewById(R.id.text_reader);
         textView.setText("这里是阅读器页面");
 
+        // 设置点击监听，切换导航栏显示状态
+        view.setOnClickListener(v -> toggleNavigationVisibility());
+
         return view;
     }
 
@@ -39,6 +43,18 @@ public class ReaderFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         // TODO: 使用bookId加载书籍内容
+    }
+
+    private void toggleNavigationVisibility() {
+        if (getActivity() instanceof MainActivity) {
+            MainActivity activity = (MainActivity) getActivity();
+            if (isNavigationVisible) {
+                activity.hideBottomNavigation();
+            } else {
+                activity.showBottomNavigation();
+            }
+            isNavigationVisible = !isNavigationVisible;
+        }
     }
 
     @Override

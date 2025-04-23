@@ -2,6 +2,7 @@ package cn.zhangjh.zhiyue.activity;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
@@ -26,7 +27,20 @@ public class MainActivity extends AppCompatActivity {
                 .findFragmentById(R.id.nav_host_fragment);
         if (navHostFragment != null) {
             navController = navHostFragment.getNavController();
+            
+            // 先设置默认导航行为
             NavigationUI.setupWithNavController(bottomNavigationView, navController);
+            
+            // 然后覆盖导航栏点击监听
+            bottomNavigationView.setOnItemSelectedListener(item -> {
+                if (item.getItemId() == R.id.readerFragment) {
+                    // 如果直接点击阅读选项，显示提示
+                    Toast.makeText(this, "请搜索你想看的书籍", Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+                // 其他选项正常导航
+                return NavigationUI.onNavDestinationSelected(item, navController);
+            });
         }
     }
 
