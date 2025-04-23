@@ -2,11 +2,13 @@ package cn.zhangjh.zhiyue;
 
 import android.os.Bundle;
 import android.text.Editable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,9 +23,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import cn.zhangjh.zhiyue.api.ApiClient;
+import cn.zhangjh.zhiyue.model.SearchResponse;
 import cn.zhangjh.zhiyue.pojo.Book;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class BooksFragment extends Fragment implements BookAdapter.OnBookClickListener {
+    private static final String TAG = "BooksFragment";
+    private static final int DEFAULT_PAGE_SIZE = 5;
+
     private TextInputEditText centerSearchEditText;
     private TextInputEditText topSearchEditText;
     private RecyclerView recyclerView;
@@ -32,8 +42,12 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     private View centerSearchContainer;
     private View topSearchContainer;
     private BookAdapter bookAdapter;
+    private String lastSearchQuery = "";
+    private int currentPage = 1;
+    private boolean isLoading = false;
+    private boolean hasMoreData = true;
 
-	@Nullable
+    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_book_search, container, false);
@@ -56,22 +70,42 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         topSearchContainer = view.findViewById(R.id.topSearchContainer);
         searchResultContainer = view.findViewById(R.id.searchResultContainer);
 
-        view.findViewById(R.id.centerSearchButton).setOnClickListener(v -> performSearch(centerSearchEditText));
-        view.findViewById(R.id.topSearchButton).setOnClickListener(v -> performSearch(topSearchEditText));
+        view.findViewById(R.id.centerSearchButton).setOnClickListener(v -> performNewSearch(centerSearchEditText));
+        view.findViewById(R.id.topSearchButton).setOnClickListener(v -> performNewSearch(topSearchEditText));
     }
 
     private void setupRecyclerView() {
         bookAdapter = new BookAdapter();
         bookAdapter.setOnBookClickListener(this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
+        recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(bookAdapter);
+
+        // 添加滚动监听以实现加载更多
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                
+                if (!hasMoreData || isLoading) return;
+
+                int visibleItemCount = layoutManager.getChildCount();
+                int totalItemCount = layoutManager.getItemCount();
+                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+
+                if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
+                        && firstVisibleItemPosition >= 0) {
+                    loadMoreBooks();
+                }
+            }
+        });
     }
 
     private void setupSearchViews() {
         // 设置中心搜索框的动作
         centerSearchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                performSearch(centerSearchEditText);
+                performNewSearch(centerSearchEditText);
                 return true;
             }
             return false;
@@ -80,7 +114,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         // 设置顶部搜索框的动作
         topSearchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                performSearch(topSearchEditText);
+                performNewSearch(topSearchEditText);
                 return true;
             }
             return false;
@@ -90,7 +124,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         centerSearchEditText.addTextChangedListener(new SimpleTextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
-                if (!topSearchEditText.getText().toString().equals(s.toString())) {
+                if (!Objects.requireNonNull(topSearchEditText.getText()).toString().equals(s.toString())) {
                     topSearchEditText.setText(s.toString());
                 }
             }
@@ -99,36 +133,135 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         topSearchEditText.addTextChangedListener(new SimpleTextWatcher() {
             @Override
             public void afterTextChanged(Editable s) {
-                if (!centerSearchEditText.getText().toString().equals(s.toString())) {
+                if (!Objects.requireNonNull(centerSearchEditText.getText()).toString().equals(s.toString())) {
                     centerSearchEditText.setText(s.toString());
                 }
             }
         });
     }
 
-    private void performSearch(TextInputEditText searchEditText) {
+    private void performNewSearch(TextInputEditText searchEditText) {
         String query = Objects.requireNonNull(searchEditText.getText()).toString().trim();
         if (query.isEmpty()) {
             return;
         }
 
-	    showLoading();
-        // TODO: Implement actual search logic here
-        // For now, we'll just simulate a search with dummy data
-        simulateSearch();
+        // 重置分页状态
+        currentPage = 1;
+        hasMoreData = true;
+        lastSearchQuery = query;
+        bookAdapter.clearBooks();
+        
+        showLoading();
+        performSearch(query, currentPage);
+    }
+
+    private void loadMoreBooks() {
+        if (!isLoading && hasMoreData) {
+            performSearch(lastSearchQuery, ++currentPage);
+        }
+    }
+
+    private void performSearch(String query, int page) {
+        isLoading = true;
+        Log.d(TAG, "Performing search: query=" + query + ", page=" + page + ", limit=" + BooksFragment.DEFAULT_PAGE_SIZE);
+        
+        ApiClient.getBookService().searchBooks(query, page, BooksFragment.DEFAULT_PAGE_SIZE).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> response) {
+                if (!isAdded()) return;
+                isLoading = false;
+
+                Log.d(TAG, "Search response received. Code: " + response.code());
+                if (!response.isSuccessful()) {
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+                        Log.e(TAG, "Error response: " + errorBody);
+                        showError("搜索失败 (" + response.code() + "): " + errorBody);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error response", e);
+                        showError("搜索失败 (" + response.code() + ")");
+                    }
+                    if (currentPage == 1) {
+                        showResults(new ArrayList<>());
+                    }
+                    return;
+                }
+
+                if (response.body() != null && response.body().isSuccess()) {
+                    List<Book> books = convertToBooks(response.body().getData());
+                    Log.d(TAG, "Search successful. Found " + books.size() + " books");
+                    
+                    // 如果返回的数据少于请求的数量，说明没有更多数据了
+                    hasMoreData = books.size() >= BooksFragment.DEFAULT_PAGE_SIZE;
+                    
+                    if (currentPage == 1) {
+                        showResults(books);
+                    } else {
+                        bookAdapter.addBooks(books);
+                    }
+                } else {
+                    Log.e(TAG, "Response body was null or not successful");
+                    showError("搜索失败：返回数据无效");
+                    if (currentPage == 1) {
+                        showResults(new ArrayList<>());
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<SearchResponse> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                isLoading = false;
+                
+                Log.e(TAG, "Search failed", t);
+                String errorMessage = "网络错误: " + t.getClass().getSimpleName();
+                if (t.getMessage() != null) {
+                    errorMessage += " - " + t.getMessage();
+                }
+                showError(errorMessage);
+                if (currentPage == 1) {
+                    showResults(new ArrayList<>());
+                }
+            }
+        });
+    }
+
+    private List<Book> convertToBooks(List<SearchResponse.BookDetail> bookDetails) {
+        List<Book> books = new ArrayList<>();
+        for (SearchResponse.BookDetail detail : bookDetails) {
+            books.add(new Book(
+                    detail.getId(),
+                    detail.getTitle(),
+                    detail.getAuthor(),
+                    detail.getFilesizeString(),
+                    detail.getExtension(),
+                    detail.getCover(),
+                    detail.getDescription()
+            ));
+        }
+        return books;
+    }
+
+    private void showError(String message) {
+        if (getContext() != null) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showLoading() {
-        progressBar.setVisibility(View.VISIBLE);
-        searchResultContainer.setVisibility(View.GONE);
-        centerSearchContainer.setVisibility(View.GONE);
-        topSearchContainer.setVisibility(View.VISIBLE);
+        if (currentPage == 1) {
+            progressBar.setVisibility(View.VISIBLE);
+            searchResultContainer.setVisibility(View.GONE);
+            centerSearchContainer.setVisibility(View.GONE);
+            topSearchContainer.setVisibility(View.VISIBLE);
+        }
     }
 
     private void showResults(List<Book> books) {
         progressBar.setVisibility(View.GONE);
-        if (books.isEmpty()) {
-            // 如果没有结果，显示中心搜索框
+        if (books.isEmpty() && currentPage == 1) {
+            // 如果是第一页且没有结果，显示中心搜索框
             searchResultContainer.setVisibility(View.GONE);
             centerSearchContainer.setVisibility(View.VISIBLE);
             topSearchContainer.setVisibility(View.GONE);
@@ -139,34 +272,6 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
             searchResultContainer.setVisibility(View.VISIBLE);
             bookAdapter.setBooks(books);
         }
-    }
-
-    // Temporary method to simulate search results
-    private void simulateSearch() {
-        // Simulate network delay
-        new Thread(() -> {
-            try {
-                Thread.sleep(1500);
-                if (getActivity() == null) return;
-
-                // Create dummy data
-                List<Book> dummyBooks = new ArrayList<>();
-                dummyBooks.add(new Book("1", "Android开发艺术探索", "任玉刚", "23.5MB", "PDF",
-                        "https://example.com/cover1.jpg", "本书是一本Android进阶类书籍，采用理论、源码和实践相结合的方式来阐述高水准的Android应用开发要点。"));
-                dummyBooks.add(new Book("2", "深入理解Java虚拟机", "周志明", "18.2MB", "EPUB",
-                        "https://example.com/cover2.jpg", "本书第3版在第2版的基础上做了重大更新，内容更丰富、实战性更强。"));
-                dummyBooks.add(new Book("3", "Android开发艺术探索", "任玉刚", "23.5MB", "PDF",
-                        "https://example.com/cover1.jpg", "本书是一本Android进阶类书籍，采用理论、源码和实践相结合的方式来阐述高水准的Android应用开发要点。"));
-                dummyBooks.add(new Book("4", "深入理解Java虚拟机", "周志明", "18.2MB", "EPUB",
-                        "https://example.com/cover2.jpg", "本书第3版在第2版的基础上做了重大更新，内容更丰富、实战性更强。"));
-                dummyBooks.add(new Book("5", "Android开发艺术探索", "任玉刚", "23.5MB", "PDF",
-                        "https://example.com/cover1.jpg", "本书是一本Android进阶类书籍，采用理论、源码和实践相结合的方式来阐述高水准的Android应用开发要点。"));
-
-                getActivity().runOnUiThread(() -> showResults(dummyBooks));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }).start();
     }
 
     @Override

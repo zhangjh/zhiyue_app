@@ -23,30 +23,38 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
     private OnBookClickListener listener;
     private int expandedPosition = -1;
 
-    public interface OnBookClickListener {
-        void onReadButtonClick(Book book);
+    public void setBooks(List<Book> books) {
+        this.books = new ArrayList<>(books);
+        notifyDataSetChanged();
+    }
+
+    public void addBooks(List<Book> newBooks) {
+        int startPosition = this.books.size();
+        this.books.addAll(newBooks);
+        notifyItemRangeInserted(startPosition, newBooks.size());
+    }
+
+    public void clearBooks() {
+        int size = this.books.size();
+        this.books.clear();
+        notifyItemRangeRemoved(0, size);
     }
 
     public void setOnBookClickListener(OnBookClickListener listener) {
         this.listener = listener;
     }
 
-    public void setBooks(List<Book> books) {
-        this.books = books;
-        notifyDataSetChanged();
-    }
-
     @NonNull
     @Override
     public BookViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_book, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_book, parent, false);
         return new BookViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull BookViewHolder holder, int position) {
-        Book book = books.get(position);
-        holder.bind(book, position);
+        holder.bind(books.get(position), position);
     }
 
     @Override
@@ -83,10 +91,8 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             bookFormat.setText(book.getFormat());
             bookDescription.setText(book.getDescription());
 
-            // Load book cover using Glide
             Glide.with(itemView.getContext())
                     .load(book.getCoverUrl())
-//                    .placeholder(R.drawable.ic_menu_gallery)
                     .placeholder(R.drawable.ic_launcher_background)
                     .into(bookCover);
 
@@ -105,5 +111,9 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
                 }
             });
         }
+    }
+
+    public interface OnBookClickListener {
+        void onReadButtonClick(Book book);
     }
 } 
