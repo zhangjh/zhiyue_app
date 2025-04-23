@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#E3F2FD"
     tools:context=".ReaderFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:id="@+id/text_reader"
+    <WebView
+        android:id="@+id/webview_reader"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="阅读器页面" />
+        android:layout_height="match_parent" />
 
-</FrameLayout>
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_alignParentBottom="true"
+        android:progressDrawable="@drawable/progress_bar_drawable"
+        android:visibility="gone" />
+
+</RelativeLayout>
