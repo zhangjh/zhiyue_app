@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">SmartReader</string>
 
+    <string name="search_placeholder">搜索你想看的书籍</string>
 </resources>
