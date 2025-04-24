@@ -8,12 +8,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
-import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,7 +31,6 @@ public class ReaderFragment extends Fragment {
     private static final String TAG = ReaderFragment.class.getName();
     private String bookUrl;
     private WebView webView;
-    private ProgressBar progressBar;
     private boolean isNavigationVisible = false;
     private int currentProgress = 0;
     private View loadingView; // 新增加载视图
@@ -122,7 +119,6 @@ public class ReaderFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_reader, container, false);
         
         webView = view.findViewById(R.id.webview_reader);
-        progressBar = view.findViewById(R.id.progress_bar);
         loadingView = view.findViewById(R.id.loading_view); // 获取加载视图
         
         showLoading("正在加载阅读器...");
@@ -159,14 +155,6 @@ public class ReaderFragment extends Fragment {
                     showLoading("正在加载电子书...");
                     webView.evaluateJavascript("loadBook('" + bookUrl + "')", null);
                 }
-            }
-        });
-
-        // 设置WebChromeClient来处理进度
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                progressBar.setProgress(newProgress);
             }
         });
 

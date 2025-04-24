@@ -14,4 +14,9 @@
     <color name="unselected_icon_color">#4B5563</color>        <!-- 未选中的图标颜色，例如灰色 -->
     <color name="selected_text_color">#2E6AEC</color>  <!-- 选中的文字颜色，例如主题色 -->
     <color name="unselected_text_color">#4B5563</color>        <!-- 未选中的文字颜色，例如灰色 -->
+
+    <!-- 主题色 -->
+        <color name="primary">#2196F3</color>
+        <color name="primary_dark">#1976D2</color>
+        <color name="primary_light">#BBDEFB</color>
 </resources>
