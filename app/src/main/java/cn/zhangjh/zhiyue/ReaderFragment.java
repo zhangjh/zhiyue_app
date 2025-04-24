@@ -15,6 +15,7 @@ import android.webkit.WebViewClient;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -38,6 +39,16 @@ public class ReaderFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 设置返回键监听
+        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // 返回到找书页面
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).navigateToSearch();
+                }
+            }
+        });
         if (getArguments() != null) {
             String bookId = getArguments().getString("book_id");
             String hashId = getArguments().getString("hash_id");

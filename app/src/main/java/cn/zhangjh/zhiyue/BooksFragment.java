@@ -230,6 +230,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     private List<Book> convertToBooks(List<SearchResponse.BookDetail> bookDetails) {
         List<Book> books = new ArrayList<>();
+        if(bookDetails == null) return books;
         for (SearchResponse.BookDetail detail : bookDetails) {
             books.add(new Book(detail));
         }
@@ -270,6 +271,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     @Override
     public void onReadButtonClick(Book book) {
         if (getActivity() instanceof MainActivity) {
+            showLoading();
             ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash());
         }
     }

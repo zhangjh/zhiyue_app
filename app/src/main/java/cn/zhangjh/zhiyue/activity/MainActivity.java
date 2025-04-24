@@ -81,4 +81,9 @@ public class MainActivity extends AppCompatActivity {
             navController.navigate(R.id.readerFragment, args);
         }
     }
+
+    public void navigateToSearch() {
+        // 切换到找书页面
+        bottomNavigationView.setSelectedItemId(R.id.booksFragment);
+    }
 }
