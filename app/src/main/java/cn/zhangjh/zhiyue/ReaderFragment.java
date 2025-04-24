@@ -194,7 +194,7 @@ public class ReaderFragment extends Fragment {
                         aiReadingLayout.setVisibility(View.VISIBLE);
                         mindMapLayout.setVisibility(View.GONE);
                         break;
-                    case 2: // 脑图
+                    case 2: // 思维导图
                         webView.setVisibility(View.GONE);
                         aiReadingLayout.setVisibility(View.GONE);
                         mindMapLayout.setVisibility(View.VISIBLE);
