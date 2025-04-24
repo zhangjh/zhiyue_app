@@ -10,13 +10,63 @@
         body {
             margin: 0;
             padding: 0;
-            background: #fafafa;
-        }
-        #viewer {
             width: 100vw;
             height: 100vh;
+            background: #fafafa;
+            overflow: hidden;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        #chapter-title {
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 20px;
+        }
+        
+        /* 调整viewer位置以适应新增的标题栏 */
+        #viewer {
+            flex: 1;
             overflow: hidden;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+        }
+        #viewer iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        /* 添加电子书内容样式 */
+        #viewer iframe {
+            --bg-color: #fafafa;
+            --text-color: #333;
+        }
+        #viewer * {
+            line-height: 1.6 !important;
+            font-size: 1.1em !important;
+        }
+        #viewer p {
+            margin: 1em 0 !important;
+            padding: 0 10px !important;
+        }
+        /* 其他样式保持不变 */
+        #progress-container {
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
         }
         #prev-btn, #next-btn {
             position: fixed;
@@ -34,7 +84,11 @@
     </style>
 </head>
 <body>
+    <div id="chapter-title">正在加载...</div>
     <div id="viewer"></div>
+    <button id="prev-btn">&lt;</button>
+    <button id="next-btn">&gt;</button>
+    <div id="progress-container">阅读进度：0%</div>
 
     <script>
         let book;
@@ -46,10 +100,32 @@
             rendition = book.renderTo("viewer", {
                 flow: "paginated",
                 width: "100%",
-                height: "100%"
+                height: "100%",
+                spread: "none",
+                minSpreadWidth: 1000
             });
             
-            rendition.display();
+            rendition.display().then(() => {
+                if (window.Android) {
+                    window.Android.onBookLoaded();
+                }
+            });
+
+            // 添加章节变化监听
+            rendition.on('relocated', (location) => {
+                // 获取当前章节信息
+                let chapter = book.navigation.get(location.start.href);
+                let chapterTitle = chapter ? chapter.label : '';
+                document.getElementById('chapter-title').textContent = chapterTitle;
+                
+                // 现有的进度更新代码
+                let progress = book.locations.percentageFromCfi(location.start.cfi);
+                let progressPercent = Math.round(progress * 100);
+                document.getElementById('progress-container').textContent = `阅读进度：${progressPercent}%`;
+                if (window.Android) {
+                    window.Android.onProgressUpdate(progressPercent);
+                }
+            });
 
             // 添加触摸事件监听
             let touchStartX = 0;
@@ -70,14 +146,26 @@
                 }
             });
 
-            // 进度更新
+            // 按钮点击事件
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                rendition.prev();
+            });
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                rendition.next();
+            });
+
+            // 在进度更新部分修改
             book.ready.then(() => {
                 book.locations.generate().then(() => {
                     rendition.on('relocated', (location) => {
                         let progress = book.locations.percentageFromCfi(location.start.cfi);
+                        let progressPercent = Math.round(progress * 100);
+                        // 更新进度显示
+                        document.getElementById('progress-container').textContent = `阅读进度：${progressPercent}%`;
                         // 通知Android进度更新
                         if (window.Android) {
-                            window.Android.onProgressUpdate(Math.round(progress * 100));
+                            window.Android.onProgressUpdate(progressPercent);
                         }
                     });
                 });
@@ -85,4 +173,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
