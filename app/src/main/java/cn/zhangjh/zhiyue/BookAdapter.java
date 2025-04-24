@@ -16,7 +16,7 @@ import com.google.android.material.button.MaterialButton;
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.zhangjh.zhiyue.pojo.Book;
+import cn.zhangjh.zhiyue.model.Book;
 
 public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder> {
     private List<Book> books = new ArrayList<>();

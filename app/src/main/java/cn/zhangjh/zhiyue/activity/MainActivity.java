@@ -11,16 +11,21 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.util.Objects;
+
 import cn.zhangjh.zhiyue.R;
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private NavController navController;
+    private String mode = "init";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mode = "init";
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
@@ -33,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
             
             // 然后覆盖导航栏点击监听
             bottomNavigationView.setOnItemSelectedListener(item -> {
-                if (item.getItemId() == R.id.readerFragment) {
+                // 首页直接点击阅读器菜单项
+                if (item.getItemId() == R.id.readerFragment && Objects.equals(mode, "init")) {
                     // 如果直接点击阅读选项，显示提示
                     Toast.makeText(this, "请搜索你想看的书籍", Toast.LENGTH_SHORT).show();
                     return false;
@@ -59,8 +65,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 切换到阅读器页面
-    public void navigateToReader(String bookId) {
+    public void navigateToReader(String bookId, String hashId) {
         if (navController != null) {
+            // 设置跳转阅读器场景的标识符
+            mode = "search";
             // 切换到阅读器页面（底部导航第二个选项）
             bottomNavigationView.setSelectedItemId(R.id.readerFragment);
             // 隐藏底部导航栏
@@ -69,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
             // TODO: 传递书籍ID到阅读器页面
             Bundle args = new Bundle();
             args.putString("book_id", bookId);
+            args.putString("hash_id", hashId);
             navController.navigate(R.id.readerFragment, args);
         }
     }

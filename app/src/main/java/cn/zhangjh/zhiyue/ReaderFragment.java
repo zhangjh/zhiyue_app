@@ -2,6 +2,7 @@ package cn.zhangjh.zhiyue;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +33,11 @@ public class ReaderFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            bookUrl = getArguments().getString("book_url");
+            String bookId = getArguments().getString("book_id");
+            String hashId = getArguments().getString("hash_id");
+            Log.d("ReaderFragment", "Received bookId: " + bookId + ", hashId: " + hashId);
+            // 获取书籍url
+            bookUrl = "";
         }
     }
 

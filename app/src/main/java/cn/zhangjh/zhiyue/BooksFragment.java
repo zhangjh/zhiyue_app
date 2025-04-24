@@ -25,8 +25,8 @@ import java.util.Objects;
 
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
+import cn.zhangjh.zhiyue.model.Book;
 import cn.zhangjh.zhiyue.model.SearchResponse;
-import cn.zhangjh.zhiyue.pojo.Book;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -231,15 +231,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     private List<Book> convertToBooks(List<SearchResponse.BookDetail> bookDetails) {
         List<Book> books = new ArrayList<>();
         for (SearchResponse.BookDetail detail : bookDetails) {
-            books.add(new Book(
-                    detail.getId(),
-                    detail.getTitle(),
-                    detail.getAuthor(),
-                    detail.getFilesizeString(),
-                    detail.getExtension(),
-                    detail.getCover(),
-                    detail.getDescription()
-            ));
+            books.add(new Book(detail));
         }
         return books;
     }
@@ -278,7 +270,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     @Override
     public void onReadButtonClick(Book book) {
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).navigateToReader(book.getId());
+            ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash());
         }
     }
 

@@ -35,8 +35,6 @@
 </head>
 <body>
     <div id="viewer"></div>
-    <button id="prev-btn">&lt;</button>
-    <button id="next-btn">&gt;</button>
 
     <script>
         let book;
@@ -70,15 +68,6 @@
                         rendition.prev();
                     }
                 }
-            });
-
-            // 按钮点击事件
-            document.getElementById('prev-btn').addEventListener('click', () => {
-                rendition.prev();
-            });
-
-            document.getElementById('next-btn').addEventListener('click', () => {
-                rendition.next();
             });
 
             // 进度更新

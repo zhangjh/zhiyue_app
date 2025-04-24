@@ -31,7 +31,7 @@ public class SearchResponse {
         private String filesizeString;
         private String extension;
         private String description;
-        private String readOnlineUrl;
+        private String hash;
 
         public String getId() {
             return id;
@@ -97,12 +97,12 @@ public class SearchResponse {
             this.description = description;
         }
 
-        public String getReadOnlineUrl() {
-            return readOnlineUrl;
+        public String getHash() {
+            return hash;
         }
 
-        public void setReadOnlineUrl(String readOnlineUrl) {
-            this.readOnlineUrl = readOnlineUrl;
+        public void setHash(String url) {
+            this.hash = hash;
         }
     }
 } 
