@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.tabs.TabLayout;
+
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.model.DownloadResponse;
@@ -172,6 +174,40 @@ public class ReaderFragment extends Fragment {
         // 加载epub.js和电子书
         String readerHtml = "file:///android_asset/reader.html";
         webView.loadUrl(readerHtml);
+
+        View aiReadingLayout = view.findViewById(R.id.ai_reading_layout);
+        View mindMapLayout = view.findViewById(R.id.mind_map_layout);
+
+        // 初始化TabLayout
+        TabLayout tabLayout = view.findViewById(R.id.tab_layout);
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                switch (tab.getPosition()) {
+                    case 0: // 阅读器
+                        webView.setVisibility(View.VISIBLE);
+                        aiReadingLayout.setVisibility(View.GONE);
+                        mindMapLayout.setVisibility(View.GONE);
+                        break;
+                    case 1: // AI伴读
+                        webView.setVisibility(View.GONE);
+                        aiReadingLayout.setVisibility(View.VISIBLE);
+                        mindMapLayout.setVisibility(View.GONE);
+                        break;
+                    case 2: // 脑图
+                        webView.setVisibility(View.GONE);
+                        aiReadingLayout.setVisibility(View.GONE);
+                        mindMapLayout.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
 
         return view;
     }
