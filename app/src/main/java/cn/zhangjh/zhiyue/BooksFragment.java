@@ -62,6 +62,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         setupSearchViews();
     }
 
+    // 添加成员变量
+    private View emptyView;
+
+    // 在 initViews 方法中添加
     private void initViews(View view) {
         centerSearchEditText = view.findViewById(R.id.centerSearchEditText);
         topSearchEditText = view.findViewById(R.id.topSearchEditText);
@@ -70,9 +74,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         centerSearchContainer = view.findViewById(R.id.centerSearchContainer);
         topSearchContainer = view.findViewById(R.id.topSearchContainer);
         searchResultContainer = view.findViewById(R.id.searchResultContainer);
-
-        view.findViewById(R.id.centerSearchButton).setOnClickListener(v -> performNewSearch(centerSearchEditText));
-        view.findViewById(R.id.topSearchButton).setOnClickListener(v -> performNewSearch(topSearchEditText));
+        emptyView = view.findViewById(R.id.emptyView);
     }
 
     private void setupRecyclerView() {
@@ -146,12 +148,16 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         if (query.isEmpty()) {
             return;
         }
-
+    
         // 重置分页状态
         currentPage = 1;
         hasMoreData = true;
         lastSearchQuery = query;
         bookAdapter.clearBooks();
+        
+        // 重置视图状态
+        recyclerView.setVisibility(View.VISIBLE);
+        emptyView.setVisibility(View.GONE);
         
         showLoading();
         performSearch(query, currentPage);
@@ -255,15 +261,20 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     private void showResults(List<Book> books) {
         progressBar.setVisibility(View.GONE);
         if (books.isEmpty() && currentPage == 1) {
-            // 如果是第一页且没有结果，显示中心搜索框
-            searchResultContainer.setVisibility(View.GONE);
-            centerSearchContainer.setVisibility(View.VISIBLE);
-            topSearchContainer.setVisibility(View.GONE);
+            // 如果是第一页且没有结果，显示空状态视图
+            searchResultContainer.setVisibility(View.VISIBLE);
+            centerSearchContainer.setVisibility(View.GONE);
+            topSearchContainer.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
+            bookAdapter.clearBooks(); // 清空现有数据
         } else {
-            // 如果有结果，显示顶部搜索框和结果列表
+            // 如果有结果，显示结果列表
             centerSearchContainer.setVisibility(View.GONE);
             topSearchContainer.setVisibility(View.VISIBLE);
             searchResultContainer.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.VISIBLE);
+            emptyView.setVisibility(View.GONE);
             bookAdapter.setBooks(books);
         }
     }
