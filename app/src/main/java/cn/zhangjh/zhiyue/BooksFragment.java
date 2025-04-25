@@ -244,8 +244,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     }
 
     private void showLoading() {
+        progressBar.setVisibility(View.VISIBLE);
         if (currentPage == 1) {
-            progressBar.setVisibility(View.VISIBLE);
             searchResultContainer.setVisibility(View.GONE);
             centerSearchContainer.setVisibility(View.GONE);
             topSearchContainer.setVisibility(View.VISIBLE);
