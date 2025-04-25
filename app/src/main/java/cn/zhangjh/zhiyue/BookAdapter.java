@@ -1,5 +1,7 @@
 package cn.zhangjh.zhiyue;
 
+import android.text.Html;
+import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -89,7 +91,16 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
             bookAuthor.setText(book.getAuthor());
             bookSize.setText(book.getSize());
             bookFormat.setText(book.getFormat());
-            bookDescription.setText(book.getDescription());
+            
+            // 处理HTML格式的描述文本
+            String description = book.getDescription();
+            if (description != null) {
+                Spanned spannedText;
+	            spannedText = Html.fromHtml(description, Html.FROM_HTML_MODE_LEGACY);
+	            bookDescription.setText(spannedText);
+            } else {
+                bookDescription.setText("");
+            }
 
             Glide.with(itemView.getContext())
                     .load(book.getCoverUrl())
@@ -116,4 +127,4 @@ public class BookAdapter extends RecyclerView.Adapter<BookAdapter.BookViewHolder
     public interface OnBookClickListener {
         void onReadButtonClick(Book book);
     }
-} 
+}
