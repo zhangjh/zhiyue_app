@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思维导图</title>
+    <script src="file:///android_asset/d3.min.js"></script>
+    <script src="file:///android_asset/markmap.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #mindmap {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+<svg id="mindmap"></svg>
+<script>
+    let mm;
+    window.renderMarkdown = function(markdown) {
+        try {
+            const data = transformMarkdown(markdown);
+
+            if (!mm) {
+                mm = window.markmap.Markmap.create('#mindmap');
+                mm.setData(data);
+                mm.fit();
+            }
+
+            window.markmapInstance = mm;
+            Android.onMindMapRendered();
+        } catch (error) {
+            console.error('渲染思维导图失败:', error);
+        }
+    };
+
+    window.zoomIn = function() {
+        if (mm) mm.rescale(mm.state.scale * 1.25);
+    };
+
+    window.zoomOut = function() {
+        if (mm) mm.rescale(mm.state.scale / 1.25);
+    };
+
+    window.resetZoom = function() {
+        if (mm) mm.fit();
+    };
+
+    function transformMarkdown(markdown) {
+        const lines = markdown.split('\n');
+        const root = { content: '思维导图', children: [] };
+        const stack = [root];
+        let currentLevel = 0;
+
+        lines.forEach(line => {
+            const match = line.match(/^(#{1,6})\s(.+)/);
+            if (match) {
+                const level = match[1].length;
+                const content = match[2];
+                const node = { content, children: [] };
+
+                while (currentLevel >= level) {
+                    stack.pop();
+                    currentLevel--;
+                }
+
+                stack[stack.length - 1].children.push(node);
+                stack.push(node);
+                currentLevel = level;
+            }
+        });
+        // 丢弃头节点
+        return root.children[0];
+    }
+</script>
+</body>
+</html>

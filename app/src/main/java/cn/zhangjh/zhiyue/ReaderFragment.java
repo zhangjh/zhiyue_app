@@ -7,7 +7,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -24,6 +26,7 @@ import com.google.android.material.tabs.TabLayout;
 
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
+import cn.zhangjh.zhiyue.mindmap.MindMapManager;
 import cn.zhangjh.zhiyue.model.DownloadResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,6 +40,11 @@ public class ReaderFragment extends Fragment {
     private boolean isNavigationVisible = false;
     private int currentProgress = 0;
     private View loadingView; // 新增加载视图
+    // 将变量声明移到类开始处
+    private WebView mindMapWebView;
+    private View mindMapLoadingProgress;
+    private TextView mindMapErrorText;
+    private MindMapManager mindMapManager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,7 +73,7 @@ public class ReaderFragment extends Fragment {
         ApiClient.getBookService().downloadBook(bookId, hashId).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<DownloadResponse> call, @NonNull Response<DownloadResponse> response) {
-                if(!response.isSuccessful()) {
+                if (!response.isSuccessful()) {
                     try {
                         String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
                         Log.e(TAG, "Error response: " + errorBody);
@@ -130,12 +138,12 @@ public class ReaderFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_reader, container, false);
-        
+
         webView = view.findViewById(R.id.webview_reader);
         loadingView = view.findViewById(R.id.loading_view); // 获取加载视图
-        
+
         showLoading("正在加载阅读器...");
-        
+
         // 配置WebView
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
@@ -203,11 +211,16 @@ public class ReaderFragment extends Fragment {
             }
 
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) {}
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
 
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
         });
+
+        // 初始化思维导图
+        initMindMap(view);
 
         return view;
     }
@@ -241,6 +254,107 @@ public class ReaderFragment extends Fragment {
         @JavascriptInterface
         public void onBookLoaded() {
             hideLoading();
+        }
+    }
+
+
+    // 重命名思维导图相关的方法，避免冲突
+    private void showMindMapLoading() {
+        if (mindMapLoadingProgress != null) {
+            mindMapLoadingProgress.setVisibility(View.VISIBLE);
+            if (mindMapErrorText != null) {
+                mindMapErrorText.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private void hideMindMapLoading() {
+        if (mindMapLoadingProgress != null) {
+            mindMapLoadingProgress.setVisibility(View.GONE);
+        }
+    }
+
+    private void showMindMapError() {
+        if (mindMapLoadingProgress != null) {
+            mindMapLoadingProgress.setVisibility(View.GONE);
+        }
+        if (mindMapErrorText != null) {
+            mindMapErrorText.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private void initMindMap(View view) {
+        mindMapWebView = view.findViewById(R.id.mind_map_webview);
+        mindMapLoadingProgress = view.findViewById(R.id.loading_progress);
+        mindMapErrorText = view.findViewById(R.id.error_text);
+
+        WebSettings webSettings = mindMapWebView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        
+        // 添加调试支持
+        mindMapWebView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                Log.d(TAG, "MindMap Console: " + consoleMessage.message());
+                return true;
+            }
+        });
+
+        // 允许加载网络资源
+        webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+
+        // 修正回调方法
+        mindMapManager = new MindMapManager(mindMapWebView, () -> {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(this::hideMindMapLoading);
+            }
+        });
+
+        mindMapWebView.addJavascriptInterface(mindMapManager.new JsInterface(), "Android");
+        mindMapWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                showMindMapLoading();
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                loadMindMapData();
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                super.onReceivedError(view, errorCode, description, failingUrl);
+                showMindMapError();
+            }
+        });
+
+        showMindMapLoading();
+        mindMapWebView.loadUrl("file:///android_asset/mindmap.html");
+    }
+
+    private void loadMindMapData() {
+        try {
+            String testMarkdown = "# 三体\n" +
+                    "## 第一部：地球往事\n" +
+                    "### 文化大革命\n" +
+                    "### 红岸基地\n" +
+                    "### 三体文明\n" +
+                    "## 第二部：黑暗森林\n" +
+                    "### 面壁计划\n" +
+                    "### 黑暗森林理论\n" +
+                    "## 第三部：死神永生\n" +
+                    "### 二向箔\n" +
+                    "### 降维打击";
+            mindMapManager.renderMarkdown(testMarkdown);
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading mind map data", e);
+            showMindMapError();
         }
     }
 }
