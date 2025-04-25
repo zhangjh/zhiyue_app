@@ -203,6 +203,8 @@ public class ReaderFragment extends Fragment {
                         mindMapLayout.setVisibility(View.GONE);
                         break;
                     case 2: // 思维导图
+                        // 初始化思维导图
+                        initMindMap(view);
                         webView.setVisibility(View.GONE);
                         aiReadingLayout.setVisibility(View.GONE);
                         mindMapLayout.setVisibility(View.VISIBLE);
@@ -218,9 +220,6 @@ public class ReaderFragment extends Fragment {
             public void onTabReselected(TabLayout.Tab tab) {
             }
         });
-
-        // 初始化思维导图
-        initMindMap(view);
 
         return view;
     }

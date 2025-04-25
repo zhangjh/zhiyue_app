@@ -23,16 +23,21 @@
 <svg id="mindmap"></svg>
 <script>
     let mm;
+    const options = {
+        autoFit: true,
+        embedGlobalCSS: true,
+        initialExpandLevel: 2
+    };
     window.renderMarkdown = function(markdown) {
         try {
             const data = transformMarkdown(markdown);
 
             if (!mm) {
                 mm = window.markmap.Markmap.create('#mindmap');
+                mm.setOptions(options);
                 mm.setData(data);
                 mm.fit();
             }
-
             window.markmapInstance = mm;
             Android.onMindMapRendered();
         } catch (error) {
