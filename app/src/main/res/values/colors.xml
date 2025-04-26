@@ -20,4 +20,7 @@
         <color name="primary">#2196F3</color>
         <color name="primary_dark">#1976D2</color>
         <color name="primary_light">#BBDEFB</color>
+    <color name="progress_low">#FF5252</color>
+    <color name="progress_medium">#FFB300</color>
+    <color name="progress_high">#69F0AE</color>
 </resources>
