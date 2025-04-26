@@ -1,5 +1,6 @@
 package cn.zhangjh.zhiyue;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.util.Log;
@@ -7,9 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -60,6 +63,43 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         initViews(view);
         setupRecyclerView();
         setupSearchViews();
+        
+        // 添加返回键处理
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+            new OnBackPressedCallback(true) {
+                @Override
+                public void handleOnBackPressed() {
+                    if (searchResultContainer.getVisibility() == View.VISIBLE) {
+                        // 如果在搜索结果页，返回到默认搜索页
+                        resetToDefaultSearchView();
+                    } else {
+                        // 如果在默认搜索页，移除回调并允许正常的返回行为
+                        setEnabled(false);
+                        requireActivity().onBackPressed();
+                    }
+                }
+            });
+    }
+
+    // 添加重置视图的方法
+    private void resetToDefaultSearchView() {
+        searchResultContainer.setVisibility(View.GONE);
+        emptyView.setVisibility(View.GONE);
+        progressBar.setVisibility(View.GONE);
+        centerSearchContainer.setVisibility(View.VISIBLE);
+        topSearchContainer.setVisibility(View.GONE);
+        
+        // 清空搜索框
+        centerSearchEditText.setText("");
+        topSearchEditText.setText("");
+        
+        // 清空搜索结果
+        bookAdapter.clearBooks();
+        
+        // 重置分页状态
+        currentPage = 1;
+        hasMoreData = true;
+        lastSearchQuery = "";
     }
 
     // 添加成员变量
@@ -148,6 +188,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         if (query.isEmpty()) {
             return;
         }
+
+        // 隐藏输入法
+        InputMethodManager imm = (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
     
         // 重置分页状态
         currentPage = 1;

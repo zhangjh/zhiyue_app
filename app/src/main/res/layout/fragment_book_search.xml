@@ -72,17 +72,6 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/centerSearchButton"
-                    style="@style/Widget.MaterialComponents.Button.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="8dp"
-                    android:text="搜索"
-                    android:textColor="@android:color/white"
-                    app:cornerRadius="8dp" />
-
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
@@ -94,70 +83,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/white"
-        android:elevation="4dp"
         android:orientation="vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="8dp"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="50dp"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.card.MaterialCardView
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/topSearchInputLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
+            android:layout_marginBottom="16dp"
+            android:hint="@string/search_placeholder"
+            app:endIconMode="clear_text"
+            app:hintTextColor="@android:color/darker_gray">
 
-            <LinearLayout
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/topSearchEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="4dp">
+                android:background="@null"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:padding="12dp"
+                android:textSize="16sp" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/topSearchInputLayout"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/search_placeholder"
-                    app:boxStrokeWidth="0dp"
-                    app:boxStrokeWidthFocused="0dp"
-                    app:endIconMode="clear_text"
-                    app:hintTextColor="@android:color/darker_gray">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/topSearchEditText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@null"
-                        android:imeOptions="actionSearch"
-                        android:inputType="text"
-                        android:maxLines="1"
-                        android:padding="8dp"
-                        android:textSize="14sp" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/topSearchButton"
-                    style="@style/Widget.MaterialComponents.Button.Icon"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="8dp"
-                    android:insetLeft="0dp"
-                    android:insetTop="0dp"
-                    android:insetRight="0dp"
-                    android:insetBottom="0dp"
-                    android:padding="8dp"
-                    app:cornerRadius="20dp"
-                    app:icon="@drawable/ic_search"
-                    app:iconGravity="textStart"
-                    app:iconPadding="0dp" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
+        </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 
@@ -190,12 +143,12 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-    
+
         <ImageView
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:src="@drawable/ic_empty_search" />
-    
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -203,7 +156,7 @@
             android:text="@string/empty_search_result"
             android:textColor="@android:color/darker_gray"
             android:textSize="16sp" />
-    
+
     </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
