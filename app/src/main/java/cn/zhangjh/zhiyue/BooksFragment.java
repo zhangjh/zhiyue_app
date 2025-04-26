@@ -184,8 +184,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     }
 
     private void performNewSearch(TextInputEditText searchEditText) {
-        String query = Objects.requireNonNull(searchEditText.getText()).toString().trim();
-        if (query.isEmpty()) {
+        String keyword = Objects.requireNonNull(searchEditText.getText()).toString().trim();
+        if (keyword.isEmpty()) {
             return;
         }
 
@@ -196,7 +196,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         // 重置分页状态
         currentPage = 1;
         hasMoreData = true;
-        lastSearchQuery = query;
+        lastSearchQuery = keyword;
         bookAdapter.clearBooks();
         
         // 重置视图状态
@@ -204,7 +204,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         emptyView.setVisibility(View.GONE);
         
         showLoading();
-        performSearch(query, currentPage);
+        performSearch(keyword, currentPage);
     }
 
     private void loadMoreBooks() {
@@ -213,11 +213,11 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         }
     }
 
-    private void performSearch(String query, int page) {
+    private void performSearch(String keyword, int page) {
         isLoading = true;
-        Log.d(TAG, "Performing search: query=" + query + ", page=" + page + ", limit=" + BooksFragment.DEFAULT_PAGE_SIZE);
-        
-        ApiClient.getBookService().searchBooks(query, page, BooksFragment.DEFAULT_PAGE_SIZE).enqueue(new Callback<>() {
+        Log.d(TAG, "Performing search: keyword=" + keyword + ", page=" + page + ", limit=" + BooksFragment.DEFAULT_PAGE_SIZE);
+
+        ApiClient.getBookService().searchBooks(keyword, "epub", page, BooksFragment.DEFAULT_PAGE_SIZE).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> response) {
                 if (!isAdded()) return;

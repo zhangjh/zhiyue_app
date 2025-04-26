@@ -13,6 +13,7 @@ public interface BookService {
     @GET("/books/search")
     Call<SearchResponse> searchBooks(
 		    @Query("keyword") String keyword,
+			@Query("format") String format,
 		    @Query("page") Integer page,
 		    @Query("limit") Integer limit
     );
@@ -23,9 +24,4 @@ public interface BookService {
 			@Field("bookId") String bookId,
 			@Field("hashId") String hashId
 	);
-
-    // 提供一个便捷方法，使用默认参数
-    default Call<SearchResponse> searchBooks(String keyword) {
-        return searchBooks(keyword, null, null);
-    }
 } 
