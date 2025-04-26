@@ -81,39 +81,41 @@
         }
         #prev-btn { left: 0; }
         #next-btn { right: 0; }
-
-         /* 添加选择菜单样式 */
+        
+        /* 添加选择菜单样式 */
         #selection-menu {
             position: fixed;
             background: white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 4px;
             display: none;
             z-index: 1000;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 50px;
         }
 
         .menu-button {
-            background: none;
-            border: none;
-            padding: 8px 16px;
-            margin: 2px;
-            width: 100%;
-            text-align: left;
+            padding: 10px 16px;
+            cursor: pointer;
+            white-space: nowrap;
             font-size: 14px;
             color: #333;
-            border-radius: 4px;
-            cursor: pointer;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            text-align: left;
+            width: 100%;
         }
 
         .menu-button:hover {
-            background: #f5f5f5;
-        }
-        ::selection {
-            background: rgba(255, 255, 0, 0.3);
+            background-color: #e0e0e0;
         }
 
-        .epub-view ::selection {
+        /* 禁用默认的文本选择菜单 */
+        ::selection {
             background: rgba(255, 255, 0, 0.3);
         }
     </style>
@@ -124,6 +126,7 @@
 <button id="prev-btn">&lt;</button>
 <button id="next-btn">&gt;</button>
 <div id="progress-container">阅读进度：0%</div>
+<!-- 添加选择菜单 -->
 <div id="selection-menu">
     <button class="menu-button" id="copy-btn">复制</button>
     <button class="menu-button" id="highlight-btn">高亮</button>
@@ -138,9 +141,34 @@
         let selectionMenu = document.getElementById('selection-menu');
         let currentCfiRange = null;
         let currentContents = null;
+        let isLongPress = false;
+        let longPressTimer;
+
+        // 确保初始状态菜单是隐藏的
+        selectionMenu.style.display = 'none';
+
+        // 添加长按检测
+        rendition.on("touchstart", function(event) {
+            isLongPress = false;
+            longPressTimer = setTimeout(() => {
+                isLongPress = true;
+            }, 500);
+        });
+
+        rendition.on("touchend", function(event) {
+            clearTimeout(longPressTimer);
+            if (!isLongPress) {
+                selectionMenu.style.display = 'none';
+            }
+        });
 
         // 选择文本时显示菜单
         rendition.on("selected", function(cfiRange, contents) {
+            if (!isLongPress) {
+                selectionMenu.style.display = 'none';
+                return;
+            }
+            
             currentCfiRange = cfiRange;
             currentContents = contents;
             const selection = contents.window.getSelection();
@@ -149,11 +177,32 @@
             if (selectedText) {
                 const range = selection.getRangeAt(0);
                 const rect = range.getBoundingClientRect();
+                const menuHeight = selectionMenu.offsetHeight;
+                const viewportHeight = window.innerHeight;
 
-                // 定位菜单
-                selectionMenu.style.display = 'block';
-                selectionMenu.style.left = `${rect.left + (rect.width / 2) - (selectionMenu.offsetWidth / 2)}px`;
-                selectionMenu.style.top = `${rect.bottom + 10}px`;
+                // 先显示菜单以获取其实际宽度
+                selectionMenu.style.display = 'flex';
+                const menuWidth = selectionMenu.offsetWidth;
+
+                // 计算菜单位置
+                let menuLeft = rect.left + (rect.width / 2) - (menuWidth / 2);
+                let menuTop;
+
+                // 检查下方空间是否足够
+                if (rect.bottom + menuHeight + 10 <= viewportHeight) {
+                    // 显示在下方
+                    menuTop = rect.bottom + 10;
+                } else {
+                    // 空间不足，显示在上方
+                    menuTop = rect.top - menuHeight - 10;
+                }
+
+                // 确保菜单不会超出屏幕左右边界
+                menuLeft = Math.max(10, Math.min(menuLeft, window.innerWidth - menuWidth - 10));
+
+                // 设置菜单位置
+                selectionMenu.style.left = `${menuLeft}px`;
+                selectionMenu.style.top = `${menuTop}px`;
             }
         });
 
@@ -297,6 +346,8 @@
                 });
             });
         });
+        // 初始化长按选择
+        initializeSelection();
     }
 </script>
 </body>

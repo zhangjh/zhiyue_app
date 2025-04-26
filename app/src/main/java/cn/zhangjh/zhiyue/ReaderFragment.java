@@ -1,6 +1,9 @@
 package cn.zhangjh.zhiyue;
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
@@ -154,6 +157,10 @@ public class ReaderFragment extends Fragment {
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
 
+        // 启用文本选择但禁用系统菜单
+        webView.setOnLongClickListener(null);
+        webView.setLongClickable(true);
+
         // 添加JavaScript接口
         webView.addJavascriptInterface(new WebAppInterface(), "Android");
 
@@ -252,6 +259,17 @@ public class ReaderFragment extends Fragment {
 
     // JavaScript接口类
     private class WebAppInterface {
+        @JavascriptInterface
+        public void copyText(String text) {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    ClipboardManager clipboard = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("selected_text", text);
+                    clipboard.setPrimaryClip(clip);
+                    Toast.makeText(getActivity(), "已复制到剪贴板", Toast.LENGTH_SHORT).show();
+                });
+            }
+        }
         @JavascriptInterface
         public void onProgressUpdate(int progress) {
             // if (getActivity() != null) {
