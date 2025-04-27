@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>电子书阅读器</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
@@ -18,7 +18,10 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
+            margin-top: env(safe-area-inset-top);
+            margin-bottom: env(safe-area-inset-bottom);
         }
+
         #chapter-title {
             height: 40px;
             line-height: 40px;
@@ -40,14 +43,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 20px;
         }
         #viewer iframe {
             width: 100%;
             height: 100%;
-            border: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
+            --text-color: #333;
         }
         
         /* 确保 iframe 内容可以选择文本 */
@@ -67,12 +69,7 @@
             z-index: 9999;  /* 保留更高的 z-index */
             min-width: 120px;
         }
-                
-        /* 添加电子书内容样式 */
-        #viewer iframe {
-            --bg-color: #fafafa;
-            --text-color: #333;
-        }
+
         #viewer * {
             line-height: 1.6 !important;
             font-size: 1.1em !important;
@@ -81,16 +78,20 @@
             margin: 1em 0 !important;
             padding: 0 10px !important;
         }
-        /* 其他样式保持不变 */
         #progress-container {
             height: 30px;
             line-height: 30px;
             text-align: center;
             font-size: 14px;
             color: #666;
+            background: #fafafa;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            padding: 5px 0;
+            margin-bottom: 50px;
         }
         
-        /* 添加选择菜单样式 */
         #selection-menu {
             position: fixed;
             background: white;
