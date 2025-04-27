@@ -137,13 +137,32 @@ public class ReaderFragment extends Fragment {
         }
     }
 
+    // 新增配置方法
+    private void configureWebView(WebView webView) {
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+
+        // 通用安全配置
+        settings.setAllowContentAccess(true);
+        settings.setAllowFileAccessFromFileURLs(true);
+        settings.setAllowUniversalAccessFromFileURLs(true);
+        webView.setLongClickable(false);
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_reader, container, false);
 
+        // 在 onCreateView 中替换原有配置代码：
         webView = view.findViewById(R.id.webview_reader);
+        configureWebView(webView); // 调用统一配置方法
+        mindMapWebView = view.findViewById(R.id.mind_map_webview);
+        configureWebView(mindMapWebView); // 复用配置
         loadingView = view.findViewById(R.id.loading_view); // 获取加载视图
 
         showLoading("正在加载阅读器...");
@@ -157,9 +176,13 @@ public class ReaderFragment extends Fragment {
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
 
-        // 启用文本选择但禁用系统菜单
-        webView.setOnLongClickListener(null);
-        webView.setLongClickable(true);
+        // 添加以下配置阻止系统菜单
+        webView.setLongClickable(false);  // 禁用系统长按菜单
+        webView.setOnLongClickListener(null);  // 移除长按监听
+        webView.setOnLongClickListener(v -> {
+            // 允许选择但阻止系统菜单
+            return false; 
+        });
 
         // 添加JavaScript接口
         webView.addJavascriptInterface(new WebAppInterface(), "Android");
@@ -249,6 +272,11 @@ public class ReaderFragment extends Fragment {
     public void onDestroyView() {
         if (webView != null) {
             webView.destroy();
+            webView = null; // 防止内存泄漏
+        }
+        if (mindMapWebView != null) {
+            mindMapWebView.destroy();
+            mindMapWebView = null;
         }
         super.onDestroyView();
         // 当阅读器页面销毁时，显示底部导航栏
