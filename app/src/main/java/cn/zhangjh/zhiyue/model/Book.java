@@ -10,7 +10,7 @@ public class Book {
     private String coverUrl;
     private String description;
 
-    public Book(SearchResponse.BookDetail bookDetail) {
+    public Book(BookDetail bookDetail) {
         this.id = bookDetail.getId();
         this.title = bookDetail.getTitle();
         this.author = bookDetail.getAuthor();

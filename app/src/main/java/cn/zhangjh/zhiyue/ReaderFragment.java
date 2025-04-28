@@ -27,11 +27,14 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.tabs.TabLayout;
+import com.google.gson.Gson;
 
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.mindmap.MindMapManager;
-import cn.zhangjh.zhiyue.model.DownloadResponse;
+import cn.zhangjh.zhiyue.model.Annotation;
+import cn.zhangjh.zhiyue.model.BizListResponse;
+import cn.zhangjh.zhiyue.model.BizResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -40,6 +43,7 @@ public class ReaderFragment extends Fragment {
 
     private static final String TAG = ReaderFragment.class.getName();
     private String bookUrl;
+    private String bookId;
     private WebView webView;
     private boolean isNavigationVisible = false;
     private int currentProgress = 0;
@@ -64,7 +68,7 @@ public class ReaderFragment extends Fragment {
             }
         });
         if (getArguments() != null) {
-            String bookId = getArguments().getString("book_id");
+            bookId = getArguments().getString("book_id");  // 保存bookId
             String hashId = getArguments().getString("hash_id");
             Log.d("ReaderFragment", "Received bookId: " + bookId + ", hashId: " + hashId);
             // 获取书籍url
@@ -76,7 +80,7 @@ public class ReaderFragment extends Fragment {
     private void getEbookUrl(String bookId, String hashId) {
         ApiClient.getBookService().downloadBook(bookId, hashId).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<DownloadResponse> call, @NonNull Response<DownloadResponse> response) {
+            public void onResponse(@NonNull Call<BizResponse> call, @NonNull retrofit2.Response<BizResponse> response) {
                 if (!response.isSuccessful()) {
                     try {
                         String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
@@ -95,7 +99,7 @@ public class ReaderFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<DownloadResponse> call, Throwable t) {
+            public void onFailure(Call<BizResponse> call, Throwable t) {
                 Log.e(TAG, "Search failed", t);
                 String errorMessage = "网络错误: " + t.getClass().getSimpleName();
                 if (t.getMessage() != null) {
@@ -209,6 +213,13 @@ public class ReaderFragment extends Fragment {
                 }
             }
         });
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                Log.d(TAG, "WebView Console: " + consoleMessage.message());
+                return true;
+            }
+        });
 
         // 加载epub.js和电子书
         String readerHtml = "file:///android_asset/reader.html";
@@ -313,6 +324,56 @@ public class ReaderFragment extends Fragment {
         @JavascriptInterface
         public void onBookLoaded() {
             hideLoading();
+        }
+    
+        @JavascriptInterface
+        public void saveAnnotation(String cfiRange, String type, String color, String text) {
+            if (getActivity() != null) {
+                Annotation annotation = new Annotation(bookId, cfiRange, type, color, text);
+                Log.d(TAG, "Saving annotation: " + new Gson().toJson(annotation));
+                // 调用API保存标注
+                ApiClient.getBookService().saveAnnotation(annotation).enqueue(new Callback<>() {
+	                @Override
+	                public void onResponse(@NonNull Call<BizResponse> call, @NonNull retrofit2.Response<BizResponse> response) {
+		                if (!response.isSuccessful()) {
+			                showError("保存标注失败");
+		                }
+	                }
+
+	                @Override
+	                public void onFailure(@NonNull Call<BizResponse> call, @NonNull Throwable t) {
+		                showError("保存标注失败: " + t.getMessage());
+	                }
+                });
+            }
+        }
+        
+        @JavascriptInterface
+        public void loadAnnotations() {
+            Log.d(TAG, "loadAnnotations called, bookId: " + bookId);
+            if (getActivity() != null) {
+                // 从服务器获取标注
+                ApiClient.getBookService().getAnnotations(bookId).enqueue(new Callback<>() {
+	                @Override
+	                public void onResponse(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Response<BizListResponse<Annotation>> response) {
+		                if (response.isSuccessful() && response.body() != null) {
+			                // 将标注传递给前端
+			                String annotations = new Gson().toJson(response.body());
+                            // mock data
+//			                String annotations = new Gson().toJson("[{\"bookId\":\"1\",\"cfiRange\":\"epubcfi(/6/8!/4/10,/1:0,/1:36)\",\"color\":\"rgba(255,255,0,0.3)\",\"text\":\"在《三体》电子书与读者见面之际，再次感谢广大读者的关注和支持，谢谢大家！\",\"timestamp\":1745821203806,\"type\":\"highlight\"}]");
+			                webView.post(() -> webView.evaluateJavascript(
+					                "window.loadAnnotations(" + annotations + ")",
+					                null
+			                ));
+		                }
+	                }
+
+	                @Override
+	                public void onFailure(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Throwable t) {
+		                showError("加载标注失败: " + t.getMessage());
+	                }
+                });
+            }
         }
     }
 

@@ -169,15 +169,28 @@
         
         async function handleHighlight() {
             if (currentCfiRange) {
+                const selection = currentContents.document.getSelection();
+                const text = selection.toString();
                 await rendition.annotations.highlight(currentCfiRange, {}, (e) => {
                     e.target.style.backgroundColor = 'rgba(255,255,0,0.3)';
                 });
+                // 保存高亮
+                if (window.Android) {
+                    window.Android.saveAnnotation(
+                        currentCfiRange,
+                        'highlight',
+                        'rgba(255,255,0,0.3)',
+                        text
+                    );
+                }
                 selectionMenu.style.display = 'none';
             }
         }
         
         async function handleUnderline() {
             if (currentCfiRange) {
+                const selection = currentContents.document.getSelection();
+                const text = selection.toString();
                 rendition.annotations.underline(currentCfiRange,
                     {},
                     undefined,
@@ -188,6 +201,15 @@
                         "stroke-width": "2px"
                     }
                 );
+                // 保存下划线
+                if (window.Android) {
+                    window.Android.saveAnnotation(
+                        currentCfiRange,
+                        'underline',
+                        '#3366ff',
+                        text
+                    );
+                }
                 selectionMenu.style.display = 'none';
             }
         }
@@ -303,6 +325,50 @@
             minSpreadWidth: 1000
         });
 
+        // 添加加载标注方法
+        window.loadAnnotations = function(annotationsJson) {
+            console.log("Received annotations:", annotationsJson);  // 添加日志
+             // 解析JSON字符串
+            const annotations = JSON.parse(annotationsJson);
+            // 检查是否有data字段（因为后端返回的是BizListResponse）
+            const annotationList = annotations.data || [];
+
+            annotations.forEach(annotation => {
+                if (annotation.type === 'highlight') {
+                    rendition.annotations.highlight(
+                        annotation.cfiRange,
+                        {},
+                        (e) => {
+                            e.target.style.backgroundColor = annotation.color;
+                        }
+                    );
+                } else if (annotation.type === 'underline') {
+                    rendition.annotations.underline(
+                        annotation.cfiRange,
+                        {},
+                        undefined,
+                        "ul",
+                        {
+                            "border": "none",
+                            "stroke": annotation.color,
+                            "stroke-width": "2px"
+                        }
+                    );
+                }
+            });
+        };
+    
+        // 在书籍加载完成后加载标注
+        rendition.display().then(() => {
+            console.log("display completed, annotationsLoaded");
+            if (window.Android) {
+                window.Android.onBookLoaded();
+                // 加载已存在的标注
+                window.Android.loadAnnotations();
+            }
+            initializeSelection();
+        });
+
         // 启用手势支持
         rendition.on("touchstart", event => {
             const touches = event.changedTouches[0];
@@ -320,13 +386,6 @@
                     rendition.prev();
                 }
             }
-        });
-
-        rendition.display().then(() => {
-            if (window.Android) {
-                window.Android.onBookLoaded();
-            }
-            initializeSelection();
         });
 
         // 添加章节变化监听

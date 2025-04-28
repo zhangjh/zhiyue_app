@@ -1,6 +1,6 @@
 package cn.zhangjh.zhiyue.model;
 
-public class DownloadResponse {
+public class BizResponse {
 
 	private boolean success;
 

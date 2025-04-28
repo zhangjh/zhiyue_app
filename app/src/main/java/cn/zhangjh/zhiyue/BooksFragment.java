@@ -29,7 +29,8 @@ import java.util.Objects;
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.model.Book;
-import cn.zhangjh.zhiyue.model.SearchResponse;
+import cn.zhangjh.zhiyue.model.BizListResponse;
+import cn.zhangjh.zhiyue.model.BookDetail;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -218,70 +219,70 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         Log.d(TAG, "Performing search: keyword=" + keyword + ", page=" + page + ", limit=" + BooksFragment.DEFAULT_PAGE_SIZE);
 
         ApiClient.getBookService().searchBooks(keyword, "epub", page, BooksFragment.DEFAULT_PAGE_SIZE).enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> response) {
-                if (!isAdded()) return;
-                isLoading = false;
+	        @Override
+	        public void onResponse(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Response<BizListResponse<BookDetail>> response) {
+		        if (!isAdded()) return;
+		        isLoading = false;
 
-                Log.d(TAG, "Search response received. Code: " + response.code());
-                if (!response.isSuccessful()) {
-                    try {
-                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-                        Log.e(TAG, "Error response: " + errorBody);
-                        showError("搜索失败 (" + response.code() + "): " + errorBody);
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error reading error response", e);
-                        showError("搜索失败 (" + response.code() + ")");
-                    }
-                    if (currentPage == 1) {
-                        showResults(new ArrayList<>());
-                    }
-                    return;
-                }
+		        Log.d(TAG, "Search response received. Code: " + response.code());
+		        if (!response.isSuccessful()) {
+			        try {
+				        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+				        Log.e(TAG, "Error response: " + errorBody);
+				        showError("搜索失败 (" + response.code() + "): " + errorBody);
+			        } catch (Exception e) {
+				        Log.e(TAG, "Error reading error response", e);
+				        showError("搜索失败 (" + response.code() + ")");
+			        }
+			        if (currentPage == 1) {
+				        showResults(new ArrayList<>());
+			        }
+			        return;
+		        }
 
-                if (response.body() != null && response.body().isSuccess()) {
-                    List<Book> books = convertToBooks(response.body().getData());
-                    Log.d(TAG, "Search successful. Found " + books.size() + " books");
-                    
-                    // 如果返回的数据少于请求的数量，说明没有更多数据了
-                    hasMoreData = books.size() >= BooksFragment.DEFAULT_PAGE_SIZE;
-                    
-                    if (currentPage == 1) {
-                        showResults(books);
-                    } else {
-                        bookAdapter.addBooks(books);
-                    }
-                } else {
-                    Log.e(TAG, "Response body was null or not successful");
-                    showError("搜索失败：返回数据无效");
-                    if (currentPage == 1) {
-                        showResults(new ArrayList<>());
-                    }
-                }
-            }
+		        if (response.body() != null && response.body().isSuccess()) {
+			        List<Book> books = convertToBooks(response.body().getData());
+			        Log.d(TAG, "Search successful. Found " + books.size() + " books");
 
-            @Override
-            public void onFailure(@NonNull Call<SearchResponse> call, @NonNull Throwable t) {
-                if (!isAdded()) return;
-                isLoading = false;
-                
-                Log.e(TAG, "Search failed", t);
-                String errorMessage = "网络错误: " + t.getClass().getSimpleName();
-                if (t.getMessage() != null) {
-                    errorMessage += " - " + t.getMessage();
-                }
-                showError(errorMessage);
-                if (currentPage == 1) {
-                    showResults(new ArrayList<>());
-                }
-            }
+			        // 如果返回的数据少于请求的数量，说明没有更多数据了
+			        hasMoreData = books.size() >= BooksFragment.DEFAULT_PAGE_SIZE;
+
+			        if (currentPage == 1) {
+				        showResults(books);
+			        } else {
+				        bookAdapter.addBooks(books);
+			        }
+		        } else {
+			        Log.e(TAG, "Response body was null or not successful");
+			        showError("搜索失败：返回数据无效");
+			        if (currentPage == 1) {
+				        showResults(new ArrayList<>());
+			        }
+		        }
+	        }
+
+	        @Override
+	        public void onFailure(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Throwable t) {
+		        if (!isAdded()) return;
+		        isLoading = false;
+
+		        Log.e(TAG, "Search failed", t);
+		        String errorMessage = "网络错误: " + t.getClass().getSimpleName();
+		        if (t.getMessage() != null) {
+			        errorMessage += " - " + t.getMessage();
+		        }
+		        showError(errorMessage);
+		        if (currentPage == 1) {
+			        showResults(new ArrayList<>());
+		        }
+	        }
         });
     }
 
-    private List<Book> convertToBooks(List<SearchResponse.BookDetail> bookDetails) {
+    private List<Book> convertToBooks(List<BookDetail> bookDetails) {
         List<Book> books = new ArrayList<>();
         if(bookDetails == null) return books;
-        for (SearchResponse.BookDetail detail : bookDetails) {
+        for (BookDetail detail : bookDetails) {
             books.add(new Book(detail));
         }
         return books;
