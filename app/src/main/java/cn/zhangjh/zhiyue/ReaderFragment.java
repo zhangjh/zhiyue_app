@@ -73,7 +73,7 @@ public class ReaderFragment extends Fragment {
             Log.d("ReaderFragment", "Received bookId: " + bookId + ", hashId: " + hashId);
             // 获取书籍url
 //            getEbookUrl(bookId, hashId);
-            bookUrl = "https://s3.zhangjh.cn/三体 (刘慈欣) (Z-Library).epub";
+            bookUrl = "https://s3.zhangjh.cn/一句顶一万句 (刘震云) (Z-Library).epub";
         }
     }
 
@@ -241,8 +241,13 @@ public class ReaderFragment extends Fragment {
                         break;
                     case 1: // AI伴读
                         webView.setVisibility(View.GONE);
-                        aiReadingLayout.setVisibility(View.VISIBLE);
+                        aiReadingLayout.setVisibility(View.GONE);  // 先隐藏include的布局
                         mindMapLayout.setVisibility(View.GONE);
+                        // 使用Fragment替换
+                        getChildFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.ai_reading_layout, new AIReadingFragment())
+                            .commit();
                         break;
                     case 2: // 思维导图
                         // 初始化思维导图

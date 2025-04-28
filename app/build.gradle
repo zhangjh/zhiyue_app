@@ -47,4 +47,8 @@ dependencies {
     implementation libs.converter.gson
     implementation libs.gson
     implementation libs.logging.interceptor
+
+    implementation libs.core
+
+    implementation libs.converter.scalars
 }

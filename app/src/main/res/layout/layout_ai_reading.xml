@@ -19,6 +19,39 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- 进度显示部分 -->
+            <LinearLayout
+                android:id="@+id/progress_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+                
+                <TextView
+                    android:id="@+id/progress_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="正在生成摘要..."
+                    android:textColor="@color/primary"
+                    android:textSize="14sp"/>
+                    
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/progress_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp"/>
+            </LinearLayout>
+
+            <!-- 现有的内容 -->
+            <TextView
+                android:id="@+id/ai_summary_text"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:textSize="16sp"/>
+
             <TextView
                 android:id="@+id/ai_summary_text"
                 android:layout_width="match_parent"

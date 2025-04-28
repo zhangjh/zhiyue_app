@@ -13,6 +13,7 @@ public class ApiClient {
     private static final String BASE_URL = "https://tx.zhangjh.cn/";
     private static final String TAG = "ApiClient";
     private static Retrofit retrofit = null;
+    private static WebSocketService webSocketService;
 
     public static Retrofit getClient() {
         if (retrofit == null) {
@@ -62,4 +63,11 @@ public class ApiClient {
         Log.d(TAG, "Created BookService instance");
         return service;
     }
-} 
+
+    public static WebSocketService getWebSocketService() {
+        if (webSocketService == null) {
+            webSocketService = retrofit.create(WebSocketService.class);
+        }
+        return webSocketService;
+    }
+}
