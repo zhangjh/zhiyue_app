@@ -5,7 +5,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -13,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -21,8 +21,6 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.lang.ref.WeakReference;
 
 import io.noties.markwon.Markwon;
 import okhttp3.OkHttpClient;
@@ -35,7 +33,7 @@ import okhttp3.WebSocketListener;
 public class AIReadingFragment extends Fragment {
     private TextView aiSummaryText;
     private RecyclerView chatRecyclerView;
-    private FrameLayout inputLayout;
+    private LinearLayout inputLayout;
     private TextInputEditText inputEditText;
     private MaterialButton sendButton;
     private LinearLayout progressLayout;
@@ -44,8 +42,6 @@ public class AIReadingFragment extends Fragment {
     private static WebSocket webSocket;
     private static boolean isWebSocketInitialized = false;
     private StringBuilder summaryContent = new StringBuilder();
-    // 保存Fragment的弱引用，保证切换Tab回来，消息处理的进度可以实时更新UI
-    private static WeakReference<AIReadingFragment> currentActiveFragment = new WeakReference<>(null);
     private static final String TAG = AIReadingFragment.class.getName();
     
     @Nullable
@@ -58,8 +54,6 @@ public class AIReadingFragment extends Fragment {
         // 初始化 StringBuilder
         summaryContent = new StringBuilder();
 
-        currentActiveFragment = new WeakReference<>(this);
-        
         return view;
     }
 
@@ -68,26 +62,21 @@ public class AIReadingFragment extends Fragment {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "AIReading Fragment onCreate called");
         // 只在第一次创建时初始化WebSocket
-        if (!isWebSocketInitialized) {
-            initWebSocket();
-            isWebSocketInitialized = true;
-        }
+//        if (!isWebSocketInitialized) {
+//            initWebSocket();
+//            isWebSocketInitialized = true;
+//        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
         initView(requireView());
-        currentActiveFragment = new WeakReference<>(this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        // 只有当前实例才清空
-        if (currentActiveFragment.get() == this) {
-            currentActiveFragment = new WeakReference<>(null);
-        }
     }
 
     private void initView(View view) {
@@ -131,41 +120,33 @@ public class AIReadingFragment extends Fragment {
             @Override
             public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
                 Log.d(TAG, "WebSocket received message: " + text);
-                AIReadingFragment fragment = currentActiveFragment.get();
-                if (fragment == null || !fragment.isAdded() || fragment.getView() == null) {
+                FragmentActivity activity = getActivity();
+
+                if (activity == null) {
                     return;
                 }
-                fragment.requireActivity().runOnUiThread(() -> {
+                activity.runOnUiThread(() -> {
                     try {
                         JSONObject message = new JSONObject(text);
-                        String type = message.getString("type");
-                        
+                        String type = message.optString("type");
+                        String data = message.optString("data");
                         switch(type) {
                             case "summaryProgress":
-                                String progressData = message.getString("data");
-                                fragment.progressLayout.setVisibility(View.VISIBLE);
-                                fragment.progressBar.setProgress((int)Double.parseDouble(progressData));
-                                fragment.progressPercentage.setText(String.format("%s%%", progressData));
+                                progressLayout.setVisibility(View.VISIBLE);
+                                progressBar.setProgress((int)Double.parseDouble(data));
+                                progressPercentage.setText(String.format("%s%%", data));
                                 break;
                             case "data":
-                                String contentData = message.getString("data");
-                                // 先设置内容
-                                fragment.summaryContent.append(contentData);
-                                fragment.aiSummaryText.setVisibility(View.VISIBLE);
-                                Markwon markwon = Markwon.create(fragment.requireContext());
-                                markwon.setMarkdown(fragment.aiSummaryText, fragment.summaryContent.toString());
-                                // 最后再隐藏进度条
-                                fragment.progressLayout.post(() -> {
-                                    fragment.progressLayout.setVisibility(View.GONE);
-                                    Log.d(TAG, "Progress layout visibility set to GONE");
-                                });
+                                summaryContent.append(data);
+                                aiSummaryText.setVisibility(View.VISIBLE);
+                                Markwon markwon = Markwon.create(requireContext());
+                                markwon.setMarkdown(aiSummaryText, summaryContent.toString());
+
+                                progressLayout.setVisibility(View.GONE);
                                 break;
                             case "finish":
-                                // finish消息没有data字段，直接处理
-                                // 总结完成后显示输入框
-                                fragment.progressLayout.setVisibility(View.GONE);
-                                fragment.inputLayout.setVisibility(View.VISIBLE);
-                                Log.d(TAG, "Summary finished, showing input layout");
+                                progressLayout.setVisibility(View.GONE);
+                                inputLayout.setVisibility(View.VISIBLE);
                                 break;
                         }
                     } catch (JSONException e) {

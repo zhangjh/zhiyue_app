@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <!-- 主内容区域 -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        android:layout_above="@id/input_layout">
 
         <!-- AI总结文本 -->
         <ScrollView
@@ -72,30 +71,44 @@
     </FrameLayout>
 
     <!-- 输入框部分 -->
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/input_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/white"
         android:elevation="4dp"
         android:visibility="gone"
-        android:padding="12dp">
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:layout_alignParentBottom="true">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/input_edit_text"
-            android:layout_width="match_parent"
+        <RelativeLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="80dp"
-            android:hint="输入问题..."
-            android:padding="12dp"
-            android:background="@android:color/white"/>
+            android:layout_weight="1">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/input_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:hint="输入问题..."
+                android:minHeight="48dp"
+                android:maxHeight="120dp"
+                android:padding="12dp"
+                android:scrollbars="vertical"
+                android:gravity="top|start"
+                android:inputType="textMultiLine"/>
+        </RelativeLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/send_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end|center_vertical"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="8dp"
+            android:minWidth="48dp"
             android:text="发送" />
-    </FrameLayout>
+    </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>
