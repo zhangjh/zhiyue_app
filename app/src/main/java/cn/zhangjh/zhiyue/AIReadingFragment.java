@@ -62,10 +62,10 @@ public class AIReadingFragment extends Fragment {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "AIReading Fragment onCreate called");
         // 只在第一次创建时初始化WebSocket
-//        if (!isWebSocketInitialized) {
-//            initWebSocket();
-//            isWebSocketInitialized = true;
-//        }
+        if (!isWebSocketInitialized) {
+            initWebSocket();
+            isWebSocketInitialized = true;
+        }
     }
 
     @Override
@@ -132,20 +132,24 @@ public class AIReadingFragment extends Fragment {
                         String data = message.optString("data");
                         switch(type) {
                             case "summaryProgress":
-                                progressLayout.setVisibility(View.VISIBLE);
+                                if(progressLayout.getVisibility() == View.GONE) {
+                                    progressLayout.setVisibility(View.VISIBLE);
+                                }
                                 progressBar.setProgress((int)Double.parseDouble(data));
                                 progressPercentage.setText(String.format("%s%%", data));
                                 break;
                             case "data":
+                                if(progressLayout.getVisibility() == View.VISIBLE) {
+                                    progressLayout.setVisibility(View.GONE);
+                                }
                                 summaryContent.append(data);
-                                aiSummaryText.setVisibility(View.VISIBLE);
+                                if(aiSummaryText.getVisibility() == View.GONE) {
+                                    aiSummaryText.setVisibility(View.VISIBLE);
+                                }
                                 Markwon markwon = Markwon.create(requireContext());
                                 markwon.setMarkdown(aiSummaryText, summaryContent.toString());
-
-                                progressLayout.setVisibility(View.GONE);
                                 break;
                             case "finish":
-                                progressLayout.setVisibility(View.GONE);
                                 inputLayout.setVisibility(View.VISIBLE);
                                 break;
                         }

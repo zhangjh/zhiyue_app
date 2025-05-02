@@ -4,71 +4,67 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 主内容区域 -->
-    <FrameLayout
+    <!-- AI总结文本 -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/input_layout">
-
-        <!-- AI总结文本 -->
-        <ScrollView
+        android:layout_above="@id/input_layout"
+        android:fillViewport="true">
+        <TextView
+            android:id="@+id/ai_summary_text"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true">
-            <TextView
-                android:id="@+id/ai_summary_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:textColor="@android:color/black"
-                android:textSize="14sp"
-                android:visibility="gone" />
-        </ScrollView>
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </ScrollView>
 
-        <!-- 进度条布局 -->
-        <LinearLayout
-            android:id="@+id/progress_layout"
+    <!-- 进度条布局 -->
+    <LinearLayout
+        android:id="@+id/progress_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:background="@android:color/white"
+        android:visibility="visible"
+        android:padding="24dp">
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:orientation="vertical"
-            android:background="@android:color/white"
-            android:padding="24dp">
+            android:text="正在生成AI总结..."
+            android:textSize="16sp"
+            android:textColor="@android:color/black"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="正在生成AI总结..."
-                android:textSize="16sp"
-                android:textColor="@android:color/black"/>
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progress_bar"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:trackCornerRadius="2dp"
+            app:indicatorColor="@android:color/holo_blue_light"/>
 
-            <com.google.android.material.progressindicator.LinearProgressIndicator
-                android:id="@+id/progress_bar"
-                android:layout_width="240dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:trackCornerRadius="2dp"
-                app:indicatorColor="@android:color/holo_blue_light"/>
+        <TextView
+            android:id="@+id/progress_percentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:text="0%" />
+    </LinearLayout>
 
-            <TextView
-                android:id="@+id/progress_percentage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="8dp"
-                android:textSize="14sp"
-                android:textColor="@android:color/black"
-                android:text="0%" />
-        </LinearLayout>
-
-        <!-- 聊天记录 -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/chat_recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"/>
-    </FrameLayout>
+    <!-- 聊天记录 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/chat_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/input_layout"
+        android:visibility="gone"/>
 
     <!-- 输入框部分 -->
     <LinearLayout
@@ -82,24 +78,19 @@
         android:padding="8dp"
         android:layout_alignParentBottom="true">
 
-        <RelativeLayout
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/input_edit_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/input_edit_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/white"
-                android:hint="输入问题..."
-                android:minHeight="48dp"
-                android:maxHeight="120dp"
-                android:padding="12dp"
-                android:scrollbars="vertical"
-                android:gravity="top|start"
-                android:inputType="textMultiLine"/>
-        </RelativeLayout>
+            android:layout_weight="1"
+            android:background="@android:color/white"
+            android:hint="输入问题..."
+            android:minHeight="48dp"
+            android:maxHeight="120dp"
+            android:padding="12dp"
+            android:scrollbars="vertical"
+            android:gravity="top|start"
+            android:inputType="textMultiLine"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/send_button"
