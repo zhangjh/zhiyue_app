@@ -5,8 +5,8 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>电子书阅读器</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
+    <script src="file:///android_asset/jszip.min.js"></script>
+    <script src="file:///android_asset/epub.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -316,7 +316,15 @@
     }
 
     function loadBook(bookUrl) {
+        console.log("bookUrl: " + bookUrl);
         book = ePub(bookUrl);
+        // 添加错误处理
+        book.on('openFailed', function(error) {
+            console.error("Failed to open book:", error);
+            if (window.Android) {
+                window.Android.onLoadError("加载电子书失败：" + error.message);
+            }
+        });
         rendition = book.renderTo("viewer", {
             flow: "paginated",
             width: "100%",

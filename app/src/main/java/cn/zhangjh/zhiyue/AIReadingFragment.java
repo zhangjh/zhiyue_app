@@ -5,6 +5,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +22,8 @@ import com.google.android.material.textfield.TextInputEditText;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
+
 import io.noties.markwon.Markwon;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -31,13 +35,17 @@ import okhttp3.WebSocketListener;
 public class AIReadingFragment extends Fragment {
     private TextView aiSummaryText;
     private RecyclerView chatRecyclerView;
+    private FrameLayout inputLayout;
     private TextInputEditText inputEditText;
     private MaterialButton sendButton;
-    private View progressLayout;
-    private TextView progressText;
+    private LinearLayout progressLayout;
+    private TextView progressPercentage;
     private LinearProgressIndicator progressBar;
-    private WebSocket webSocket;
-
+    private static WebSocket webSocket;
+    private static boolean isWebSocketInitialized = false;
+    private StringBuilder summaryContent = new StringBuilder();
+    // 保存Fragment的弱引用，保证切换Tab回来，消息处理的进度可以实时更新UI
+    private static WeakReference<AIReadingFragment> currentActiveFragment = new WeakReference<>(null);
     private static final String TAG = AIReadingFragment.class.getName();
     
     @Nullable
@@ -45,38 +53,61 @@ public class AIReadingFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_ai_reading, container, false);
         
-        // 初始化进度相关视图
-        progressLayout = view.findViewById(R.id.progress_layout);
-        progressText = view.findViewById(R.id.progress_text);
-        progressBar = view.findViewById(R.id.progress_bar);
+        initView(view);
         
-        // 初始化视图
-        aiSummaryText = view.findViewById(R.id.ai_summary_text);
-        chatRecyclerView = view.findViewById(R.id.chat_recycler_view);
-        inputEditText = view.findViewById(R.id.input_edit_text);
-        sendButton = view.findViewById(R.id.send_button);
+        // 初始化 StringBuilder
+        summaryContent = new StringBuilder();
+
+        currentActiveFragment = new WeakReference<>(this);
         
         return view;
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d(TAG, "AIReading Fragment onCreate called");
+        // 只在第一次创建时初始化WebSocket
+        if (!isWebSocketInitialized) {
+            initWebSocket();
+            isWebSocketInitialized = true;
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
-        // 在Fragment可见时初始化WebSocket
-        initWebSocket();
+        initView(requireView());
+        currentActiveFragment = new WeakReference<>(this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        // 在Fragment不可见时关闭WebSocket
-        if (webSocket != null) {
-            webSocket.close(1000, "Fragment paused");
-            webSocket = null;
+        // 只有当前实例才清空
+        if (currentActiveFragment.get() == this) {
+            currentActiveFragment = new WeakReference<>(null);
         }
     }
+
+    private void initView(View view) {
+        // 初始化进度相关视图
+        progressLayout = view.findViewById(R.id.progress_layout);
+        progressBar = view.findViewById(R.id.progress_bar);
+        progressPercentage = view.findViewById(R.id.progress_percentage);
+
+        aiSummaryText = view.findViewById(R.id.ai_summary_text);
+        chatRecyclerView = view.findViewById(R.id.chat_recycler_view);
+        inputLayout = view.findViewById(R.id.input_layout);
+        inputEditText = view.findViewById(R.id.input_edit_text);
+        sendButton = view.findViewById(R.id.send_button);
+    }
+
     private void initWebSocket() {
-        String fileId = "三体 (刘慈欣) (Z-Library).epub";
+        if (webSocket != null) {
+            return;
+        }
+        String fileId = "一句顶一万句 (刘震云) (Z-Library).epub";
         String userId = "123456";
         String wsUrl = String.format("wss://tx.zhangjh.cn/socket/summary?userId=%s", userId);
         
@@ -100,43 +131,47 @@ public class AIReadingFragment extends Fragment {
             @Override
             public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
                 Log.d(TAG, "WebSocket received message: " + text);
-                if(getActivity() == null) return;
-                
-                getActivity().runOnUiThread(() -> {
+                AIReadingFragment fragment = currentActiveFragment.get();
+                if (fragment == null || !fragment.isAdded() || fragment.getView() == null) {
+                    return;
+                }
+                fragment.requireActivity().runOnUiThread(() -> {
                     try {
                         JSONObject message = new JSONObject(text);
                         String type = message.getString("type");
-                        String data = message.getString("data");
                         
                         switch(type) {
                             case "summaryProgress":
-                                double progress = Double.parseDouble(data);
-                                progressBar.setProgress((int)progress);
-                                progressText.setText(String.format("正在总结中，请稍等... %.1f%%", progress));
+                                String progressData = message.getString("data");
+                                fragment.progressLayout.setVisibility(View.VISIBLE);
+                                fragment.progressBar.setProgress((int)Double.parseDouble(progressData));
+                                fragment.progressPercentage.setText(String.format("%s%%", progressData));
                                 break;
-                            case "contentSummary":
-                                progressLayout.setVisibility(View.GONE);
-                                Markwon markwon = Markwon.create(requireContext());
-                                markwon.setMarkdown(aiSummaryText, data);
+                            case "data":
+                                String contentData = message.getString("data");
+                                // 先设置内容
+                                fragment.summaryContent.append(contentData);
+                                fragment.aiSummaryText.setVisibility(View.VISIBLE);
+                                Markwon markwon = Markwon.create(fragment.requireContext());
+                                markwon.setMarkdown(fragment.aiSummaryText, fragment.summaryContent.toString());
+                                // 最后再隐藏进度条
+                                fragment.progressLayout.post(() -> {
+                                    fragment.progressLayout.setVisibility(View.GONE);
+                                    Log.d(TAG, "Progress layout visibility set to GONE");
+                                });
                                 break;
                             case "finish":
-                                progressLayout.setVisibility(View.GONE);
+                                // finish消息没有data字段，直接处理
+                                // 总结完成后显示输入框
+                                fragment.progressLayout.setVisibility(View.GONE);
+                                fragment.inputLayout.setVisibility(View.VISIBLE);
+                                Log.d(TAG, "Summary finished, showing input layout");
                                 break;
                         }
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "JSON解析错误: " + e.getMessage());
                     }
                 });
-            }
-            
-            @Override
-            public void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
-                Log.d(TAG, "WebSocket closing: code=" + code + ", reason=" + reason);
-            }
-            
-            @Override
-            public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
-                Log.d(TAG, "WebSocket closed: code=" + code + ", reason=" + reason);
             }
             
             @Override
@@ -152,12 +187,19 @@ public class AIReadingFragment extends Fragment {
             }
         });
     }
-    
+
     @Override
     public void onDestroyView() {
-        if (webSocket != null) {
-            webSocket.close(1000, "Fragment destroyed");  // 1000 表示正常关闭
-        }
+        summaryContent = new StringBuilder(); // 清空累积的内容
         super.onDestroyView();
+    }
+
+    // 添加一个在应用退出时调用的方法
+    public static void closeWebSocket() {
+        if (webSocket != null) {
+            webSocket.close(1000, "Application closing");
+            webSocket = null;
+            isWebSocketInitialized = false;
+        }
     }
 }

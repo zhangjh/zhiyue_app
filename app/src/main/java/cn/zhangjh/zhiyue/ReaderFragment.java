@@ -25,9 +25,13 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
+
+import java.util.Objects;
 
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
@@ -44,7 +48,7 @@ public class ReaderFragment extends Fragment {
     private static final String TAG = ReaderFragment.class.getName();
     private String bookUrl;
     private String bookId;
-    private WebView webView;
+    private WebView webViewReader;
     private boolean isNavigationVisible = false;
     private int currentProgress = 0;
     private View loadingView; // 新增加载视图
@@ -163,8 +167,8 @@ public class ReaderFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_reader, container, false);
 
         // 在 onCreateView 中替换原有配置代码：
-        webView = view.findViewById(R.id.webview_reader);
-        configureWebView(webView); // 调用统一配置方法
+        webViewReader = view.findViewById(R.id.webview_reader);
+        configureWebView(webViewReader); // 调用统一配置方法
         mindMapWebView = view.findViewById(R.id.mind_map_webview);
         configureWebView(mindMapWebView); // 复用配置
         loadingView = view.findViewById(R.id.loading_view); // 获取加载视图
@@ -172,7 +176,7 @@ public class ReaderFragment extends Fragment {
         showLoading("正在加载阅读器...");
 
         // 配置WebView
-        WebSettings webSettings = webView.getSettings();
+        WebSettings webSettings = webViewReader.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setAllowFileAccess(true);
@@ -181,18 +185,18 @@ public class ReaderFragment extends Fragment {
         webSettings.setAllowUniversalAccessFromFileURLs(true);
 
         // 添加以下配置阻止系统菜单
-        webView.setLongClickable(false);  // 禁用系统长按菜单
-        webView.setOnLongClickListener(null);  // 移除长按监听
-        webView.setOnLongClickListener(v -> {
+        webViewReader.setLongClickable(false);  // 禁用系统长按菜单
+        webViewReader.setOnLongClickListener(null);  // 移除长按监听
+        webViewReader.setOnLongClickListener(v -> {
             // 允许选择但阻止系统菜单
             return false; 
         });
 
         // 添加JavaScript接口
-        webView.addJavascriptInterface(new WebAppInterface(), "Android");
+        webViewReader.addJavascriptInterface(new WebAppInterface(), "Android");
 
         // 设置WebViewClient
-        webView.setWebViewClient(new WebViewClient() {
+        webViewReader.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return false;
@@ -209,11 +213,11 @@ public class ReaderFragment extends Fragment {
                 super.onPageFinished(view, url);
                 if (bookUrl != null) {
                     showLoading("正在加载电子书...");
-                    webView.evaluateJavascript("loadBook('" + bookUrl + "')", null);
+                    webViewReader.evaluateJavascript("loadBook('" + bookUrl + "')", null);
                 }
             }
         });
-        webView.setWebChromeClient(new WebChromeClient() {
+        webViewReader.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
                 Log.d(TAG, "WebView Console: " + consoleMessage.message());
@@ -223,7 +227,7 @@ public class ReaderFragment extends Fragment {
 
         // 加载epub.js和电子书
         String readerHtml = "file:///android_asset/reader.html";
-        webView.loadUrl(readerHtml);
+        webViewReader.loadUrl(readerHtml);
 
         View aiReadingLayout = view.findViewById(R.id.ai_reading_layout);
         View mindMapLayout = view.findViewById(R.id.mind_map_layout);
@@ -235,26 +239,46 @@ public class ReaderFragment extends Fragment {
             public void onTabSelected(TabLayout.Tab tab) {
                 switch (tab.getPosition()) {
                     case 0: // 阅读器
-                        webView.setVisibility(View.VISIBLE);
+                        webViewReader.setVisibility(View.VISIBLE);
                         aiReadingLayout.setVisibility(View.GONE);
                         mindMapLayout.setVisibility(View.GONE);
+                        // 隐藏AIReadingFragment（如果存在）
+                        if (getChildFragmentManager().findFragmentByTag("AIReadingFragment") != null) {
+                            getChildFragmentManager()
+                                .beginTransaction()
+                                .hide(Objects.requireNonNull(getChildFragmentManager().findFragmentByTag("AIReadingFragment")))
+                                .commit();
+                        }
                         break;
                     case 1: // AI伴读
-                        webView.setVisibility(View.GONE);
-                        aiReadingLayout.setVisibility(View.GONE);  // 先隐藏include的布局
+                        webViewReader.setVisibility(View.GONE);
+                        aiReadingLayout.setVisibility(View.VISIBLE);
                         mindMapLayout.setVisibility(View.GONE);
-                        // 使用Fragment替换
-                        getChildFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.ai_reading_layout, new AIReadingFragment())
-                            .commit();
+                        // 复用Fragment实例
+                        FragmentManager fm = getChildFragmentManager();
+                        Fragment fragment = fm.findFragmentByTag("AIReadingFragment");
+                        FragmentTransaction ft = fm.beginTransaction();
+                        if (fragment == null) {
+                            fragment = new AIReadingFragment();
+                            ft.add(R.id.ai_reading_layout, fragment, "AIReadingFragment");
+                        } else {
+                            ft.show(fragment);
+                        }
+                        ft.commit();
                         break;
                     case 2: // 思维导图
                         // 初始化思维导图
                         initMindMap(view);
-                        webView.setVisibility(View.GONE);
+                        webViewReader.setVisibility(View.GONE);
                         aiReadingLayout.setVisibility(View.GONE);
                         mindMapLayout.setVisibility(View.VISIBLE);
+                        // 隐藏AIReadingFragment（如果存在）
+                        if (getChildFragmentManager().findFragmentByTag("AIReadingFragment") != null) {
+                            getChildFragmentManager()
+                                .beginTransaction()
+                                .hide(Objects.requireNonNull(getChildFragmentManager().findFragmentByTag("AIReadingFragment")))
+                                .commit();
+                        }
                         break;
                 }
             }
@@ -286,9 +310,9 @@ public class ReaderFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        if (webView != null) {
-            webView.destroy();
-            webView = null; // 防止内存泄漏
+        if (webViewReader != null) {
+            webViewReader.destroy();
+            webViewReader = null; // 防止内存泄漏
         }
         if (mindMapWebView != null) {
             mindMapWebView.destroy();
@@ -332,6 +356,14 @@ public class ReaderFragment extends Fragment {
         }
     
         @JavascriptInterface
+        public void onLoadError(String error) {
+            requireActivity().runOnUiThread(() -> {
+                Toast.makeText(getActivity(), error, Toast.LENGTH_LONG).show();
+                // 隐藏加载提示
+                hideLoading();
+            });
+        }
+        @JavascriptInterface
         public void saveAnnotation(String cfiRange, String type, String color, String text) {
             if (getActivity() != null) {
                 Annotation annotation = new Annotation(bookId, cfiRange, type, color, text);
@@ -366,7 +398,7 @@ public class ReaderFragment extends Fragment {
 			                String annotations = new Gson().toJson(response.body());
                             // mock data
 //			                String annotations = new Gson().toJson("[{\"bookId\":\"1\",\"cfiRange\":\"epubcfi(/6/8!/4/10,/1:0,/1:36)\",\"color\":\"rgba(255,255,0,0.3)\",\"text\":\"在《三体》电子书与读者见面之际，再次感谢广大读者的关注和支持，谢谢大家！\",\"timestamp\":1745821203806,\"type\":\"highlight\"}]");
-			                webView.post(() -> webView.evaluateJavascript(
+			                webViewReader.post(() -> webViewReader.evaluateJavascript(
 					                "window.loadAnnotations(" + annotations + ")",
 					                null
 			                ));

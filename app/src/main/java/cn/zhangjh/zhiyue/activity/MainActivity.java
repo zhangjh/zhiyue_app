@@ -2,7 +2,6 @@ package cn.zhangjh.zhiyue.activity;
 
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.navigation.NavController;
@@ -11,8 +10,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import java.util.Objects;
-
+import cn.zhangjh.zhiyue.AIReadingFragment;
 import cn.zhangjh.zhiyue.R;
 
 public class MainActivity extends AppCompatActivity {
@@ -86,5 +84,11 @@ public class MainActivity extends AppCompatActivity {
     public void navigateToSearch() {
         // 切换到找书页面
         bottomNavigationView.setSelectedItemId(R.id.booksFragment);
+    }
+
+    @Override
+    protected void onDestroy() {
+        AIReadingFragment.closeWebSocket();
+        super.onDestroy();
     }
 }
