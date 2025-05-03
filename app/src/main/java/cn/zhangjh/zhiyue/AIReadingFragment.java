@@ -132,24 +132,22 @@ public class AIReadingFragment extends Fragment {
                         String data = message.optString("data");
                         switch(type) {
                             case "summaryProgress":
-                                if(progressLayout.getVisibility() == View.GONE) {
-                                    progressLayout.setVisibility(View.VISIBLE);
-                                }
+                                progressLayout.setVisibility(View.VISIBLE);
                                 progressBar.setProgress((int)Double.parseDouble(data));
                                 progressPercentage.setText(String.format("%s%%", data));
                                 break;
                             case "data":
-                                if(progressLayout.getVisibility() == View.VISIBLE) {
-                                    progressLayout.setVisibility(View.GONE);
-                                }
+                                // 强制设置进度条隐藏
+                                progressLayout.setVisibility(View.GONE);
+                                // 确保文本视图可见
+                                aiSummaryText.setVisibility(View.VISIBLE);
                                 summaryContent.append(data);
-                                if(aiSummaryText.getVisibility() == View.GONE) {
-                                    aiSummaryText.setVisibility(View.VISIBLE);
-                                }
                                 Markwon markwon = Markwon.create(requireContext());
                                 markwon.setMarkdown(aiSummaryText, summaryContent.toString());
                                 break;
                             case "finish":
+                                // 确保进度条隐藏
+                                progressLayout.setVisibility(View.GONE);
                                 inputLayout.setVisibility(View.VISIBLE);
                                 break;
                         }
