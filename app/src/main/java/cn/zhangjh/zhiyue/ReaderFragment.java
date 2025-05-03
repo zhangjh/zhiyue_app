@@ -31,11 +31,8 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
 
-import java.util.Objects;
-
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
-import cn.zhangjh.zhiyue.mindmap.MindMapManager;
 import cn.zhangjh.zhiyue.model.Annotation;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
@@ -52,11 +49,6 @@ public class ReaderFragment extends Fragment {
     private boolean isNavigationVisible = false;
     private int currentProgress = 0;
     private View loadingView; // 新增加载视图
-    // 将变量声明移到类开始处
-    private WebView mindMapWebView;
-    private View mindMapLoadingProgress;
-    private TextView mindMapErrorText;
-    private MindMapManager mindMapManager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -166,12 +158,10 @@ public class ReaderFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_reader, container, false);
 
-        // 在 onCreateView 中替换原有配置代码：
+        // 删除思维导图相关初始化
         webViewReader = view.findViewById(R.id.webview_reader);
-        configureWebView(webViewReader); // 调用统一配置方法
-        mindMapWebView = view.findViewById(R.id.mind_map_webview);
-        configureWebView(mindMapWebView); // 复用配置
-        loadingView = view.findViewById(R.id.loading_view); // 获取加载视图
+        configureWebView(webViewReader);
+        loadingView = view.findViewById(R.id.loading_view);
 
         showLoading("正在加载阅读器...");
 
@@ -230,7 +220,6 @@ public class ReaderFragment extends Fragment {
         webViewReader.loadUrl(readerHtml);
 
         View aiReadingLayout = view.findViewById(R.id.ai_reading_layout);
-        View mindMapLayout = view.findViewById(R.id.mind_map_layout);
 
         // 初始化TabLayout
         TabLayout tabLayout = view.findViewById(R.id.tab_layout);
@@ -241,19 +230,12 @@ public class ReaderFragment extends Fragment {
                     case 0: // 阅读器
                         webViewReader.setVisibility(View.VISIBLE);
                         aiReadingLayout.setVisibility(View.GONE);
-                        mindMapLayout.setVisibility(View.GONE);
-                        // 隐藏AIReadingFragment（如果存在）
-                        if (getChildFragmentManager().findFragmentByTag("AIReadingFragment") != null) {
-                            getChildFragmentManager()
-                                .beginTransaction()
-                                .hide(Objects.requireNonNull(getChildFragmentManager().findFragmentByTag("AIReadingFragment")))
-                                .commit();
-                        }
+                        tabLayout.setVisibility(View.VISIBLE); // 显示一级Tab
                         break;
                     case 1: // AI伴读
                         webViewReader.setVisibility(View.GONE);
                         aiReadingLayout.setVisibility(View.VISIBLE);
-                        mindMapLayout.setVisibility(View.GONE);
+                        tabLayout.setVisibility(View.GONE); // 隐藏一级Tab
                         // 复用Fragment实例
                         FragmentManager fm = getChildFragmentManager();
                         Fragment fragment = fm.findFragmentByTag("AIReadingFragment");
@@ -265,20 +247,6 @@ public class ReaderFragment extends Fragment {
                             ft.show(fragment);
                         }
                         ft.commit();
-                        break;
-                    case 2: // 思维导图
-                        // 初始化思维导图
-                        initMindMap(view);
-                        webViewReader.setVisibility(View.GONE);
-                        aiReadingLayout.setVisibility(View.GONE);
-                        mindMapLayout.setVisibility(View.VISIBLE);
-                        // 隐藏AIReadingFragment（如果存在）
-                        if (getChildFragmentManager().findFragmentByTag("AIReadingFragment") != null) {
-                            getChildFragmentManager()
-                                .beginTransaction()
-                                .hide(Objects.requireNonNull(getChildFragmentManager().findFragmentByTag("AIReadingFragment")))
-                                .commit();
-                        }
                         break;
                 }
             }
@@ -312,14 +280,9 @@ public class ReaderFragment extends Fragment {
     public void onDestroyView() {
         if (webViewReader != null) {
             webViewReader.destroy();
-            webViewReader = null; // 防止内存泄漏
-        }
-        if (mindMapWebView != null) {
-            mindMapWebView.destroy();
-            mindMapWebView = null;
+            webViewReader = null;
         }
         super.onDestroyView();
-        // 当阅读器页面销毁时，显示底部导航栏
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).showBottomNavigation();
         }
@@ -411,107 +374,6 @@ public class ReaderFragment extends Fragment {
 	                }
                 });
             }
-        }
-    }
-
-
-    // 重命名思维导图相关的方法，避免冲突
-    private void showMindMapLoading() {
-        if (mindMapLoadingProgress != null) {
-            mindMapLoadingProgress.setVisibility(View.VISIBLE);
-            if (mindMapErrorText != null) {
-                mindMapErrorText.setVisibility(View.GONE);
-            }
-        }
-    }
-
-    private void hideMindMapLoading() {
-        if (mindMapLoadingProgress != null) {
-            mindMapLoadingProgress.setVisibility(View.GONE);
-        }
-    }
-
-    private void showMindMapError() {
-        if (mindMapLoadingProgress != null) {
-            mindMapLoadingProgress.setVisibility(View.GONE);
-        }
-        if (mindMapErrorText != null) {
-            mindMapErrorText.setVisibility(View.VISIBLE);
-        }
-    }
-
-    @SuppressLint("SetJavaScriptEnabled")
-    private void initMindMap(View view) {
-        mindMapWebView = view.findViewById(R.id.mind_map_webview);
-        mindMapLoadingProgress = view.findViewById(R.id.loading_progress);
-        mindMapErrorText = view.findViewById(R.id.error_text);
-
-        WebSettings webSettings = mindMapWebView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        
-        // 添加调试支持
-        mindMapWebView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                Log.d(TAG, "MindMap Console: " + consoleMessage.message());
-                return true;
-            }
-        });
-
-        // 允许加载网络资源
-        webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-
-        // 修正回调方法
-        mindMapManager = new MindMapManager(mindMapWebView, () -> {
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(this::hideMindMapLoading);
-            }
-        });
-
-        mindMapWebView.addJavascriptInterface(mindMapManager.new JsInterface(), "Android");
-        mindMapWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                showMindMapLoading();
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                loadMindMapData();
-            }
-
-            @Override
-            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                super.onReceivedError(view, errorCode, description, failingUrl);
-                showMindMapError();
-            }
-        });
-
-        showMindMapLoading();
-        mindMapWebView.loadUrl("file:///android_asset/mindmap.html");
-    }
-
-    private void loadMindMapData() {
-        try {
-            String testMarkdown = "# 三体\n" +
-                    "## 第一部：地球往事\n" +
-                    "### 文化大革命\n" +
-                    "### 红岸基地\n" +
-                    "### 三体文明\n" +
-                    "## 第二部：黑暗森林\n" +
-                    "### 面壁计划\n" +
-                    "### 黑暗森林理论\n" +
-                    "## 第三部：死神永生\n" +
-                    "### 二向箔\n" +
-                    "### 降维打击";
-            mindMapManager.renderMarkdown(testMarkdown);
-        } catch (Exception e) {
-            Log.e(TAG, "Error loading mind map data", e);
-            showMindMapError();
         }
     }
 }

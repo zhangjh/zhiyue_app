@@ -10,8 +10,8 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import cn.zhangjh.zhiyue.AIReadingFragment;
 import cn.zhangjh.zhiyue.R;
+import cn.zhangjh.zhiyue.fragment.AISummaryFragment;
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        AIReadingFragment.closeWebSocket();
+        AISummaryFragment.closeWebSocket();
         super.onDestroy();
     }
 }

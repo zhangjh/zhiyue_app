@@ -5,22 +5,18 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- 二级Tab导航 -->
     <com.google.android.material.tabs.TabLayout
-        android:id="@+id/ai_tab_layout"
+        android:id="@+id/tab_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white"
         app:tabTextColor="@color/gray"
         app:tabSelectedTextColor="@color/primary"
         app:tabIndicatorColor="@color/primary"
-        app:tabMode="fixed">
+        app:tabMode="fixed" />
 
-    </com.google.android.material.tabs.TabLayout>
-
-    <!-- ViewPager2用于切换不同的AI功能页面 -->
     <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/ai_view_pager"
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
