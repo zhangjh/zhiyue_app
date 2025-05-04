@@ -179,7 +179,7 @@ public class ReaderFragment extends Fragment {
         webViewReader.setOnLongClickListener(null);  // 移除长按监听
         webViewReader.setOnLongClickListener(v -> {
             // 允许选择但阻止系统菜单
-            return false; 
+            return false;
         });
 
         // 添加JavaScript接口
@@ -266,12 +266,12 @@ public class ReaderFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        
+
         // 设置全屏模式
         if (getActivity() != null) {
             getActivity().getWindow().setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN
             );
         }
     }
@@ -301,6 +301,7 @@ public class ReaderFragment extends Fragment {
                 });
             }
         }
+
         @JavascriptInterface
         public void onProgressUpdate(int progress) {
             // if (getActivity() != null) {
@@ -317,7 +318,7 @@ public class ReaderFragment extends Fragment {
         public void onBookLoaded() {
             hideLoading();
         }
-    
+
         @JavascriptInterface
         public void onLoadError(String error) {
             requireActivity().runOnUiThread(() -> {
@@ -326,6 +327,7 @@ public class ReaderFragment extends Fragment {
                 hideLoading();
             });
         }
+
         @JavascriptInterface
         public void saveAnnotation(String cfiRange, String type, String color, String text) {
             if (getActivity() != null) {
@@ -333,45 +335,45 @@ public class ReaderFragment extends Fragment {
                 Log.d(TAG, "Saving annotation: " + new Gson().toJson(annotation));
                 // 调用API保存标注
                 ApiClient.getBookService().saveAnnotation(annotation).enqueue(new Callback<>() {
-	                @Override
-	                public void onResponse(@NonNull Call<BizResponse> call, @NonNull retrofit2.Response<BizResponse> response) {
-		                if (!response.isSuccessful()) {
-			                showError("保存标注失败");
-		                }
-	                }
+                    @Override
+                    public void onResponse(@NonNull Call<BizResponse> call, @NonNull retrofit2.Response<BizResponse> response) {
+                        if (!response.isSuccessful()) {
+                            showError("保存标注失败");
+                        }
+                    }
 
-	                @Override
-	                public void onFailure(@NonNull Call<BizResponse> call, @NonNull Throwable t) {
-		                showError("保存标注失败: " + t.getMessage());
-	                }
+                    @Override
+                    public void onFailure(@NonNull Call<BizResponse> call, @NonNull Throwable t) {
+                        showError("保存标注失败: " + t.getMessage());
+                    }
                 });
             }
         }
-        
+
         @JavascriptInterface
         public void loadAnnotations() {
             Log.d(TAG, "loadAnnotations called, bookId: " + bookId);
             if (getActivity() != null) {
                 // 从服务器获取标注
                 ApiClient.getBookService().getAnnotations(bookId).enqueue(new Callback<>() {
-	                @Override
-	                public void onResponse(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Response<BizListResponse<Annotation>> response) {
-		                if (response.isSuccessful() && response.body() != null) {
-			                // 将标注传递给前端
-			                String annotations = new Gson().toJson(response.body());
+                    @Override
+                    public void onResponse(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Response<BizListResponse<Annotation>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            // 将标注传递给前端
+                            String annotations = new Gson().toJson(response.body());
                             // mock data
 //			                String annotations = new Gson().toJson("[{\"bookId\":\"1\",\"cfiRange\":\"epubcfi(/6/8!/4/10,/1:0,/1:36)\",\"color\":\"rgba(255,255,0,0.3)\",\"text\":\"在《三体》电子书与读者见面之际，再次感谢广大读者的关注和支持，谢谢大家！\",\"timestamp\":1745821203806,\"type\":\"highlight\"}]");
-			                webViewReader.post(() -> webViewReader.evaluateJavascript(
-					                "window.loadAnnotations(" + annotations + ")",
-					                null
-			                ));
-		                }
-	                }
+                            webViewReader.post(() -> webViewReader.evaluateJavascript(
+                                    "window.loadAnnotations(" + annotations + ")",
+                                    null
+                            ));
+                        }
+                    }
 
-	                @Override
-	                public void onFailure(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Throwable t) {
-		                showError("加载标注失败: " + t.getMessage());
-	                }
+                    @Override
+                    public void onFailure(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Throwable t) {
+                        showError("加载标注失败: " + t.getMessage());
+                    }
                 });
             }
         }

@@ -12,17 +12,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import cn.zhangjh.zhiyue.R;
+import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
 import io.noties.markwon.Markwon;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
-import cn.zhangjh.zhiyue.R;
 
 public class AISummaryFragment extends Fragment {
     private static final String TAG = AISummaryFragment.class.getName();
@@ -33,6 +35,8 @@ public class AISummaryFragment extends Fragment {
     private static WebSocket webSocket;
     private static boolean isWebSocketInitialized = false;
     private StringBuilder summaryContent = new StringBuilder();
+    private String title;
+    private String author;
 
     @Nullable
     @Override
@@ -90,6 +94,12 @@ public class AISummaryFragment extends Fragment {
                         String type = message.optString("type");
                         String data = message.optString("data");
                         switch(type) {
+                            case "title":
+                                title = data;
+                                break;
+                            case "author":
+                                author = data;
+                                break;
                             case "summaryProgress":
                                 progressLayout.setVisibility(View.VISIBLE);
                                 progressBar.setProgress((int)Double.parseDouble(data));
@@ -104,6 +114,7 @@ public class AISummaryFragment extends Fragment {
                                 break;
                             case "finish":
                                 progressLayout.setVisibility(View.GONE);
+                                updateBookInfo(title, author, summaryContent.toString());
                                 break;
                         }
                     } catch (JSONException e) {
@@ -139,4 +150,17 @@ public class AISummaryFragment extends Fragment {
             isWebSocketInitialized = false;
         }
     }
+
+    private BookInfoViewModel viewModel;
+    
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
+    }
+
+    private void updateBookInfo(String title, String author, String summary) {
+        viewModel.setBookInfo(title, author, summary);
+    }
+
 }
