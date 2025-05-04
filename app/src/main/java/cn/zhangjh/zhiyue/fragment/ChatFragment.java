@@ -1,5 +1,6 @@
 package cn.zhangjh.zhiyue.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -7,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -140,9 +142,20 @@ public class ChatFragment extends Fragment {
     private final List<ChatContext> chatContexts = new ArrayList<>();
 
     private void sendQuestion(String question) {
+        // 隐藏软键盘
+        View view = requireActivity().getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm =
+                    (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+
         // 添加用户问题到消息列表
         chatMessages.add(new ChatMsg(question, ChatMsg.TYPE_USER));
         chatMessages.add(new ChatMsg("", ChatMsg.TYPE_AI));
+        // 添加用户问题到上下文
+        chatContexts.add(new ChatContext("user", question));
+        
         chatAdapter.notifyItemRangeInserted(chatMessages.size() - 2, 2);
         chatRecyclerView.scrollToPosition(chatMessages.size() - 1);
 
@@ -192,7 +205,7 @@ public class ChatFragment extends Fragment {
                 chatAdapter.notifyItemChanged(chatMessages.size() - 1);
                 chatRecyclerView.scrollToPosition(chatMessages.size() - 1);
                 
-                // 当AI回复完成时，将回复添加到上下文zhe
+                // 当AI回复完成时，将回复添加到上下文
                 if (isComplete) {
                     chatContexts.add(new ChatContext("assistant", content));
                 }
