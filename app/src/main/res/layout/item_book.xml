@@ -138,7 +138,7 @@
                 android:layout_margin="16dp"
                 android:paddingHorizontal="24dp"
                 android:text="去阅读"
-                android:textColor="@android:color/white"
+                android:textColor="@color/text_primary"
                 app:cornerRadius="24dp" />
 
         </LinearLayout>

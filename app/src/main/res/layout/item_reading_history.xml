@@ -31,7 +31,7 @@
                     android:id="@+id/bookTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@android:color/black"
+                    android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
         
@@ -40,7 +40,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:textColor="@android:color/darker_gray"
+                    android:textColor="@color/text_primary"
                     android:textSize="14sp" />
             </LinearLayout>
         
@@ -82,7 +82,7 @@
                 android:id="@+id/startReadingTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/darker_gray"
+                android:textColor="@color/text_primary"
                 android:textSize="12sp" />
 
             <TextView
@@ -90,7 +90,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="@android:color/darker_gray"
+                android:textColor="@color/text_primary"
                 android:textSize="12sp" />
         </LinearLayout>
 

@@ -13,7 +13,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
-            android:textColor="@android:color/black"
+            android:textColor="@color/text_primary"
             android:textSize="14sp" />
     </ScrollView>
 
@@ -34,7 +34,7 @@
             android:layout_gravity="center"
             android:text="正在生成AI总结..."
             android:textSize="16sp"
-            android:textColor="@android:color/black"/>
+            android:textColor="@color/text_primary"/>
 
         <com.google.android.material.progressindicator.LinearProgressIndicator
             android:id="@+id/progress_bar"
@@ -51,7 +51,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="8dp"
             android:textSize="14sp"
-            android:textColor="@android:color/black"
+            android:textColor="@color/text_primary"
             android:text="0%" />
     </LinearLayout>
 </RelativeLayout>

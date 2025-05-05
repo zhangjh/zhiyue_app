@@ -35,8 +35,8 @@ public class AISummaryFragment extends Fragment {
     private static WebSocket webSocket;
     private static boolean isWebSocketInitialized = false;
     private StringBuilder summaryContent = new StringBuilder();
-    private String title;
-    private String author;
+    private String title, author;
+    private final StringBuilder summary = new StringBuilder();
 
     @Nullable
     @Override
@@ -74,7 +74,7 @@ public class AISummaryFragment extends Fragment {
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
-                Log.d(TAG, "WebSocket connection opened");
+                Log.d(TAG, "SummaryWebSocket connection opened");
                 String message = String.format("{\"fileId\": \"%s\", \"userId\": \"%s\"}", fileId, userId);
                 webSocket.send(message);
                 Log.d(TAG, "Sent message: " + message);
@@ -82,7 +82,7 @@ public class AISummaryFragment extends Fragment {
 
             @Override
             public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
-                Log.d(TAG, "WebSocket received message: " + text);
+                Log.d(TAG, "SummaryWs received message: " + text);
                 FragmentActivity activity = getActivity();
 
                 if (activity == null) {
@@ -100,6 +100,9 @@ public class AISummaryFragment extends Fragment {
                             case "author":
                                 author = data;
                                 break;
+                            case "contentSummary":
+                                summary.append(data);
+                                break;
                             case "summaryProgress":
                                 progressLayout.setVisibility(View.VISIBLE);
                                 progressBar.setProgress((int)Double.parseDouble(data));
@@ -114,7 +117,7 @@ public class AISummaryFragment extends Fragment {
                                 break;
                             case "finish":
                                 progressLayout.setVisibility(View.GONE);
-                                updateBookInfo(title, author, summaryContent.toString());
+                                updateBookInfo(title, author, summary.toString());
                                 break;
                         }
                     } catch (JSONException e) {
@@ -126,7 +129,7 @@ public class AISummaryFragment extends Fragment {
             @Override
             public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, 
                     @Nullable Response response) {
-                Log.e(TAG, "WebSocket connection failed", t);
+                Log.e(TAG, "SummaryWs connection failed", t);
                 if(getActivity() == null) return;
                 
                 getActivity().runOnUiThread(() -> {

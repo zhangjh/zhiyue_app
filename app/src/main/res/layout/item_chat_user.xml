@@ -12,6 +12,6 @@
         android:background="@drawable/bg_chat_user"
         android:maxWidth="280dp"
         android:padding="12dp"
-        android:textColor="@android:color/white"
+        android:textColor="@color/text_primary"
         android:textSize="14sp" />
 </LinearLayout>

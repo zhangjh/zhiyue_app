@@ -15,6 +15,7 @@ import java.util.Objects;
 
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.fragment.AISummaryFragment;
+import cn.zhangjh.zhiyue.fragment.MindMapFragment;
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
@@ -49,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
                  return NavigationUI.onNavDestinationSelected(item, navController);
              });
         }
-//        navigateToReader("1", "2");
+        // for test only
+        navigateToReader("1", "2");
     }
 
     // 隐藏底部导航栏
@@ -91,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         AISummaryFragment.closeWebSocket();
+        MindMapFragment.closeWebSocket();
         super.onDestroy();
     }
 }

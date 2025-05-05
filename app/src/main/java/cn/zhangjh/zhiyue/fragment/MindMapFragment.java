@@ -18,9 +18,19 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.mindmap.MindMapManager;
+import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 
 public class MindMapFragment extends Fragment {
     private static final String TAG = MindMapFragment.class.getName();
@@ -28,6 +38,11 @@ public class MindMapFragment extends Fragment {
     private ProgressBar loadingProgress;
     private TextView errorText;
     private MindMapManager mindMapManager;
+    private String title, author, summary;
+
+    private static WebSocket webSocket;
+    private static boolean isWebSocketInitialized = false;
+    private final StringBuilder markdownData = new StringBuilder();
 
     @SuppressLint("SetJavaScriptEnabled")
     @Nullable
@@ -39,9 +54,74 @@ public class MindMapFragment extends Fragment {
         loadingProgress = view.findViewById(R.id.loading_progress);
         errorText = view.findViewById(R.id.error_text);
 
+        if(!isWebSocketInitialized) {
+            initWebSocket();
+            isWebSocketInitialized = true;
+        }
         initMindMap();
-        
         return view;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 观察数据变化
+        BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
+        viewModel.getTitle().observe(this, title -> this.title = title);
+        viewModel.getAuthor().observe(this, author -> this.author = author);
+        viewModel.getSummary().observe(this, summary -> this.summary = summary);
+    }
+
+    private void initWebSocket() {
+        if (webSocket != null) {
+            return;
+        }
+        String wsUrl = "wss://tx.zhangjh.cn/socket/mindmap?userId=123456";
+
+        Log.d(TAG, "Connecting to MindMapSocket: " + wsUrl);
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+            .url(wsUrl)
+            .build();
+
+        webSocket = client.newWebSocket(request, new WebSocketListener() {
+            @Override
+            public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
+                Log.d(TAG, "MindMapWebSocket connection opened");
+            }
+
+            @Override
+            public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
+                Log.d(TAG, "MindMapWs received message: " + text);
+                try {
+                    JSONObject message = new JSONObject(text);
+                    String type = message.getString("type");
+                    
+                    if ("data".equals(type)) {
+                        String data = message.getString("data");
+                        markdownData.append(data);
+                    } else if ("finish".equals(type)) {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> mindMapManager.renderMarkdown(markdownData.toString()));
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.e(TAG, "MindMapWs message parse error", e);
+                    showMindMapError();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, Response response) {
+                Log.e(TAG, "MindMapWs connection failed", t);
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> showMindMapError());
+                }
+            }
+        });
     }
 
     private void showMindMapLoading() {
@@ -105,6 +185,7 @@ public class MindMapFragment extends Fragment {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                Log.d(TAG, "开始加载map data");
                 loadMindMapData();
             }
 
@@ -121,18 +202,11 @@ public class MindMapFragment extends Fragment {
 
     private void loadMindMapData() {
         try {
-            String testMarkdown = "# 三体\n" +
-                    "## 第一部：地球往事\n" +
-                    "### 文化大革命\n" +
-                    "### 红岸基地\n" +
-                    "### 三体文明\n" +
-                    "## 第二部：黑暗森林\n" +
-                    "### 面壁计划\n" +
-                    "### 黑暗森林理论\n" +
-                    "## 第三部：死神永生\n" +
-                    "### 二向箔\n" +
-                    "### 降维打击";
-            mindMapManager.renderMarkdown(testMarkdown);
+            JSONObject request = new JSONObject();
+            request.put("title", title);
+            request.put("author", author);
+            request.put("summary", summary);
+            webSocket.send(request.toString());
         } catch (Exception e) {
             Log.e(TAG, "Error loading mind map data", e);
             showMindMapError();
@@ -146,5 +220,13 @@ public class MindMapFragment extends Fragment {
             mindMapWebView = null;
         }
         super.onDestroyView();
+    }
+
+    public static void closeWebSocket() {
+        if (webSocket != null) {
+            webSocket.close(1000, "Fragment closing");
+            webSocket = null;
+            isWebSocketInitialized = false;
+        }
     }
 }

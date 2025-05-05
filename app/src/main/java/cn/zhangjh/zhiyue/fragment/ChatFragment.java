@@ -87,12 +87,14 @@ public class ChatFragment extends Fragment {
         chatSocket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
-                Log.d(TAG, "WebSocket connection opened");
+                Log.d(TAG, "ChatWebSocket connection opened");
+
+                webSocket.send("{\"type\":\"ping\"}");
             }
 
             @Override
             public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
-                Log.d(TAG, "Received: " + text);
+                Log.d(TAG, "ChatWs Received: " + text);
                 try {
                     JSONObject message = new JSONObject(text);
                     String type = message.optString("type");
@@ -117,7 +119,7 @@ public class ChatFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, @Nullable Response response) {
-                Log.e(TAG, "WebSocket failure", t);
+                Log.e(TAG, "ChatWs failure", t);
                 handler.post(() -> Toast.makeText(getContext(), "连接失败: " + t.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });

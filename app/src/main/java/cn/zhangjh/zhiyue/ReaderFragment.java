@@ -70,8 +70,10 @@ public class ReaderFragment extends Fragment {
             // 获取书籍url
             // todo: 阅读记录里已有则不重复下载
 //            showError("该书籍已下载请从阅读记录继续阅读");
-            getEbookUrl(bookId, hashId);
-//            bookUrl = "https://s3.zhangjh.cn/一句顶一万句 (刘震云) (Z-Library).epub";
+//            getEbookUrl(bookId, hashId);
+
+            // for test only
+            bookUrl = "https://s3.zhangjh.cn/一句顶一万句 (刘震云) (Z-Library).epub";
         }
     }
 
