@@ -78,12 +78,10 @@
                         android:id="@+id/bookFormat"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="#F5F5F5"
                         android:paddingHorizontal="8dp"
                         android:paddingVertical="2dp"
                         android:textColor="@android:color/darker_gray"
-                        android:textSize="12sp"
-                        tools:text="PDF" />
+                        android:textSize="12sp" />
 
                     <TextView
                         android:id="@+id/bookSize"

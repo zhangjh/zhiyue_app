@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主题色 - 使用更柔和的蓝色 -->
+    <color name="primary">#82B1FF</color>         <!-- 柔和的蓝色 -->
+    <color name="primary_dark">#448AFF</color>    <!-- 深蓝色 -->
+    <color name="primary_light">#B6E3FF</color>   <!-- 浅蓝色 -->
+    
+    <!-- 文字和图标颜色 - 提高可读性 -->
+    <color name="selected_icon_color">@color/primary</color>
+    <color name="unselected_icon_color">#757575</color>   <!-- 中性灰色 -->
+    <color name="selected_text_color">@color/primary</color>
+    <color name="unselected_text_color">#757575</color>
+    
+    <!-- 基础颜色 - 优化层次感 -->
+    <color name="background">#121212</color>       <!-- Material Dark 推荐背景色 -->
+    <color name="surface">#1E1E1E</color>         <!-- 稍浅的表面色，增加层次 -->
+    <color name="gray">#757575</color>            <!-- 中性灰色文字 -->
+    <color name="text_primary">#FFFFFF</color>    <!-- 主要文字颜色 -->
+    <color name="text_secondary">#B3FFFFFF</color><!-- 次要文字颜色，70%白 -->
+    
+    <!-- 输入框颜色 -->
+    <color name="input_background">#1E1E1E</color>
+    <color name="input_text">#FFFFFF</color>
+    
+    <!-- 功能色 - 降低饱和度 -->
+    <color name="error">#CF6679</color>           <!-- 柔和的红色 -->
+    <color name="warning">#FFB74D</color>         <!-- 柔和的橙色 -->
+    <color name="success">#66BB6A</color>         <!-- 柔和的绿色 -->
+    
+    <!-- 进度条颜色 -->
+    <color name="progress_low">#CF6679</color>
+    <color name="progress_medium">#FFB74D</color>
+    <color name="progress_high">#66BB6A</color>
+</resources>
