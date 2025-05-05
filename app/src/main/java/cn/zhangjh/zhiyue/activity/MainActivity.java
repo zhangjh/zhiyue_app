@@ -76,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
             // 隐藏底部导航栏
             hideBottomNavigation();
             
-            // TODO: 传递书籍ID到阅读器页面
             Bundle args = new Bundle();
             args.putString("book_id", bookId);
             args.putString("hash_id", hashId);
