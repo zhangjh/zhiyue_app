@@ -29,7 +29,7 @@
             android:layout_marginBottom="16dp"
             android:gravity="center"
             android:text="发现好书"
-            android:textColor="@android:color/black"
+            android:textColor="@color/text_primary"
             android:textSize="24sp"
             android:textStyle="bold" />
 
@@ -57,7 +57,7 @@
                     app:boxStrokeWidth="0dp"
                     app:boxStrokeWidthFocused="0dp"
                     app:endIconMode="clear_text"
-                    app:hintTextColor="@android:color/darker_gray">
+                    app:hintTextColor="@color/text_secondary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/centerSearchEditText"
@@ -97,7 +97,7 @@
             android:layout_marginBottom="16dp"
             android:hint="@string/search_placeholder"
             app:endIconMode="clear_text"
-            app:hintTextColor="@android:color/darker_gray">
+            app:hintTextColor="@color/text_secondary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/topSearchEditText"
@@ -154,7 +154,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/empty_search_result"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="@color/text_primary"
             android:textSize="16sp" />
 
     </LinearLayout>
