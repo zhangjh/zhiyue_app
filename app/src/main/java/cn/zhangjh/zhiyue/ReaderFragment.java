@@ -48,7 +48,7 @@ public class ReaderFragment extends Fragment {
     private WebView webViewReader;
     private boolean isNavigationVisible = false;
     private int currentProgress = 0;
-    private View loadingView; // 新增加载视图
+    private View loadingView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -68,8 +68,8 @@ public class ReaderFragment extends Fragment {
             String hashId = getArguments().getString("hash_id");
             Log.d("ReaderFragment", "Received bookId: " + bookId + ", hashId: " + hashId);
             // 获取书籍url
-//            getEbookUrl(bookId, hashId);
-            bookUrl = "https://s3.zhangjh.cn/一句顶一万句 (刘震云) (Z-Library).epub";
+            getEbookUrl(bookId, hashId);
+//            bookUrl = "https://s3.zhangjh.cn/一句顶一万句 (刘震云) (Z-Library).epub";
         }
     }
 
@@ -93,9 +93,9 @@ public class ReaderFragment extends Fragment {
                     Log.d(TAG, "Ebook url: " + bookUrl);
                 }
             }
-
+    
             @Override
-            public void onFailure(Call<BizResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<BizResponse> call, @NonNull Throwable t) {
                 Log.e(TAG, "Search failed", t);
                 String errorMessage = "网络错误: " + t.getClass().getSimpleName();
                 if (t.getMessage() != null) {
@@ -138,6 +138,7 @@ public class ReaderFragment extends Fragment {
     }
 
     // 新增配置方法
+    @SuppressLint("SetJavaScriptEnabled")
     private void configureWebView(WebView webView) {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -152,7 +153,6 @@ public class ReaderFragment extends Fragment {
         webView.setLongClickable(false);
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -165,18 +165,8 @@ public class ReaderFragment extends Fragment {
 
         showLoading("正在加载阅读器...");
 
-        // 配置WebView
-        WebSettings webSettings = webViewReader.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setAllowFileAccess(true);
-        webSettings.setAllowContentAccess(true);
-        webSettings.setAllowFileAccessFromFileURLs(true);
-        webSettings.setAllowUniversalAccessFromFileURLs(true);
-
         // 添加以下配置阻止系统菜单
         webViewReader.setLongClickable(false);  // 禁用系统长按菜单
-        webViewReader.setOnLongClickListener(null);  // 移除长按监听
         webViewReader.setOnLongClickListener(v -> {
             // 允许选择但阻止系统菜单
             return false;
