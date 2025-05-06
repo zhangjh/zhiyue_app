@@ -1,6 +1,5 @@
 package cn.zhangjh.zhiyue.activity;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
@@ -15,7 +14,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.util.Objects;
 
 import cn.zhangjh.zhiyue.R;
-import cn.zhangjh.zhiyue.auth.GoogleSignInManager;
 import cn.zhangjh.zhiyue.fragment.AISummaryFragment;
 import cn.zhangjh.zhiyue.fragment.MindMapFragment;
 
@@ -23,8 +21,6 @@ public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private NavController navController;
     private String mode = "init";
-
-    private GoogleSignInManager googleSignInManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,32 +95,5 @@ public class MainActivity extends AppCompatActivity {
         AISummaryFragment.closeWebSocket();
         MindMapFragment.closeWebSocket();
         super.onDestroy();
-    }
-
-    public void startGoogleSignIn() {
-        googleSignInManager.signIn(new GoogleSignInManager.GoogleSignInCallback() {
-            @Override
-            public void onSuccess(String idToken, String email) {
-                // TODO: 发送token到服务器验证
-                Toast.makeText(MainActivity.this, 
-                    getString(R.string.google_sign_in_success), 
-                    Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Toast.makeText(MainActivity.this, 
-                    getString(R.string.google_sign_in_failed), 
-                    Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 9001) {
-            googleSignInManager.handleSignInResult(data);
-        }
     }
 }
