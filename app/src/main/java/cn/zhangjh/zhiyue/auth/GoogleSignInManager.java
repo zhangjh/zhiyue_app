@@ -52,7 +52,12 @@ public class GoogleSignInManager {
             String idToken = account.getIdToken();
             String email = account.getEmail();
             String userId = account.getId();
-            // todo: 这里可以保存登录信息
+            // 同时保存到UserManager中
+            UserManager.getInstance().setUserInfo(
+                userId,
+                email,
+                idToken
+            );
             
             if (idToken == null || email == null) {
                 Log.e(TAG, "handleSignInResult: idToken or email is null");
