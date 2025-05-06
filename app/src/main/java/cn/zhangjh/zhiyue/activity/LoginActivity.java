@@ -8,6 +8,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.material.button.MaterialButton;
 
 import cn.zhangjh.zhiyue.R;
@@ -44,10 +46,17 @@ public class LoginActivity extends AppCompatActivity {
 
     // 添加检查登录状态的方法
     private void checkLoginState() {
-        SharedPreferences prefs = getSharedPreferences("auth", MODE_PRIVATE);
-        boolean isLoggedIn = prefs.getBoolean("isLoggedIn", false);
-        if (isLoggedIn) {
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null && !account.isExpired()) {
+            // 账号存在且未过期
             loginSuccess();
+        } else {
+            // 清除本地登录状态
+            SharedPreferences prefs = getSharedPreferences("auth", MODE_PRIVATE);
+            prefs.edit()
+                .putBoolean("isLoggedIn", false)
+                .remove("idToken")
+                .apply();
         }
     }
 

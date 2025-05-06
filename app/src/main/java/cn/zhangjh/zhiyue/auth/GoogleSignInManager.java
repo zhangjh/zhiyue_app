@@ -51,6 +51,8 @@ public class GoogleSignInManager {
             GoogleSignInAccount account = task.getResult(ApiException.class);
             String idToken = account.getIdToken();
             String email = account.getEmail();
+            String userId = account.getId();
+            // todo: 这里可以保存登录信息
             
             if (idToken == null || email == null) {
                 Log.e(TAG, "handleSignInResult: idToken or email is null");
