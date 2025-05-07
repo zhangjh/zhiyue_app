@@ -43,4 +43,9 @@ public interface BookService {
 			@Query("pageSize") int pageSize,
 			@Query("userId") String userId
 	);
+
+	@FormUrlEncoded
+    @POST("parse/saveRecord")
+    Call<BizResponse<Void>> saveRecord(@Field("userId") String userId,
+									   @Field("fileId") String fileId);
 }

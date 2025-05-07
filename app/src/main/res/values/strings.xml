@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">SmartReader</string>
 
+    <string name="biz_domain">https://s3.zhangjh.cn/</string>
+
     <string name="search_placeholder">搜索你想看的书籍</string>
 
     <string name="empty_search_result">没有找到相关书籍</string>

@@ -4,8 +4,10 @@ import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -43,6 +45,7 @@ import retrofit2.Response;
 public class ReaderFragment extends Fragment {
 
     private static final String TAG = ReaderFragment.class.getName();
+    private String fileId;
     private String bookUrl;
     private String bookId;
     private WebView webViewReader;
@@ -73,7 +76,8 @@ public class ReaderFragment extends Fragment {
 //            getEbookUrl(bookId, hashId);
 
             // for test only
-            bookUrl = "https://s3.zhangjh.cn/一句顶一万句 (刘震云) (Z-Library).epub";
+            fileId = "一句顶一万句 (刘震云) (Z-Library).epub";
+            bookUrl = getString(R.string.biz_domain) + fileId;
         }
     }
 
@@ -235,7 +239,7 @@ public class ReaderFragment extends Fragment {
                         Fragment fragment = fm.findFragmentByTag("AIReadingFragment");
                         FragmentTransaction ft = fm.beginTransaction();
                         if (fragment == null) {
-                            fragment = new AIReadingFragment();
+                            fragment = new AIReadingFragment(fileId);
                             ft.add(R.id.ai_reading_layout, fragment, "AIReadingFragment");
                         } else {
                             ft.show(fragment);
@@ -285,6 +289,13 @@ public class ReaderFragment extends Fragment {
     // JavaScript接口类
     private class WebAppInterface {
         @JavascriptInterface
+        public void onBookLoaded() {
+            hideLoading();
+            // 保存阅读记录
+            saveReadingRecord();
+        }
+
+        @JavascriptInterface
         public void copyText(String text) {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
@@ -306,11 +317,6 @@ public class ReaderFragment extends Fragment {
             //         Toast.makeText(getContext(), "阅读进度: " + progress + "%", Toast.LENGTH_SHORT).show();
             //     });
             // }
-        }
-
-        @JavascriptInterface
-        public void onBookLoaded() {
-            hideLoading();
         }
 
         @JavascriptInterface
@@ -371,5 +377,44 @@ public class ReaderFragment extends Fragment {
                 });
             }
         }
+    }
+
+    // 添加保存阅读记录的方法
+    private void saveReadingRecord() {
+        if (getActivity() == null || fileId == null) {
+            return;
+        }
+
+        // 获取用户ID
+        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
+        String userId = prefs.getString("userId", "");
+        if (TextUtils.isEmpty(userId)) {
+            return;
+        }
+
+        // 调用保存记录接口
+        ApiClient.getBookService().saveRecord(userId, fileId)
+            .enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<BizResponse<Void>> call,
+                                       @NonNull Response<BizResponse<Void>> response) {
+                    if (!response.isSuccessful()) {
+                        Log.e(TAG, "Save reading record failed: " + response.code());
+                        return;
+                    }
+                    BizResponse<Void> bizResponse = response.body();
+                    if (bizResponse != null && bizResponse.isSuccess()) {
+                        Log.d(TAG, "Save reading record success");
+                    } else {
+                        String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "unknown error";
+                        Log.e(TAG, "Save reading record failed: " + errorMsg);
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Save reading record failed", t);
+                }
+            });
     }
 }
