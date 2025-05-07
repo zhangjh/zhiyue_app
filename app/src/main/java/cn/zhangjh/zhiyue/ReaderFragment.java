@@ -80,7 +80,7 @@ public class ReaderFragment extends Fragment {
     private void getEbookUrl(String bookId, String hashId) {
         ApiClient.getBookService().downloadBook(bookId, hashId).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<BizResponse> call, @NonNull retrofit2.Response<BizResponse> response) {
+            public void onResponse(@NonNull Call<BizResponse<String>> call, @NonNull retrofit2.Response<BizResponse<String>> response) {
                 if (!response.isSuccessful()) {
                     try {
                         String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
@@ -99,7 +99,7 @@ public class ReaderFragment extends Fragment {
             }
     
             @Override
-            public void onFailure(@NonNull Call<BizResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<BizResponse<String>> call, @NonNull Throwable t) {
                 Log.e(TAG, "Search failed", t);
                 String errorMessage = "网络错误: " + t.getClass().getSimpleName();
                 if (t.getMessage() != null) {
@@ -330,14 +330,14 @@ public class ReaderFragment extends Fragment {
                 // 调用API保存标注
                 ApiClient.getBookService().saveAnnotation(annotation).enqueue(new Callback<>() {
                     @Override
-                    public void onResponse(@NonNull Call<BizResponse> call, @NonNull retrofit2.Response<BizResponse> response) {
+                    public void onResponse(@NonNull Call<BizResponse<Void>> call, @NonNull retrofit2.Response<BizResponse<Void>> response) {
                         if (!response.isSuccessful()) {
                             showError("保存标注失败");
                         }
                     }
 
                     @Override
-                    public void onFailure(@NonNull Call<BizResponse> call, @NonNull Throwable t) {
+                    public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
                         showError("保存标注失败: " + t.getMessage());
                     }
                 });

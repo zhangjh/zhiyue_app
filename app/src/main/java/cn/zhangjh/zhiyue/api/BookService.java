@@ -24,14 +24,14 @@ public interface BookService {
 
 	@FormUrlEncoded
 	@POST("/books/download")
-	Call<BizResponse> downloadBook(
+	Call<BizResponse<String>> downloadBook(
 			@Field("bookId") String bookId,
 			@Field("hashId") String hashId
 	);
 
 	//	todo: add annotation api
     @POST("/annotations")
-    Call<BizResponse> saveAnnotation(@Body Annotation annotation);
+    Call<BizResponse<Void>> saveAnnotation(@Body Annotation annotation);
     
     @GET("/annotations/{bookId}")
     Call<BizListResponse<Annotation>> getAnnotations(@Path("bookId") String bookId);

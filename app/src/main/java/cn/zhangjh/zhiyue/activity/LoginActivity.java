@@ -18,6 +18,7 @@ import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.auth.GoogleSignInManager;
 import cn.zhangjh.zhiyue.model.BizResponse;
+import cn.zhangjh.zhiyue.model.GoogleUser;
 import cn.zhangjh.zhiyue.model.LoginUser;
 import cn.zhangjh.zhiyue.request.LoginUserRequest;
 import retrofit2.Call;
@@ -75,50 +76,50 @@ public class LoginActivity extends AppCompatActivity {
         
         googleSignInManager.signIn(new GoogleSignInManager.GoogleSignInCallback() {
             @Override
-            public void onSuccess(LoginUser loginUser) {
+            public void onSuccess(GoogleUser googleUser) {
                 // 保存登录状态和用户信息
                 SharedPreferences prefs = getSharedPreferences("auth", MODE_PRIVATE);
                 prefs.edit()
-                    .putString("idToken", loginUser.getIdToken())
-                    .putString("email", loginUser.getEmail())
-                    .putString("userId", loginUser.getUserId())
-                    .putString("name", loginUser.getName())
-                    .putString("avatar", loginUser.getAvatar())
+                    .putString("idToken", googleUser.getIdToken())
+                    .putString("email", googleUser.getEmail())
+                    .putString("userId", googleUser.getUserId())
+                    .putString("name", googleUser.getName())
+                    .putString("avatar", googleUser.getAvatar())
                     .putBoolean("isLoggedIn", true)
                     .apply();
 
                 // 保存用户信息到服务端
                 LoginUserRequest loginUserRequest = new LoginUserRequest();
-                loginUserRequest.setExt_id(loginUser.getUserId());
-                loginUserRequest.setName(loginUserRequest.getName());
-                loginUserRequest.setAvatar(loginUserRequest.getAvatar());
-                loginUserRequest.setEmail(loginUser.getEmail());
+                loginUserRequest.setExtId(googleUser.getUserId());
+                loginUserRequest.setUserName(googleUser.getName());
+                loginUserRequest.setAvatar(googleUser.getAvatar());
+                loginUserRequest.setEmail(googleUser.getEmail());
                 ApiClient.getUserService().register(loginUserRequest)
                         .enqueue(new Callback<>() {
-	                        @Override
-	                        public void onResponse(@NonNull Call<BizResponse> call, @NonNull Response<BizResponse> response) {
-		                        if (!response.isSuccessful()) {
-			                        Log.e(TAG, "Register user failed: " + response.code());
-			                        return;
-		                        }
-		                        BizResponse bizResponse = response.body();
-		                        if (bizResponse != null && bizResponse.isSuccess()) {
-			                        Log.d(TAG, "Register user success: " + new Gson().toJson(bizResponse.getData()));
-		                        } else {
-			                        String errorMsg = (bizResponse != null ? bizResponse.getErrorMsg() : "unknown error");
+                            @Override
+                            public void onResponse(@NonNull Call<BizResponse<LoginUser>> call, @NonNull Response<BizResponse<LoginUser>> response) {
+                                if (!response.isSuccessful()) {
+                                    Log.e(TAG, "Register user failed: " + response.code());
+                                    return;
+                                }
+                                BizResponse<LoginUser> bizResponse = response.body();
+                                if (bizResponse != null && bizResponse.isSuccess()) {
+                                    Log.d(TAG, "Register user success ");
+                                } else {
+                                    String errorMsg = (bizResponse != null ? bizResponse.getErrorMsg() : "unknown error");
                                     Log.e(TAG, "Register user failed: " + errorMsg);
-		                            Toast.makeText(LoginActivity.this,
+                                    Toast.makeText(LoginActivity.this,
                                             errorMsg, Toast.LENGTH_SHORT).show();
                                 }
-	                        }
+                            }
 
-	                        @Override
-	                        public void onFailure(@NonNull Call<BizResponse> call, @NonNull Throwable t) {
-		                        Log.e(TAG, "Register user failed", t);
-	                        }
+                            @Override
+                            public void onFailure(@NonNull Call<BizResponse<LoginUser>> call, @NonNull Throwable t) {
+                                Log.e(TAG, "Register user failed", t);
+                            }
                         });
                 
-                Log.d(TAG, "Google sign in success, loginUser: " + new Gson().toJson(loginUser));
+                Log.d(TAG, "Google sign in success, loginUser: " + new Gson().toJson(googleUser));
                 loginSuccess();
             }
 

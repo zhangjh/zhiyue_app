@@ -1,10 +1,10 @@
 package cn.zhangjh.zhiyue.model;
 
-public class BizResponse {
+public class BizResponse<T> {
 
 	private boolean success;
 
-	private String data;
+	private T data;
 
 	private String errorMsg;
 
@@ -16,9 +16,9 @@ public class BizResponse {
 		this.success = success;
 	}
 
-	public String getData() { return this.data; }
+	public T getData() { return this.data; }
 
-	public void setData(String data) {
+	public void setData(T data) {
 		this.data = data;
 	}
 

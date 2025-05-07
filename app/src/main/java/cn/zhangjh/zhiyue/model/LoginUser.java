@@ -1,50 +1,60 @@
 package cn.zhangjh.zhiyue.model;
 
+// 数据库登录用户对象
 public class LoginUser {
-	private String idToken;
 
-	private String userId;
-	private String name;
-	private String email;
-	private String avatar;
+    private int id;
+    private String name;
+    private String avatar;
+    private String ext_id;
+    private String ext_type;
+    private String feature;
 
-	public String getIdToken() {
-		return idToken;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setIdToken(String idToken) {
-		this.idToken = idToken;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public String getUserId() {
-		return userId;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getAvatar() {
+        return avatar;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public String getExt_id() {
+        return ext_id;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public void setExt_id(String ext_id) {
+        this.ext_id = ext_id;
+    }
 
-	public String getAvatar() {
-		return avatar;
-	}
+    public String getExt_type() {
+        return ext_type;
+    }
 
-	public void setAvatar(String avatar) {
-		this.avatar = avatar;
-	}
+    public void setExt_type(String ext_type) {
+        this.ext_type = ext_type;
+    }
+
+    public String getFeature() {
+        return feature;
+    }
+
+    public void setFeature(String feature) {
+        this.feature = feature;
+    }
 }

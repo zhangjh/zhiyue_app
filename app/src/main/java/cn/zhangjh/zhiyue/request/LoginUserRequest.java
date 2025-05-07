@@ -2,27 +2,27 @@ package cn.zhangjh.zhiyue.request;
 
 public class LoginUserRequest {
 
-	private String product_type = "zhiyue_app";
-	private String name;
+	private String productType = "zhiyue_app";
+	private String userName;
 	private String avatar;
-	private String ext_id;
-	private String ext_type = "google";
+	private String extId;
+	private String extType = "google";
 	private String email;
 
-	public String getProduct_type() {
-		return product_type;
+	public String getProductType() {
+		return productType;
 	}
 
-	public void setProduct_type(String product_type) {
-		this.product_type = product_type;
+	public void setProductType(String productType) {
+		this.productType = productType;
 	}
 
-	public String getName() {
-		return name;
+	public String getUserName() {
+		return userName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 
 	public String getAvatar() {
@@ -33,20 +33,20 @@ public class LoginUserRequest {
 		this.avatar = avatar;
 	}
 
-	public String getExt_id() {
-		return ext_id;
+	public String getExtId() {
+		return extId;
 	}
 
-	public void setExt_id(String ext_id) {
-		this.ext_id = ext_id;
+	public void setExtId(String extId) {
+		this.extId = extId;
 	}
 
-	public String getExt_type() {
-		return ext_type;
+	public String getExtType() {
+		return extType;
 	}
 
-	public void setExt_type(String ext_type) {
-		this.ext_type = ext_type;
+	public void setExtType(String extType) {
+		this.extType = extType;
 	}
 
 	public String getEmail() {

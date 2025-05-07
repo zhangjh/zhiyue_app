@@ -14,7 +14,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
-import cn.zhangjh.zhiyue.model.LoginUser;
+import cn.zhangjh.zhiyue.model.GoogleUser;
 
 public class GoogleSignInManager {
     private static final String TAG = "GoogleSignInManager";
@@ -63,16 +63,16 @@ public class GoogleSignInManager {
                 }
                 return;
             }
-            LoginUser loginUser = new LoginUser();
-            loginUser.setIdToken(idToken);
-            loginUser.setUserId(userId);
-            loginUser.setEmail(email);
-            loginUser.setName(name);
+            GoogleUser googleUser = new GoogleUser();
+            googleUser.setIdToken(idToken);
+            googleUser.setUserId(userId);
+            googleUser.setEmail(email);
+            googleUser.setName(name);
             if(photoUrl != null) {
-                loginUser.setAvatar(photoUrl.getPath());
+                googleUser.setAvatar(photoUrl.toString());
             }
             if (callback != null) {
-                callback.onSuccess(loginUser);
+                callback.onSuccess(googleUser);
             }
         } catch (ApiException e) {
             // 添加更详细的错误日志
@@ -109,7 +109,7 @@ public class GoogleSignInManager {
     }
     
     public interface GoogleSignInCallback {
-        void onSuccess(LoginUser loginUser);
+        void onSuccess(GoogleUser googleUser);
         void onFailure(String error);
     }
 }
