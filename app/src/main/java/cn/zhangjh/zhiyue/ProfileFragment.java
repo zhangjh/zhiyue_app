@@ -1,7 +1,11 @@
 package cn.zhangjh.zhiyue;
 
+import static android.content.Context.MODE_PRIVATE;
+
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,10 +18,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.model.ReadingHistory;
@@ -89,11 +95,23 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     }
 
     private void loadUserInfo() {
-        // 模拟用户数据
-        userName.setText("测试用户");
-        userStatus.setText("普通会员");
-        // 设置默认头像
-        userAvatar.setImageResource(R.drawable.default_avatar);
+        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
+        // 获取用户信息
+        userName.setText(prefs.getString("name", "未登录"));
+
+        // 获取并加载用户头像
+        String avatarUrl = prefs.getString("avatar", "");
+        if (!TextUtils.isEmpty(avatarUrl)) {
+            // 使用Glide加载网络图片
+            Glide.with(this)
+                .load(avatarUrl)
+                .placeholder(R.drawable.default_avatar)
+                .error(R.drawable.default_avatar)
+                .circleCrop()
+                .into(userAvatar);
+        } else {
+            userAvatar.setImageResource(R.drawable.default_avatar);
+        }
     }
 
     private void loadReadingHistory(int page) {
