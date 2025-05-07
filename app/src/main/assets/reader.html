@@ -443,6 +443,10 @@
                 window.Android.onLoadError("加载电子书失败：" + error.message);
             }
         });
+        book.loaded.metadata.then(metadata => {
+            // 调用Android接口更新书籍信息
+            window.Android.onBookMetadata(metadata.title, metadata.creator);
+        });
         rendition = book.renderTo("viewer", {
             flow: "paginated",
             width: "100%",

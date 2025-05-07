@@ -38,6 +38,7 @@ import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.model.Annotation;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
+import cn.zhangjh.zhiyue.model.ReadingRecord;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -287,6 +288,47 @@ public class ReaderFragment extends Fragment {
 
     // JavaScript接口类
     private class WebAppInterface {
+        @JavascriptInterface
+        public void onBookMetadata(String title, String author) {
+            // 获取用户ID
+            SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
+            String userId = prefs.getString("userId", "");
+            if (TextUtils.isEmpty(userId)) {
+                return;
+            }
+
+            // 调用更新记录接口
+            ReadingRecord readingRecord = new ReadingRecord();
+            readingRecord.setFileId(fileId);
+            readingRecord.setUserId(userId);
+            readingRecord.setTitle(title);
+            readingRecord.setAuthor(author);
+
+            ApiClient.getBookService().updateRecord(readingRecord)
+                .enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<BizResponse<Void>> call,
+                                           @NonNull Response<BizResponse<Void>> response) {
+                        if (!response.isSuccessful()) {
+                            Log.e(TAG, "Update reading record failed: " + response.code());
+                            return;
+                        }
+                        BizResponse<Void> bizResponse = response.body();
+                        if (bizResponse != null && bizResponse.isSuccess()) {
+                            Log.d(TAG, "Update reading record success");
+                        } else {
+                            String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "unknown error";
+                            Log.e(TAG, "Update reading record failed: " + errorMsg);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
+                        Log.e(TAG, "Update reading record failed", t);
+                    }
+                });
+        }
+
         @JavascriptInterface
         public void onBookLoaded() {
             hideLoading();

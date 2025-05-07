@@ -5,6 +5,7 @@ import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.BookDetail;
 import cn.zhangjh.zhiyue.model.HistoryResponse;
+import cn.zhangjh.zhiyue.model.ReadingRecord;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
@@ -55,4 +56,7 @@ public interface BookService {
             @Field("userId") String userId,
             @Field("fileId") String fileId
     );
+
+    @POST("parse/updateRecord")
+    Call<BizResponse<Void>> updateRecord(@Body ReadingRecord readingRecord);
 }
