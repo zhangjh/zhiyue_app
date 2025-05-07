@@ -6,14 +6,23 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.material.button.MaterialButton;
+import com.google.gson.Gson;
 
 import cn.zhangjh.zhiyue.R;
+import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.auth.GoogleSignInManager;
+import cn.zhangjh.zhiyue.model.BizResponse;
+import cn.zhangjh.zhiyue.model.LoginUser;
+import cn.zhangjh.zhiyue.request.LoginUserRequest;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -66,16 +75,50 @@ public class LoginActivity extends AppCompatActivity {
         
         googleSignInManager.signIn(new GoogleSignInManager.GoogleSignInCallback() {
             @Override
-            public void onSuccess(String idToken, String email) {
+            public void onSuccess(LoginUser loginUser) {
                 // 保存登录状态和用户信息
                 SharedPreferences prefs = getSharedPreferences("auth", MODE_PRIVATE);
                 prefs.edit()
-                    .putString("idToken", idToken)
-                    .putString("email", email)
+                    .putString("idToken", loginUser.getIdToken())
+                    .putString("email", loginUser.getEmail())
+                    .putString("userId", loginUser.getUserId())
+                    .putString("name", loginUser.getName())
+                    .putString("avatar", loginUser.getAvatar())
                     .putBoolean("isLoggedIn", true)
                     .apply();
+
+                // 保存用户信息到服务端
+                LoginUserRequest loginUserRequest = new LoginUserRequest();
+                loginUserRequest.setExt_id(loginUser.getUserId());
+                loginUserRequest.setName(loginUserRequest.getName());
+                loginUserRequest.setAvatar(loginUserRequest.getAvatar());
+                loginUserRequest.setEmail(loginUser.getEmail());
+                ApiClient.getUserService().register(loginUserRequest)
+                        .enqueue(new Callback<>() {
+	                        @Override
+	                        public void onResponse(@NonNull Call<BizResponse> call, @NonNull Response<BizResponse> response) {
+		                        if (!response.isSuccessful()) {
+			                        Log.e(TAG, "Register user failed: " + response.code());
+			                        return;
+		                        }
+		                        BizResponse bizResponse = response.body();
+		                        if (bizResponse != null && bizResponse.isSuccess()) {
+			                        Log.d(TAG, "Register user success: " + new Gson().toJson(bizResponse.getData()));
+		                        } else {
+			                        String errorMsg = (bizResponse != null ? bizResponse.getErrorMsg() : "unknown error");
+                                    Log.e(TAG, "Register user failed: " + errorMsg);
+		                            Toast.makeText(LoginActivity.this,
+                                            errorMsg, Toast.LENGTH_SHORT).show();
+                                }
+	                        }
+
+	                        @Override
+	                        public void onFailure(@NonNull Call<BizResponse> call, @NonNull Throwable t) {
+		                        Log.e(TAG, "Register user failed", t);
+	                        }
+                        });
                 
-                Log.d(TAG, "Google sign in success, idToken " + idToken + ", email: " + email);
+                Log.d(TAG, "Google sign in success, loginUser: " + new Gson().toJson(loginUser));
                 loginSuccess();
             }
 

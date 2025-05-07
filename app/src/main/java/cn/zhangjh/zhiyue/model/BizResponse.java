@@ -6,6 +6,8 @@ public class BizResponse {
 
 	private String data;
 
+	private String errorMsg;
+
 	public boolean isSuccess() {
 		return success;
 	}
@@ -18,5 +20,13 @@ public class BizResponse {
 
 	public void setData(String data) {
 		this.data = data;
+	}
+
+	public String getErrorMsg() {
+		return errorMsg;
+	}
+
+	public void setErrorMsg(String errorMsg) {
+		this.errorMsg = errorMsg;
 	}
 }

@@ -1,9 +1,9 @@
 package cn.zhangjh.zhiyue.auth;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 
-import androidx.activity.result.ActivityResult;
 import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -13,6 +13,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+
+import cn.zhangjh.zhiyue.model.LoginUser;
 
 public class GoogleSignInManager {
     private static final String TAG = "GoogleSignInManager";
@@ -52,13 +54,8 @@ public class GoogleSignInManager {
             String idToken = account.getIdToken();
             String email = account.getEmail();
             String userId = account.getId();
-            // 同时保存到UserManager中
-            UserManager.getInstance().setUserInfo(
-                userId,
-                email,
-                idToken
-            );
-            
+            Uri photoUrl = account.getPhotoUrl();
+            String name = account.getDisplayName();
             if (idToken == null || email == null) {
                 Log.e(TAG, "handleSignInResult: idToken or email is null");
                 if (callback != null) {
@@ -66,9 +63,16 @@ public class GoogleSignInManager {
                 }
                 return;
             }
-            
+            LoginUser loginUser = new LoginUser();
+            loginUser.setIdToken(idToken);
+            loginUser.setUserId(userId);
+            loginUser.setEmail(email);
+            loginUser.setName(name);
+            if(photoUrl != null) {
+                loginUser.setAvatar(photoUrl.getPath());
+            }
             if (callback != null) {
-                callback.onSuccess(idToken, email);
+                callback.onSuccess(loginUser);
             }
         } catch (ApiException e) {
             // 添加更详细的错误日志
@@ -105,7 +109,7 @@ public class GoogleSignInManager {
     }
     
     public interface GoogleSignInCallback {
-        void onSuccess(String idToken, String email);
+        void onSuccess(LoginUser loginUser);
         void onFailure(String error);
     }
 }
