@@ -329,7 +329,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         if (getActivity() instanceof MainActivity) {
             // 只显示加载进度条，保持其他视图状态不变
             progressBar.setVisibility(View.VISIBLE);
-            ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash());
+            ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash(), "");
         }
     }
 

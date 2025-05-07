@@ -15,7 +15,6 @@
         android:padding="16dp">
 
         <!-- 书籍基本信息 -->
-        <!-- 书籍基本信息部分的修改 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

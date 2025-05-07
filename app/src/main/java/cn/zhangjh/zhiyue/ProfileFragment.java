@@ -192,7 +192,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     @Override
     public void onContinueReading(ReadingHistory history) {
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).navigateToReader(history.getId(), history.getFileId());
+            ((MainActivity) getActivity()).navigateToReader(history.getId(), "", history.getFileId());
         }
     }
 
