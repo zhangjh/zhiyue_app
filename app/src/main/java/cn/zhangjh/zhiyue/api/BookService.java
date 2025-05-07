@@ -4,6 +4,7 @@ import cn.zhangjh.zhiyue.model.Annotation;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.BookDetail;
+import cn.zhangjh.zhiyue.model.HistoryResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
@@ -35,4 +36,11 @@ public interface BookService {
     
     @GET("/annotations/{bookId}")
     Call<BizListResponse<Annotation>> getAnnotations(@Path("bookId") String bookId);
+
+	@GET("/books/getHistory")
+	Call<BizResponse<HistoryResponse>> getHistory(
+			@Query("pageIndex") int pageIndex,
+			@Query("pageSize") int pageSize,
+			@Query("userId") String userId
+	);
 }
