@@ -21,14 +21,18 @@ public class ReadingHistory {
     @SerializedName("cover")
     private String coverUrl;
 
+    private String cfi;
+
     @SerializedName("progress")
-    private int progress;
+    private String progress;
 
     @SerializedName("file_id")
-    private String hash;
+    private String fileId;
 
     @SerializedName("summary")
     private String summary;
+
+    private String contentSummary;
 
     public String getId() {
         return id;
@@ -78,20 +82,28 @@ public class ReadingHistory {
         this.coverUrl = coverUrl;
     }
 
-    public int getProgress() {
+    public String getCfi() {
+        return cfi;
+    }
+
+    public void setCfi(String cfi) {
+        this.cfi = cfi;
+    }
+
+    public String getProgress() {
         return progress;
     }
 
-    public void setProgress(int progress) {
+    public void setProgress(String progress) {
         this.progress = progress;
     }
 
-    public String getHash() {
-        return hash;
+    public String getFileId() {
+        return fileId;
     }
 
-    public void setHash(String hash) {
-        this.hash = hash;
+    public void setFileId(String fileId) {
+        this.fileId = fileId;
     }
 
     public String getSummary() {
@@ -100,5 +112,13 @@ public class ReadingHistory {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public String getContentSummary() {
+        return contentSummary;
+    }
+
+    public void setContentSummary(String contentSummary) {
+        this.contentSummary = contentSummary;
     }
 }

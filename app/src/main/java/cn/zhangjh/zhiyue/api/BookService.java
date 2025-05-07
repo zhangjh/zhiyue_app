@@ -48,4 +48,11 @@ public interface BookService {
     @POST("parse/saveRecord")
     Call<BizResponse<Void>> saveRecord(@Field("userId") String userId,
 									   @Field("fileId") String fileId);
+
+	@FormUrlEncoded
+    @POST("books/deleteHistory")
+    Call<BizResponse<Void>> deleteHistory(
+            @Field("userId") String userId,
+            @Field("fileId") String fileId
+    );
 }

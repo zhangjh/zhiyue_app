@@ -85,7 +85,7 @@ public class ReadingHistoryAdapter extends RecyclerView.Adapter<ReadingHistoryAd
 		void bind(ReadingHistory history) {
 			bookTitle.setText(history.getBookTitle());
 			bookAuthor.setText(history.getBookAuthor());
-			readingProgress.setText(String.format("%d%%", history.getProgress()));
+			readingProgress.setText(String.format("%s%%", history.getProgress()));
 			startReadingTime.setText(String.format("开始阅读：%s", history.getStartTime()));
 			lastReadingTime.setText(String.format("最近阅读：%s", history.getLastReadTime()));
 
@@ -102,7 +102,7 @@ public class ReadingHistoryAdapter extends RecyclerView.Adapter<ReadingHistoryAd
 			});
 
 			// 设置进度
-			int progress = history.getProgress();
+			int progress = Integer.parseInt(history.getProgress());
 			progressBar.setProgress(progress);
 			
 			// 根据进度设置不同的颜色

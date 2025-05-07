@@ -192,12 +192,47 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     @Override
     public void onContinueReading(ReadingHistory history) {
         if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).navigateToReader(history.getId(), history.getHash());
+            ((MainActivity) getActivity()).navigateToReader(history.getId(), history.getFileId());
         }
     }
 
     @Override
     public void onDeleteHistory(ReadingHistory history) {
-        // TODO: 实现删除阅读记录的逻辑
+        // 获取用户ID
+        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
+        String userId = prefs.getString("userId", "");
+        if (TextUtils.isEmpty(userId)) {
+            Toast.makeText(requireContext(), "请先登录", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 调用删除接口
+        ApiClient.getBookService().deleteHistory(userId, history.getFileId())
+            .enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<BizResponse<Void>> call,
+                                       @NonNull Response<BizResponse<Void>> response) {
+                    if (!response.isSuccessful()) {
+                        Toast.makeText(requireContext(), "删除记录失败", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    BizResponse<Void> bizResponse = response.body();
+                    if (bizResponse != null && bizResponse.isSuccess()) {
+                        Toast.makeText(requireContext(), "删除成功", Toast.LENGTH_SHORT).show();
+                        // 重新加载第一页数据
+                        loadReadingHistory(1);
+                    } else {
+                        String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "未知错误";
+                        Toast.makeText(requireContext(), "删除失败: " + errorMsg, Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
+                    Toast.makeText(requireContext(), "网络请求失败", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Delete history failed", t);
+                }
+            });
     }
 }
