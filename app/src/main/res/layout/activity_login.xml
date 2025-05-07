@@ -9,7 +9,7 @@
         android:id="@+id/logoImage"
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:src="@mipmap/zhiyue_logo"
+        android:src="@drawable/zhiyue_logo"
         android:layout_marginTop="64dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
