@@ -53,8 +53,7 @@ public class ReaderFragment extends Fragment {
     private String fileId;
     private String cfi;
     private String bookUrl;
-    private String bookId;
-    private WebView webViewReader;
+	private WebView webViewReader;
     private View loadingView;
 
     @Override
@@ -71,7 +70,7 @@ public class ReaderFragment extends Fragment {
             }
         });
         if (getArguments() != null) {
-            bookId = getArguments().getString("book_id");
+	        String bookId = getArguments().getString("book_id");
             String hashId = getArguments().getString("hash_id");
             fileId = getArguments().getString("file_id");
             cfi = getArguments().getString("cfi");
@@ -80,8 +79,9 @@ public class ReaderFragment extends Fragment {
             if(fileId == null || fileId.isEmpty()) {
                 // 获取书籍url, 阅读记录里已有则不重复下载
                  getEbookUrl(bookId, hashId);
+            } else {
+                bookUrl = getString(R.string.biz_domain) + fileId;
             }
-//            bookUrl = getString(R.string.biz_domain) + fileId;
         }
         BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
 
@@ -220,11 +220,7 @@ public class ReaderFragment extends Fragment {
                 super.onPageFinished(view, url);
                 if (!TextUtils.isEmpty(bookUrl)) {
                     showLoading("正在加载电子书...");
-                    webViewReader.evaluateJavascript("loadBook('" + bookUrl + "')", null);
-                }
-                // 如果有cfi参数，跳转到指定位置
-                if (!TextUtils.isEmpty(cfi)) {
-                    String script = String.format("window.reader.rendition.display('%s');", cfi);
+                    String script = String.format("loadBook('%s', '%s')", bookUrl, cfi);
                     webViewReader.evaluateJavascript(script, null);
                 }
             }
@@ -400,7 +396,8 @@ public class ReaderFragment extends Fragment {
                     public void onResponse(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Response<BizListResponse<Annotation>> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             // 将标注传递给前端
-                            String annotations = new Gson().toJson(response.body());
+                            String annotations = new Gson().toJson(response.body().getData());
+                            Log.d(TAG, "Annotations: " + annotations);
                             // mock data
 //			                String annotations = new Gson().toJson("[{\"bookId\":\"1\",\"cfiRange\":\"epubcfi(/6/8!/4/10,/1:0,/1:36)\",\"color\":\"rgba(255,255,0,0.3)\",\"text\":\"在《三体》电子书与读者见面之际，再次感谢广大读者的关注和支持，谢谢大家！\",\"timestamp\":1745821203806,\"type\":\"highlight\"}]");
                             webViewReader.post(() -> webViewReader.evaluateJavascript(
