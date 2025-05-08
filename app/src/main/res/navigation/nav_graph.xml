@@ -6,15 +6,15 @@
 
     <fragment
         android:id="@+id/booksFragment"
-        android:name="cn.zhangjh.zhiyue.BooksFragment"
+        android:name="cn.zhangjh.zhiyue.fragment.BooksFragment"
         android:label="找书" />
     <fragment
         android:id="@+id/readerFragment"
-        android:name="cn.zhangjh.zhiyue.ReaderFragment"
+        android:name="cn.zhangjh.zhiyue.fragment.ReaderFragment"
         android:label="阅读器" />
     <fragment
         android:id="@+id/profileFragment"
-        android:name="cn.zhangjh.zhiyue.ProfileFragment"
+        android:name="cn.zhangjh.zhiyue.fragment.ProfileFragment"
         android:label="我的" />
 
 </navigation>

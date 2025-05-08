@@ -1,6 +1,8 @@
 package cn.zhangjh.zhiyue.fragment;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
@@ -34,6 +36,7 @@ import okhttp3.WebSocketListener;
 
 public class MindMapFragment extends Fragment {
     private static final String TAG = MindMapFragment.class.getName();
+    private String userId;
     private WebView mindMapWebView;
     private ProgressBar loadingProgress;
     private TextView errorText;
@@ -65,7 +68,8 @@ public class MindMapFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        SharedPreferences prefs = requireContext().getSharedPreferences("auth", Context.MODE_PRIVATE);
+        this.userId = prefs.getString("userId", "");
         // 观察数据变化
         BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
         viewModel.getTitle().observe(this, title -> this.title = title);
@@ -77,7 +81,7 @@ public class MindMapFragment extends Fragment {
         if (webSocket != null) {
             return;
         }
-        String wsUrl = "wss://tx.zhangjh.cn/socket/mindmap?userId=123456";
+        String wsUrl = "wss://tx.zhangjh.cn/socket/mindmap?userId=" + this.userId;
 
         Log.d(TAG, "Connecting to MindMapSocket: " + wsUrl);
 

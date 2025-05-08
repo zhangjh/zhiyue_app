@@ -1,4 +1,4 @@
-package cn.zhangjh.zhiyue;
+package cn.zhangjh.zhiyue.fragment;
 
 import android.annotation.SuppressLint;
 import android.content.ClipData;
@@ -34,6 +34,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
 
+import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.model.Annotation;

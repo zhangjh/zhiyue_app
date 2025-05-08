@@ -1,4 +1,4 @@
-package cn.zhangjh.zhiyue;
+package cn.zhangjh.zhiyue.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.TimeZone;
 
+import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.model.ReadingHistory;
 
 public class ReadingHistoryAdapter extends RecyclerView.Adapter<ReadingHistoryAdapter.ViewHolder> {

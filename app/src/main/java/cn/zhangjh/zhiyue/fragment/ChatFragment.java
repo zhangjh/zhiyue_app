@@ -1,6 +1,7 @@
 package cn.zhangjh.zhiyue.fragment;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -42,6 +43,7 @@ import okhttp3.WebSocketListener;
 
 public class ChatFragment extends Fragment {
     private static final String TAG = ChatFragment.class.getName();
+    private String userId;
     private RecyclerView chatRecyclerView;
     private TextInputEditText inputEditText;
     private ChatAdapter chatAdapter;
@@ -54,7 +56,9 @@ public class ChatFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_chat, container, false);
-        
+        SharedPreferences prefs = requireContext().getSharedPreferences("auth", Context.MODE_PRIVATE);
+        this.userId = prefs.getString("userId", "");
+
         initViews(view);
         initWebSocket();
         
@@ -80,7 +84,7 @@ public class ChatFragment extends Fragment {
     }
 
     private void initWebSocket() {
-        String wsUrl = "wss://tx.zhangjh.cn/socket/chat?userId=123456";
+        String wsUrl = "wss://tx.zhangjh.cn/socket/chat?userId=" + this.userId;
         Request request = new Request.Builder().url(wsUrl).build();
         
         OkHttpClient client = new OkHttpClient();

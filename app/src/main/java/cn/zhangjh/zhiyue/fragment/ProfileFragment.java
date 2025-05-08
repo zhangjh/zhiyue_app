@@ -1,4 +1,4 @@
-package cn.zhangjh.zhiyue;
+package cn.zhangjh.zhiyue.fragment;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -25,6 +25,8 @@ import com.google.android.material.imageview.ShapeableImageView;
 import java.util.ArrayList;
 import java.util.List;
 
+import cn.zhangjh.zhiyue.R;
+import cn.zhangjh.zhiyue.adapter.ReadingHistoryAdapter;
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.model.BizResponse;

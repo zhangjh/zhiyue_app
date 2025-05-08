@@ -1,4 +1,4 @@
-package cn.zhangjh.zhiyue;
+package cn.zhangjh.zhiyue.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import cn.zhangjh.zhiyue.adapter.BookAdapter;
+import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.model.Book;

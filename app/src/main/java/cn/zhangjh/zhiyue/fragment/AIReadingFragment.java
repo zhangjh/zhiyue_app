@@ -1,4 +1,4 @@
-package cn.zhangjh.zhiyue;
+package cn.zhangjh.zhiyue.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +13,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.adapter.AIReadingPagerAdapter;
 
 
