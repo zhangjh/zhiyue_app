@@ -18,7 +18,13 @@ import cn.zhangjh.zhiyue.adapter.AIReadingPagerAdapter;
 
 public class AIReadingFragment extends Fragment {
     private static final String TAG = AIReadingFragment.class.getName();
+    private String fileId;
+
     private final String[] tabTitles = new String[]{"AI总结", "AI问答", "思维导图"};
+
+    public AIReadingFragment(String fileId) {
+        this.fileId = fileId;
+    }
 
     @Nullable
     @Override
@@ -29,7 +35,7 @@ public class AIReadingFragment extends Fragment {
         TabLayout tabLayout = view.findViewById(R.id.tab_layout);
 
         // 设置适配器
-        AIReadingPagerAdapter pagerAdapter = new AIReadingPagerAdapter(requireActivity());
+        AIReadingPagerAdapter pagerAdapter = new AIReadingPagerAdapter(requireActivity(), fileId);
         viewPager.setAdapter(pagerAdapter);
 
         // 连接 TabLayout 和 ViewPager2

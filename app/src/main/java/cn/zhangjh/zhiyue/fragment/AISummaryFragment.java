@@ -1,5 +1,8 @@
 package cn.zhangjh.zhiyue.fragment;
 
+import static android.content.Context.MODE_PRIVATE;
+
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,6 +31,8 @@ import okhttp3.WebSocketListener;
 
 public class AISummaryFragment extends Fragment {
     private static final String TAG = AISummaryFragment.class.getName();
+    private String userId;
+    private final String fileId;
     private TextView summaryText;
     private View progressLayout;
     private TextView progressPercentage;
@@ -38,11 +43,17 @@ public class AISummaryFragment extends Fragment {
     private String title, author;
     private final StringBuilder summary = new StringBuilder();
 
+    public AISummaryFragment(String fileId) {
+        this.fileId = fileId;
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ai_summary, container, false);
-        
+        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
+        this.userId = prefs.getString("userId", "");
+
         summaryText = view.findViewById(R.id.ai_summary_text);
         progressLayout = view.findViewById(R.id.progress_layout);
         progressBar = view.findViewById(R.id.progress_bar);
@@ -60,8 +71,10 @@ public class AISummaryFragment extends Fragment {
         if (webSocket != null) {
             return;
         }
-        String fileId = "一句顶一万句 (刘震云) (Z-Library).epub";
-        String userId = "123456";
+        // todo: 跳转登陆
+        if(userId.isEmpty()) {
+            return;
+        }
         String wsUrl = String.format("wss://tx.zhangjh.cn/socket/summary?userId=%s", userId);
         
         Log.d(TAG, "Connecting to WebSocket: " + wsUrl);

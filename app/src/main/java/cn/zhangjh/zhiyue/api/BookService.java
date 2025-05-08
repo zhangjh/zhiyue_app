@@ -4,13 +4,14 @@ import cn.zhangjh.zhiyue.model.Annotation;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.BookDetail;
+import cn.zhangjh.zhiyue.model.HistoryResponse;
+import cn.zhangjh.zhiyue.model.ReadingRecord;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
-import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface BookService {
@@ -24,15 +25,36 @@ public interface BookService {
 
 	@FormUrlEncoded
 	@POST("/books/download")
-	Call<BizResponse> downloadBook(
+	Call<BizResponse<String>> downloadBook(
 			@Field("bookId") String bookId,
 			@Field("hashId") String hashId
 	);
 
-	//	todo: add annotation api
-    @POST("/annotations")
-    Call<BizResponse> saveAnnotation(@Body Annotation annotation);
+    @POST("/books/saveAnnotation")
+    Call<BizResponse<Void>> saveAnnotation(@Body Annotation annotation);
     
-    @GET("/annotations/{bookId}")
-    Call<BizListResponse<Annotation>> getAnnotations(@Path("bookId") String bookId);
+    @GET("/books/getAnnotations")
+    Call<BizListResponse<Annotation>> getAnnotations(@Query("userId") String userId, @Query("fileId") String fileId);
+
+	@GET("/books/getHistory")
+	Call<BizResponse<HistoryResponse>> getHistory(
+			@Query("pageIndex") int pageIndex,
+			@Query("pageSize") int pageSize,
+			@Query("userId") String userId
+	);
+
+	@FormUrlEncoded
+    @POST("parse/saveRecord")
+    Call<BizResponse<Void>> saveRecord(@Field("userId") String userId,
+									   @Field("fileId") String fileId);
+
+	@FormUrlEncoded
+    @POST("books/deleteHistory")
+    Call<BizResponse<Void>> deleteHistory(
+            @Field("userId") String userId,
+            @Field("fileId") String fileId
+    );
+
+    @POST("parse/updateRecord")
+    Call<BizResponse<Void>> updateRecord(@Body ReadingRecord readingRecord);
 }

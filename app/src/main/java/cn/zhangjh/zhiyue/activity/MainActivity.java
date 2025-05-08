@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
              });
         }
         // for test only
-        navigateToReader("1", "2");
+//        navigateToReader("1", "2", "");
     }
 
     // 隐藏底部导航栏
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 切换到阅读器页面
-    public void navigateToReader(String bookId, String hashId) {
+    public void navigateToReader(String bookId, String hashId, String fileId, String cfi) {
         if (navController != null) {
             // 设置跳转阅读器场景的标识符
             mode = "search";
@@ -81,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
             Bundle args = new Bundle();
             args.putString("book_id", bookId);
             args.putString("hash_id", hashId);
+            args.putString("file_id", fileId);
+            args.putString("cfi", cfi);
             navController.navigate(R.id.readerFragment, args);
         }
     }

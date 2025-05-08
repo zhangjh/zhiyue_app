@@ -14,8 +14,11 @@ import cn.zhangjh.zhiyue.fragment.MindMapFragment;
 public class AIReadingPagerAdapter extends FragmentStateAdapter {
     private final SparseArray<Fragment> fragments = new SparseArray<>();
 
-    public AIReadingPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
+    private final String fileId;
+
+    public AIReadingPagerAdapter(@NonNull FragmentActivity fragmentActivity, @NonNull String fileId) {
         super(fragmentActivity);
+        this.fileId = fileId;
     }
 
     @NonNull
@@ -24,7 +27,7 @@ public class AIReadingPagerAdapter extends FragmentStateAdapter {
         Fragment fragment;
         switch (position) {
             case 0:
-                fragment = new AISummaryFragment();
+                fragment = new AISummaryFragment(fileId);
                 break;
             case 1:
                 fragment = new ChatFragment();
