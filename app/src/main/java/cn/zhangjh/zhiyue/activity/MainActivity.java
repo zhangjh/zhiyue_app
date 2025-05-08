@@ -1,6 +1,7 @@
 package cn.zhangjh.zhiyue.activity;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 
@@ -43,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
                  // 首页直接点击阅读器菜单项
                  if (item.getItemId() == R.id.readerFragment && Objects.equals(mode, "init")) {
                      // 如果直接点击阅读选项，显示提示
-                     Toast.makeText(this, "请搜索你想看的书籍", Toast.LENGTH_SHORT).show();
+                     Toast.makeText(this, "请先搜索或从阅读记录继续", Toast.LENGTH_SHORT).show();
                      return false;
                  }
                  // 其他选项正常导航
@@ -68,11 +69,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 切换到阅读器页面
+    // 切换到阅读器页面，有两个跳转场景：1. 搜索，2. 阅读记录
     public void navigateToReader(String bookId, String hashId, String fileId, String cfi) {
         if (navController != null) {
             // 设置跳转阅读器场景的标识符
-            mode = "search";
+            if(TextUtils.isEmpty(fileId)) {
+                mode = "search";
+            } else {
+                mode = "history";
+            }
             // 切换到阅读器页面（底部导航第二个选项）
             bottomNavigationView.setSelectedItemId(R.id.readerFragment);
             // 隐藏底部导航栏
