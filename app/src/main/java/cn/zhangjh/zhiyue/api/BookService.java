@@ -12,7 +12,6 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
-import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface BookService {
@@ -31,12 +30,11 @@ public interface BookService {
 			@Field("hashId") String hashId
 	);
 
-	//	todo: add annotation api
-    @POST("/annotations")
+    @POST("/books/saveAnnotation")
     Call<BizResponse<Void>> saveAnnotation(@Body Annotation annotation);
     
-    @GET("/annotations/{bookId}")
-    Call<BizListResponse<Annotation>> getAnnotations(@Path("bookId") String bookId);
+    @GET("/books/getAnnotations")
+    Call<BizListResponse<Annotation>> getAnnotations(@Query("userId") String userId, @Query("fileId") String fileId);
 
 	@GET("/books/getHistory")
 	Call<BizResponse<HistoryResponse>> getHistory(

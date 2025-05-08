@@ -367,9 +367,10 @@ public class ReaderFragment extends Fragment {
         }
 
         @JavascriptInterface
-        public void saveAnnotation(String cfiRange, String type, String color, String text) {
+        public void saveAnnotation(String cfi, String type, String color, String text) {
             if (getActivity() != null) {
-                Annotation annotation = new Annotation(bookId, cfiRange, type, color, text);
+                Annotation annotation = new Annotation(fileId, cfi, type, color, text);
+                annotation.setUserId(userId);
                 Log.d(TAG, "Saving annotation: " + new Gson().toJson(annotation));
                 // 调用API保存标注
                 ApiClient.getBookService().saveAnnotation(annotation).enqueue(new Callback<>() {
@@ -390,10 +391,10 @@ public class ReaderFragment extends Fragment {
 
         @JavascriptInterface
         public void loadAnnotations() {
-            Log.d(TAG, "loadAnnotations called, bookId: " + bookId);
+            Log.d(TAG, "loadAnnotations called, fileId: " + fileId);
             if (getActivity() != null) {
                 // 从服务器获取标注
-                ApiClient.getBookService().getAnnotations(bookId).enqueue(new Callback<>() {
+                ApiClient.getBookService().getAnnotations(userId, fileId).enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Response<BizListResponse<Annotation>> response) {
                         if (response.isSuccessful() && response.body() != null) {

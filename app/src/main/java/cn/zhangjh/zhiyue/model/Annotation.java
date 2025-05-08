@@ -1,36 +1,43 @@
 package cn.zhangjh.zhiyue.model;
 
 public class Annotation {
-    private String bookId;
-    private String cfiRange;
+    private String userId;
+    private String fileId;
+    private String cfi;
     private String type;    // highlight 或 underline
     private String color;
     private String text;
-    private long timestamp;
-    
-    public Annotation(String bookId, String cfiRange, String type, String color, String text) {
-        this.bookId = bookId;
-        this.cfiRange = cfiRange;
+
+    public Annotation(String fileId, String cfi, String type, String color, String text) {
+        this.fileId = fileId;
+        this.cfi = cfi;
         this.type = type;
         this.color = color;
         this.text = text;
-        this.timestamp = System.currentTimeMillis();
-    }
-    
-    public String getBookId() {
-        return bookId;
     }
 
-    public void setBookId(String bookId) {
-        this.bookId = bookId;
+    public String getUserId() {
+        return userId;
     }
 
-    public String getCfiRange() {
-        return cfiRange;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
-    public void setCfiRange(String cfiRange) {
-        this.cfiRange = cfiRange;
+    public String getFileId() {
+        return fileId;
+    }
+
+    public void setFileId(String fileId) {
+        this.fileId = fileId;
+    }
+
+    public String getCfi() {
+        return cfi;
+    }
+
+    public void setCfi(String cfi) {
+        this.cfi = cfi;
     }
 
     public String getType() {
@@ -56,14 +63,5 @@ public class Annotation {
     public void setText(String text) {
         this.text = text;
     }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
 
 }
