@@ -422,7 +422,7 @@
         });
     }
 
-    function loadBook(bookUrl) {
+    function loadBook(bookUrl, cfi) {
         console.log("bookUrl: " + bookUrl);
         book = ePub(bookUrl);
         // 添加错误处理
@@ -442,6 +442,24 @@
             height: "100%",
             spread: "none",
             minSpreadWidth: 1000
+        });
+
+        // 添加位置信息生成代码
+        book.ready.then(() => {
+            return book.locations.generate();
+        }).then(() => {
+            if(cfi) {
+                return rendition.display(cfi);
+            } else {
+                return rendition.display();
+            }
+        }).then(() => {
+            // 位置信息生成完成后，再加载标注
+            if (window.Android) {
+                window.Android.onBookLoaded();
+                window.Android.loadAnnotations();
+            }
+            initializeSelection();
         });
 
         // 添加目录功能
@@ -473,7 +491,7 @@
             annotations.forEach(annotation => {
                 if (annotation.type === 'highlight') {
                     rendition.annotations.highlight(
-                        annotation.cfiRange,
+                        annotation.cfi,
                         {},
                         (e) => {
                             e.target.style.backgroundColor = annotation.color;
@@ -481,7 +499,7 @@
                     );
                 } else if (annotation.type === 'underline') {
                     rendition.annotations.underline(
-                        annotation.cfiRange,
+                        annotation.cfi,
                         {},
                         undefined,
                         "ul",
@@ -494,17 +512,6 @@
                 }
             });
         };
-
-        // 在书籍加载完成后加载标注
-        rendition.display().then(() => {
-            console.log("display completed, annotationsLoaded");
-            if (window.Android) {
-                window.Android.onBookLoaded();
-                // 加载已存在的标注
-                window.Android.loadAnnotations();
-            }
-            initializeSelection();
-        });
 
         // 启用手势支持
         rendition.on("touchstart", event => {
@@ -536,12 +543,15 @@
                 }
             }
 
-            // 现有的进度更新代码
-            let progress = book.locations.percentageFromCfi(location.start.cfi);
-            let progressPercent = Math.round(progress * 100);
-            document.getElementById('progress-container').textContent = `阅读进度：${progressPercent}%`;
-            if (window.Android) {
-                window.Android.onProgressUpdate(progressPercent, location.start.cfi);
+            // 确保位置信息已生成后再计算进度
+            if (book.locations && book.locations.length() > 0) {
+                let progress = book.locations.percentageFromCfi(location.start.cfi);
+                let progressPercent = Math.round(progress * 100);
+                console.log("progressPercent: " + progressPercent);
+                document.getElementById('progress-container').textContent = `阅读进度：${progressPercent}%`;
+                if (window.Android) {
+                    window.Android.onProgressUpdate(progressPercent, location.start.cfi);
+                }
             }
         });
     }

@@ -341,17 +341,17 @@ public class ReaderFragment extends Fragment {
 
         @JavascriptInterface
         public void onProgressUpdate(int progress, String cfi) {
-             if (getActivity() != null) {
-                 getActivity().runOnUiThread(() -> {
-                     // 这里可以保存进度到本地存储
-                     ReadingRecord readingRecord = new ReadingRecord();
-                     readingRecord.setUserId(userId);
-                     readingRecord.setFileId(fileId);
-                     readingRecord.setProgress(progress);
-                     readingRecord.setCfi(cfi);
-                     updateReadingRecord(readingRecord);
-                 });
-             }
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    // 这里可以保存进度到本地存储
+                    ReadingRecord readingRecord = new ReadingRecord();
+                    readingRecord.setUserId(userId);
+                    readingRecord.setFileId(fileId);
+                    readingRecord.setProgress(progress);
+                    readingRecord.setCfi(cfi);
+                    updateReadingRecord(readingRecord);
+                });
+            }
         }
 
         @JavascriptInterface
@@ -399,10 +399,8 @@ public class ReaderFragment extends Fragment {
                             String annotations = new Gson().toJson(response.body().getData());
                             Log.d(TAG, "Annotations: " + annotations);
                             // mock data
-//			                String annotations = new Gson().toJson("[{\"bookId\":\"1\",\"cfiRange\":\"epubcfi(/6/8!/4/10,/1:0,/1:36)\",\"color\":\"rgba(255,255,0,0.3)\",\"text\":\"在《三体》电子书与读者见面之际，再次感谢广大读者的关注和支持，谢谢大家！\",\"timestamp\":1745821203806,\"type\":\"highlight\"}]");
-                            webViewReader.post(() -> webViewReader.evaluateJavascript(
-                                    "window.loadAnnotations(" + annotations + ")",
-                                    null
+                            String script = String.format("loadAnnotations('%s')", annotations);
+                            webViewReader.post(() -> webViewReader.evaluateJavascript(script, null
                             ));
                         }
                     }
