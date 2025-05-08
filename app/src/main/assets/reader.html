@@ -552,24 +552,8 @@
             let progressPercent = Math.round(progress * 100);
             document.getElementById('progress-container').textContent = `阅读进度：${progressPercent}%`;
             if (window.Android) {
-                window.Android.onProgressUpdate(progressPercent);
+                window.Android.onProgressUpdate(progressPercent, location.start.cfi);
             }
-        });
-
-        // 在进度更新部分修改
-        book.ready.then(() => {
-            book.locations.generate().then(() => {
-                rendition.on('relocated', (location) => {
-                    let progress = book.locations.percentageFromCfi(location.start.cfi);
-                    let progressPercent = Math.round(progress * 100);
-                    // 更新进度显示
-                    document.getElementById('progress-container').textContent = `阅读进度：${progressPercent}%`;
-                    // 通知Android进度更新
-                    if (window.Android) {
-                        window.Android.onProgressUpdate(progressPercent);
-                    }
-                });
-            });
         });
     }
 

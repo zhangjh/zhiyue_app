@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
              });
         }
         // for test only
-        navigateToReader("1", "2", "");
+//        navigateToReader("1", "2", "");
     }
 
     // 隐藏底部导航栏

@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
@@ -39,6 +40,7 @@ import cn.zhangjh.zhiyue.model.Annotation;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.ReadingRecord;
+import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,12 +48,11 @@ import retrofit2.Response;
 public class ReaderFragment extends Fragment {
 
     private static final String TAG = ReaderFragment.class.getName();
+    private String userId;
     private String fileId;
     private String bookUrl;
     private String bookId;
     private WebView webViewReader;
-    private boolean isNavigationVisible = false;
-    private int currentProgress = 0;
     private View loadingView;
 
     @Override
@@ -72,13 +73,25 @@ public class ReaderFragment extends Fragment {
             String hashId = getArguments().getString("hash_id");
             fileId = getArguments().getString("file_id");
             // for test only
-            fileId = "一句顶一万句 (刘震云) (Z-Library).epub";
-            if(fileId == null ||fileId.isEmpty()) {
+//            fileId = "一句顶一万句 (刘震云) (Z-Library).epub";
+            if(fileId == null || fileId.isEmpty()) {
                 // 获取书籍url, 阅读记录里已有则不重复下载
-                // getEbookUrl(bookId, hashId);
+                 getEbookUrl(bookId, hashId);
             }
-            bookUrl = getString(R.string.biz_domain) + fileId;
+//            bookUrl = getString(R.string.biz_domain) + fileId;
         }
+        BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
+
+        // 观察数据变化
+        viewModel.getSummary().observe(this, summary -> {
+            // 更新总结到记录
+            ReadingRecord readingRecord = new ReadingRecord();
+            readingRecord.setUserId(userId);
+            readingRecord.setFileId(fileId);
+            readingRecord.setSummary(summary);
+
+            updateReadingRecord(readingRecord);
+        });
     }
 
     private void getEbookUrl(String bookId, String hashId) {
@@ -99,6 +112,7 @@ public class ReaderFragment extends Fragment {
                 if (response.body() != null && response.body().isSuccess()) {
                     bookUrl = response.body().getData();
                     Log.d(TAG, "Ebook url: " + bookUrl);
+                    fileId = bookUrl.substring(bookUrl.lastIndexOf('/') + 1);
                 }
             }
     
@@ -165,6 +179,8 @@ public class ReaderFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_reader, container, false);
+        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
+        this.userId = prefs.getString("userId", "");
 
         // 删除思维导图相关初始化
         webViewReader = view.findViewById(R.id.webview_reader);
@@ -290,13 +306,6 @@ public class ReaderFragment extends Fragment {
     private class WebAppInterface {
         @JavascriptInterface
         public void onBookMetadata(String title, String author) {
-            // 获取用户ID
-            SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
-            String userId = prefs.getString("userId", "");
-            if (TextUtils.isEmpty(userId)) {
-                return;
-            }
-
             // 调用更新记录接口
             ReadingRecord readingRecord = new ReadingRecord();
             readingRecord.setFileId(fileId);
@@ -304,29 +313,7 @@ public class ReaderFragment extends Fragment {
             readingRecord.setTitle(title);
             readingRecord.setAuthor(author);
 
-            ApiClient.getBookService().updateRecord(readingRecord)
-                .enqueue(new Callback<>() {
-                    @Override
-                    public void onResponse(@NonNull Call<BizResponse<Void>> call,
-                                           @NonNull Response<BizResponse<Void>> response) {
-                        if (!response.isSuccessful()) {
-                            Log.e(TAG, "Update reading record failed: " + response.code());
-                            return;
-                        }
-                        BizResponse<Void> bizResponse = response.body();
-                        if (bizResponse != null && bizResponse.isSuccess()) {
-                            Log.d(TAG, "Update reading record success");
-                        } else {
-                            String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "unknown error";
-                            Log.e(TAG, "Update reading record failed: " + errorMsg);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
-                        Log.e(TAG, "Update reading record failed", t);
-                    }
-                });
+            updateReadingRecord(readingRecord);
         }
 
         @JavascriptInterface
@@ -349,15 +336,18 @@ public class ReaderFragment extends Fragment {
         }
 
         @JavascriptInterface
-        public void onProgressUpdate(int progress) {
-            // if (getActivity() != null) {
-            //     getActivity().runOnUiThread(() -> {
-            //         currentProgress = progress;
-            //         // 这里可以保存进度到本地存储
-            //         // 也可以更新UI显示当前进度
-            //         Toast.makeText(getContext(), "阅读进度: " + progress + "%", Toast.LENGTH_SHORT).show();
-            //     });
-            // }
+        public void onProgressUpdate(int progress, String cfi) {
+             if (getActivity() != null) {
+                 getActivity().runOnUiThread(() -> {
+                     // 这里可以保存进度到本地存储
+                     ReadingRecord readingRecord = new ReadingRecord();
+                     readingRecord.setUserId(userId);
+                     readingRecord.setFileId(fileId);
+                     readingRecord.setProgress(progress);
+                     readingRecord.setCfi(cfi);
+                     updateReadingRecord(readingRecord);
+                 });
+             }
         }
 
         @JavascriptInterface
@@ -425,10 +415,6 @@ public class ReaderFragment extends Fragment {
         if (getActivity() == null || fileId == null) {
             return;
         }
-
-        // 获取用户ID
-        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
-        String userId = prefs.getString("userId", "");
         if (TextUtils.isEmpty(userId)) {
             return;
         }
@@ -455,6 +441,38 @@ public class ReaderFragment extends Fragment {
                 @Override
                 public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
                     Log.e(TAG, "Save reading record failed", t);
+                }
+            });
+    }
+
+    // 更新阅读记录
+    private void updateReadingRecord(ReadingRecord readingRecord) {
+        String userId = readingRecord.getUserId();
+        if(TextUtils.isEmpty(userId)) {
+            Log.d(TAG, "Update reading record failed: userId is empty");
+            return;
+        }
+        ApiClient.getBookService().updateRecord(readingRecord)
+            .enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<BizResponse<Void>> call,
+                                       @NonNull Response<BizResponse<Void>> response) {
+                    if (!response.isSuccessful()) {
+                        Log.e(TAG, "Update reading record failed: " + response.code());
+                        return;
+                    }
+                    BizResponse<Void> bizResponse = response.body();
+                    if (bizResponse != null && bizResponse.isSuccess()) {
+                        Log.d(TAG, "Update reading record success");
+                    } else {
+                        String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "unknown error";
+                        Log.e(TAG, "Update reading record failed: " + errorMsg);
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
+                    Log.e(TAG, "Update reading record failed", t);
                 }
             });
     }

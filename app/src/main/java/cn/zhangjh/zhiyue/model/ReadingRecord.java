@@ -6,6 +6,7 @@ public class ReadingRecord {
     private String fileId;
     private String title;
     private String author;
+    private int progress;
     private String cfi;
     private String summary;
 
@@ -39,6 +40,14 @@ public class ReadingRecord {
 
     public void setAuthor(String author) {
         this.author = author;
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public void setProgress(int progress) {
+        this.progress = progress;
     }
 
     public String getCfi() {
