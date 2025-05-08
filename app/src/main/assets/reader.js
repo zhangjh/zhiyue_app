@@ -1,4 +1,6 @@
 let rendition;
+// 在文件顶部添加全局变量
+window.isSelecting = false; // 添加这行，使isSelecting成为全局变量
 
 // 添加加载标注方法
 window.loadAnnotations = function(annotationsJson) {
@@ -37,7 +39,6 @@ function initializeSelection() {
     const selectionMenu = document.getElementById('selection-menu');
     let currentCfiRange = null;
     let currentContents = null;
-    let isSelecting = false;
     let startX, startY;
     let touchStartTime = 0;
     let longPressTimer = null;
@@ -120,14 +121,16 @@ function initializeSelection() {
 
         // 触摸事件处理
         doc.addEventListener('touchstart', (e) => {
+            console.log("触摸开始");
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
             touchStartTime = Date.now();
-            isSelecting = false;
+            window.isSelecting = false;
 
             // 添加长按定时器
             longPressTimer = setTimeout(() => {
-                isSelecting = true;
+                console.log("长按触发");
+                window.isSelecting = true;
                 // 启用文本选择
                 const range = doc.caretRangeFromPoint(startX, startY);
                 if (range) {
@@ -165,10 +168,12 @@ function initializeSelection() {
 
         // 修改选择变化监听
         doc.addEventListener('selectionchange', () => {
+            console.log("selection-menu selectionchange");
             const selection = doc.getSelection();
             const selectedText = selection.toString().trim();
 
-            if (selectedText && isSelecting) {
+            if (selectedText && window.isSelecting) {
+                console.log("有选中文本且处于选择模式");
                 const range = selection.getRangeAt(0);
                 currentCfiRange = contents.cfiFromRange(range);
 
@@ -214,6 +219,7 @@ function initializeSelection() {
 
 function loadBook(bookUrl, cfi) {
     let book;
+    let touchStartX; // 添加这行声明变量
 
     book = ePub(bookUrl);
 
@@ -240,12 +246,21 @@ function loadBook(bookUrl, cfi) {
             window.Android.loadAnnotations();
         }
         initializeSelection();
-         // 启用手势支持
+        
+        // 启用手势支持 - 修改这部分代码，避免与文本选择冲突
+        let lastTapTime = 0;
         rendition.on("touchstart", event => {
-            const touches = event.changedTouches[0];
-            touchStartX = touches.screenX;
+            // 只在非选择模式下处理翻页手势
+            if (!window.isSelecting) {
+                const touches = event.changedTouches[0];
+                touchStartX = touches.screenX;
+                lastTapTime = Date.now();
+            }
         });
+        
         rendition.on("touchend", event => {
+            // 只在非选择模式下处理翻页手势
+            if (!window.isSelecting && Date.now() - lastTapTime < 300) {
                 const touches = event.changedTouches[0];
                 const swipeDistance = touchStartX - touches.screenX;
 
@@ -256,7 +271,8 @@ function loadBook(bookUrl, cfi) {
                         rendition.prev();
                     }
                 }
-            });
+            }
+        });
         // 添加章节变化监听
         rendition.on('relocated', (location) => {
                             // 获取当前章节信息
