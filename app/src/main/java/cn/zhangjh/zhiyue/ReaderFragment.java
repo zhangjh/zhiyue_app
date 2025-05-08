@@ -50,6 +50,7 @@ public class ReaderFragment extends Fragment {
     private static final String TAG = ReaderFragment.class.getName();
     private String userId;
     private String fileId;
+    private String cfi;
     private String bookUrl;
     private String bookId;
     private WebView webViewReader;
@@ -72,6 +73,7 @@ public class ReaderFragment extends Fragment {
             bookId = getArguments().getString("book_id");
             String hashId = getArguments().getString("hash_id");
             fileId = getArguments().getString("file_id");
+            cfi = getArguments().getString("cfi");
             // for test only
 //            fileId = "一句顶一万句 (刘震云) (Z-Library).epub";
             if(fileId == null || fileId.isEmpty()) {
@@ -215,9 +217,14 @@ public class ReaderFragment extends Fragment {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                if (bookUrl != null) {
+                if (!TextUtils.isEmpty(bookUrl)) {
                     showLoading("正在加载电子书...");
                     webViewReader.evaluateJavascript("loadBook('" + bookUrl + "')", null);
+                }
+                // 如果有cfi参数，跳转到指定位置
+                if (!TextUtils.isEmpty(cfi)) {
+                    String script = String.format("window.reader.rendition.display('%s');", cfi);
+                    webViewReader.evaluateJavascript(script, null);
                 }
             }
         });
