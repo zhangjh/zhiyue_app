@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -17,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -26,33 +28,39 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import cn.zhangjh.zhiyue.adapter.BookAdapter;
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.activity.MainActivity;
+import cn.zhangjh.zhiyue.adapter.BookAdapter;
+import cn.zhangjh.zhiyue.adapter.RecommendBookAdapter;
 import cn.zhangjh.zhiyue.api.ApiClient;
-import cn.zhangjh.zhiyue.model.Book;
 import cn.zhangjh.zhiyue.model.BizListResponse;
+import cn.zhangjh.zhiyue.model.Book;
 import cn.zhangjh.zhiyue.model.BookDetail;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class BooksFragment extends Fragment implements BookAdapter.OnBookClickListener {
+public class BooksFragment extends Fragment implements BookAdapter.OnBookClickListener, RecommendBookAdapter.OnBookClickListener {
     private static final String TAG = "BooksFragment";
     private static final int DEFAULT_PAGE_SIZE = 5;
 
     private TextInputEditText centerSearchEditText;
     private TextInputEditText topSearchEditText;
     private RecyclerView recyclerView;
+    private RecyclerView recommendRecyclerView;
+    private ProgressBar recommendProgressBar;
+    private ImageButton refreshRecommendButton;
     private ConstraintLayout searchResultContainer;
     private ProgressBar progressBar;
     private View centerSearchContainer;
     private View topSearchContainer;
     private BookAdapter bookAdapter;
+    private RecommendBookAdapter recommendBookAdapter;
     private String lastSearchQuery = "";
     private int currentPage = 1;
     private boolean isLoading = false;
     private boolean hasMoreData = true;
+    private View emptyView;
 
     @Nullable
     @Override
@@ -66,6 +74,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         initViews(view);
         setupRecyclerView();
         setupSearchViews();
+        setupRecommendBooks();
         
         // 添加返回键处理
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
@@ -105,14 +114,13 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         lastSearchQuery = "";
     }
 
-    // 添加成员变量
-    private View emptyView;
-
-    // 在 initViews 方法中添加
     private void initViews(View view) {
         centerSearchEditText = view.findViewById(R.id.centerSearchEditText);
         topSearchEditText = view.findViewById(R.id.topSearchEditText);
         recyclerView = view.findViewById(R.id.recyclerView);
+        recommendRecyclerView = view.findViewById(R.id.recommendRecyclerView);
+        recommendProgressBar = view.findViewById(R.id.recommendProgressBar);
+        refreshRecommendButton = view.findViewById(R.id.refreshRecommendButton);
         progressBar = view.findViewById(R.id.progressBar);
         centerSearchContainer = view.findViewById(R.id.centerSearchContainer);
         topSearchContainer = view.findViewById(R.id.topSearchContainer);
@@ -121,12 +129,13 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     }
 
     private void setupRecyclerView() {
+        // 设置搜索结果列表
         bookAdapter = new BookAdapter();
         bookAdapter.setOnBookClickListener(this);
         LinearLayoutManager layoutManager = new LinearLayoutManager(requireContext());
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(bookAdapter);
-
+    
         // 添加滚动监听以实现加载更多
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -134,17 +143,34 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                 super.onScrolled(recyclerView, dx, dy);
                 
                 if (!hasMoreData || isLoading) return;
-
+    
                 int visibleItemCount = layoutManager.getChildCount();
                 int totalItemCount = layoutManager.getItemCount();
                 int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-
+    
                 if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
                         && firstVisibleItemPosition >= 0) {
                     loadMoreBooks();
                 }
             }
         });
+        
+        // 设置推荐书目列表为网格布局，两列
+        recommendBookAdapter = new RecommendBookAdapter();
+        recommendBookAdapter.setOnBookClickListener(this);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(requireContext(), 2);
+        recommendRecyclerView.setLayoutManager(gridLayoutManager);
+        recommendRecyclerView.setAdapter(recommendBookAdapter);
+        
+        // 设置推荐书目列表的高度，使其只显示2.5行
+        ViewGroup.LayoutParams params = recommendRecyclerView.getLayoutParams();
+        if (params != null) {
+            // 计算高度：每个项目的高度约为150dp，显示2.5行
+            float density = getResources().getDisplayMetrics().density;
+            int itemHeight = (int) (150 * density);
+            params.height = (int) (2.5f * itemHeight);
+            recommendRecyclerView.setLayoutParams(params);
+        }
     }
 
     private void setupSearchViews() {
@@ -182,6 +208,68 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                 if (!Objects.requireNonNull(centerSearchEditText.getText()).toString().equals(s.toString())) {
                     centerSearchEditText.setText(s.toString());
                 }
+            }
+        });
+    }
+
+    private void setupRecommendBooks() {
+        // 设置刷新按钮点击事件
+        refreshRecommendButton.setOnClickListener(v -> loadRecommendBooks());
+        
+        // 加载推荐书目
+        loadRecommendBooks();
+    }
+
+    private void loadRecommendBooks() {
+        // 将进度条显示在推荐书目列表的位置，而不是在底部
+        recommendProgressBar.setVisibility(View.VISIBLE);
+        
+        // 确保推荐书目列表在加载时不可见，避免空白区域
+        recommendRecyclerView.setVisibility(View.GONE);
+        
+        ApiClient.getBookService().getRecommendBooks().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Response<BizListResponse<BookDetail>> response) {
+                if (!isAdded()) return;
+                recommendProgressBar.setVisibility(View.GONE);
+                // 数据加载完成后显示列表
+                recommendRecyclerView.setVisibility(View.VISIBLE);
+                
+                if (!response.isSuccessful()) {
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+                        Log.e(TAG, "Error response: " + errorBody);
+                        showError("获取推荐书目失败 (" + response.code() + "): " + errorBody);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error response", e);
+                        showError("获取推荐书目失败 (" + response.code() + ")");
+                    }
+                    return;
+                }
+                
+                if (response.body() != null && response.body().isSuccess()) {
+                    List<Book> books = convertToBooks(response.body().getData());
+                    Log.d(TAG, "Recommend successful. Found " + books.size() + " books");
+                    recommendBookAdapter.setBooks(books);
+                } else {
+                    Log.e(TAG, "Response body was null or not successful");
+                    showError("获取推荐书目失败：返回数据无效");
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                recommendProgressBar.setVisibility(View.GONE);
+                // 即使加载失败也显示列表（可能有缓存数据）
+                recommendRecyclerView.setVisibility(View.VISIBLE);
+                
+                Log.e(TAG, "Recommend failed", t);
+                String errorMessage = "网络错误: " + t.getClass().getSimpleName();
+                if (t.getMessage() != null) {
+                    errorMessage += " - " + t.getMessage();
+                }
+                showError(errorMessage);
             }
         });
     }
@@ -330,6 +418,15 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     public void onReadButtonClick(Book book) {
         if (getActivity() instanceof MainActivity) {
             // 只显示加载进度条，保持其他视图状态不变
+            progressBar.setVisibility(View.VISIBLE);
+            ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash(), "", "");
+        }
+    }
+
+    @Override
+    public void onBookClick(Book book) {
+        if (getActivity() instanceof MainActivity) {
+            // 显示加载进度条
             progressBar.setVisibility(View.VISIBLE);
             ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash(), "", "");
         }

@@ -23,6 +23,9 @@ public interface BookService {
 		    @Query("limit") Integer limit
     );
 
+    @GET("/books/recommend")
+    Call<BizListResponse<BookDetail>> getRecommendBooks();
+
 	@FormUrlEncoded
 	@POST("/books/download")
 	Call<BizResponse<String>> downloadBook(

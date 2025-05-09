@@ -75,6 +75,62 @@
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
+        
+        <!-- 推荐书目区域 -->
+        <LinearLayout
+            android:id="@+id/recommendContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+                
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="推荐书目"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+                    
+                <ImageButton
+                    android:id="@+id/refreshRecommendButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@android:drawable/ic_popup_sync"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="刷新推荐" />
+            </LinearLayout>
+            
+            <!-- 将进度条放在RecyclerView的位置，使用FrameLayout叠加显示 -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recommendRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="true" />
+                    
+                <ProgressBar
+                    android:id="@+id/recommendProgressBar"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/primary" />
+            </FrameLayout>
+        </LinearLayout>
     </LinearLayout>
 
     <!-- 顶部搜索区域 -->
