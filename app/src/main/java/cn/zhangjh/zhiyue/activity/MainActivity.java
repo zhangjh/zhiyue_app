@@ -80,8 +80,6 @@ public class MainActivity extends AppCompatActivity {
             }
             // 切换到阅读器页面（底部导航第二个选项）
             bottomNavigationView.setSelectedItemId(R.id.readerFragment);
-            // 隐藏底部导航栏
-            hideBottomNavigation();
             
             Bundle args = new Bundle();
             args.putString("book_id", bookId);

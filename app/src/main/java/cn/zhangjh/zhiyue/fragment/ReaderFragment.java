@@ -291,6 +291,10 @@ public class ReaderFragment extends Fragment {
                     WindowManager.LayoutParams.FLAG_FULLSCREEN,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN
             );
+            // 确保底部导航栏隐藏
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).hideBottomNavigation();
+            }
         }
     }
 
