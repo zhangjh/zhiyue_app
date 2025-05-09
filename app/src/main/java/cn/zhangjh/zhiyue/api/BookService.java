@@ -43,6 +43,12 @@ public interface BookService {
 			@Query("userId") String userId
 	);
 
+	@GET("/books/getRecordDetail")
+	Call<BizResponse<ReadingRecord>> getRecordDetail(
+			@Query("userId") String userId,
+			@Query("fileId") String fileId
+	);
+
 	@FormUrlEncoded
     @POST("parse/saveRecord")
     Call<BizResponse<Void>> saveRecord(@Field("userId") String userId,
