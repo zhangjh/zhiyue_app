@@ -38,7 +38,7 @@ import retrofit2.Callback;
 public class AISummaryFragment extends Fragment {
     private static final String TAG = AISummaryFragment.class.getName();
     private String userId;
-    private final String fileId;
+    private String fileId;
     private TextView summaryText;
     private View progressLayout;
     private TextView progressPercentage;
@@ -49,6 +49,9 @@ public class AISummaryFragment extends Fragment {
     private String title, author;
     private final StringBuilder summary = new StringBuilder();
     private boolean isLoadingFromHistory = false;
+
+    public AISummaryFragment() {
+    }
 
     public AISummaryFragment(String fileId) {
         this.fileId = fileId;
