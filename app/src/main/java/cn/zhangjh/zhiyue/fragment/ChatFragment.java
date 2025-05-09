@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
@@ -61,6 +62,11 @@ public class ChatFragment extends Fragment {
 
         initViews(view);
         initWebSocket();
+        
+        // 设置软键盘不遮挡输入框
+        if (getActivity() != null) {
+            getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
         
         return view;
     }
@@ -222,6 +228,11 @@ public class ChatFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        // 恢复软键盘模式
+        if (getActivity() != null) {
+            getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
+        }
+        
         if (chatSocket != null) {
             chatSocket.close(1000, "Fragment closing");
             chatSocket = null;
