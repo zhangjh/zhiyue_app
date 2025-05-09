@@ -130,7 +130,7 @@ public class AISummaryFragment extends Fragment {
                                 break;
                             case "finish":
                                 progressLayout.setVisibility(View.GONE);
-                                updateBookInfo(title, author, summary.toString());
+                                updateBookInfo(title, author, summaryContent.toString());
                                 break;
                         }
                     } catch (JSONException e) {
