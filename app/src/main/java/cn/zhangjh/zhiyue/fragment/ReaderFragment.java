@@ -267,7 +267,7 @@ public class ReaderFragment extends Fragment {
                         Fragment fragment = fm.findFragmentByTag("AIReadingFragment");
                         FragmentTransaction ft = fm.beginTransaction();
                         if (fragment == null) {
-                            fragment = AIReadingFragment.newInstance(fileId);
+                            fragment = new AIReadingFragment(fileId);
                             ft.add(R.id.ai_reading_layout, fragment, "AIReadingFragment");
                         } else {
                             ft.show(fragment);

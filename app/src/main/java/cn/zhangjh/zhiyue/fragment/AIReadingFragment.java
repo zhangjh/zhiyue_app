@@ -19,12 +19,15 @@ import cn.zhangjh.zhiyue.adapter.AIReadingPagerAdapter;
 
 public class AIReadingFragment extends Fragment {
     private static final String TAG = AIReadingFragment.class.getName();
-    private final String fileId;
+    private String fileId;
 
     private final String[] tabTitles = new String[]{"AI总结", "AI问答", "思维导图"};
 
     public AIReadingFragment(String fileId) {
         this.fileId = fileId;
+    }
+
+    public AIReadingFragment() {
     }
 
     @Nullable
