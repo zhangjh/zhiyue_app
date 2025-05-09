@@ -399,13 +399,23 @@ public class ReaderFragment extends Fragment {
                     @Override
                     public void onResponse(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Response<BizListResponse<Annotation>> response) {
                         if (response.isSuccessful() && response.body() != null) {
-                            // 将标注传递给前端
-                            String annotations = new Gson().toJson(response.body().getData());
-                            Log.d(TAG, "Annotations: " + annotations);
-                            // mock data
-                            String script = String.format("loadAnnotations('%s')", annotations);
-                            webViewReader.post(() -> webViewReader.evaluateJavascript(script, null
-                            ));
+                            try {
+                                // 将标注传递给前端
+                                String annotations = new Gson().toJson(response.body().getData());
+                                Log.d(TAG, "Annotations: " + annotations);
+                                // 确保JSON字符串正确转义
+                                annotations = annotations.replace("\n", "\\n")
+                                                       .replace("\r", "\\r")
+                                                       .replace("\t", "\\t")
+                                                       .replace("\\", "\\\\")
+                                                       .replace("\"", "\\\"");
+                                // 使用单引号包裹整个JSON字符串，避免双引号冲突
+                                String script = String.format("loadAnnotations('%s')", annotations);
+                                webViewReader.post(() -> webViewReader.evaluateJavascript(script, null));
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error processing annotations", e);
+                                showError("处理标注数据失败: " + e.getMessage());
+                            }
                         }
                     }
 
@@ -415,6 +425,28 @@ public class ReaderFragment extends Fragment {
                     }
                 });
             }
+        }
+
+        @JavascriptInterface
+        public void deleteAnnotation(String annotationText) {
+
+            ApiClient.getBookService().deleteAnnotation(annotationText)
+                .enqueue(new Callback<>() {
+	                @Override
+	                public void onResponse(@NonNull Call<BizResponse<Void>> call, @NonNull Response<BizResponse<Void>> response) {
+		                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+			                Log.d(TAG, "标注删除成功");
+		                } else {
+			                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "删除失败", Toast.LENGTH_SHORT).show());
+		                }
+	                }
+
+	                @Override
+	                public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
+		                Log.e(TAG, "标注删除请求失败", t);
+		                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "网络错误，删除失败", Toast.LENGTH_SHORT).show());
+	                }
+                });
         }
     }
 

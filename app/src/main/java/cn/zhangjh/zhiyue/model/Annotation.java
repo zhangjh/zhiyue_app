@@ -1,6 +1,7 @@
 package cn.zhangjh.zhiyue.model;
 
 public class Annotation {
+    private String id;
     private String userId;
     private String fileId;
     private String cfi;
@@ -14,6 +15,14 @@ public class Annotation {
         this.type = type;
         this.color = color;
         this.text = text;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getUserId() {
