@@ -116,6 +116,14 @@ public class ReaderFragment extends Fragment {
                     bookUrl = response.body().getData();
                     Log.d(TAG, "Ebook url: " + bookUrl);
                     fileId = bookUrl.substring(bookUrl.lastIndexOf('/') + 1);
+                    Log.d(TAG, "fileId: " + fileId);
+                    // 需要在这里触发加载
+                    if (webViewReader != null) {
+                        webViewReader.post(() -> {
+                            String script = String.format("loadBook('%s', '%s')", bookUrl, cfi);
+                            webViewReader.evaluateJavascript(script, null);
+                        });
+                    }
                 }
             }
     
@@ -259,7 +267,7 @@ public class ReaderFragment extends Fragment {
                         Fragment fragment = fm.findFragmentByTag("AIReadingFragment");
                         FragmentTransaction ft = fm.beginTransaction();
                         if (fragment == null) {
-                            fragment = new AIReadingFragment(fileId);
+                            fragment = AIReadingFragment.newInstance(fileId);
                             ft.add(R.id.ai_reading_layout, fragment, "AIReadingFragment");
                         } else {
                             ft.show(fragment);
@@ -403,6 +411,9 @@ public class ReaderFragment extends Fragment {
                                 // 将标注传递给前端
                                 String annotations = new Gson().toJson(response.body().getData());
                                 Log.d(TAG, "Annotations: " + annotations);
+                                if(TextUtils.isEmpty(annotations)) {
+                                    return;
+                                }
                                 // 确保JSON字符串正确转义
                                 annotations = annotations.replace("\n", "\\n")
                                                        .replace("\r", "\\r")
