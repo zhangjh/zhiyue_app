@@ -175,7 +175,6 @@ public class ReaderFragment extends Fragment {
         settings.setAllowContentAccess(true);
         settings.setAllowFileAccessFromFileURLs(true);
         settings.setAllowUniversalAccessFromFileURLs(true);
-        webView.setLongClickable(false);
     }
 
     @Nullable
@@ -194,9 +193,10 @@ public class ReaderFragment extends Fragment {
 
         // 添加以下配置阻止系统菜单
         webViewReader.setLongClickable(false);  // 禁用系统长按菜单
+        webViewReader.setHapticFeedbackEnabled(true);  // 启用触觉反馈
         webViewReader.setOnLongClickListener(v -> {
-            // 允许选择但阻止系统菜单
-            return false;
+            // 返回true表示我们已经处理了长按事件，阻止系统菜单
+            return true;
         });
 
         // 添加JavaScript接口

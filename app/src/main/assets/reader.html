@@ -232,7 +232,6 @@
 </div>
 <div id="viewer"></div>
 <div id="progress-container">阅读进度：0%</div>
-<!-- 添加选择菜单 -->
 <div id="selection-menu">
     <button class="menu-button" id="copy-btn">复制</button>
     <button class="menu-button" id="highlight-btn">高亮</button>
@@ -242,12 +241,12 @@
 <script>
     let book;
     let rendition;
+    let isSelecting = false;
 
     function initializeSelection() {
         const selectionMenu = document.getElementById('selection-menu');
         let currentCfiRange = null;
         let currentContents = null;
-        let isSelecting = false;
         let startX, startY;
         let touchStartTime = 0;
         let longPressTimer = null;
@@ -370,7 +369,11 @@
 
             doc.addEventListener('touchend', () => {
                 clearTimeout(longPressTimer);
-                // 不在这里重置 isSelecting，让 selectionchange 事件处理它
+                // 在选择结束后，添加一个短暂延迟再重置isSelecting
+                // 这样可以确保selectionchange事件有足够时间处理
+                setTimeout(() => {
+                    isSelecting = false;
+                }, 300);
             }, { passive: true });
 
             // 修改选择变化监听
@@ -423,6 +426,7 @@
     }
 
     function loadBook(bookUrl, cfi) {
+        let touchStartX;
         console.log("bookUrl: " + bookUrl);
         book = ePub(bookUrl);
         // 添加错误处理
@@ -482,11 +486,7 @@
 
         // 添加加载标注方法
         window.loadAnnotations = function(annotationsJson) {
-            console.log("Received annotations:", annotationsJson);  // 添加日志
-             // 解析JSON字符串
             const annotations = JSON.parse(annotationsJson);
-            // 检查是否有data字段（因为后端返回的是BizListResponse）
-            const annotationList = annotations.data || [];
 
             annotations.forEach(annotation => {
                 if (annotation.type === 'highlight') {
@@ -515,19 +515,24 @@
 
         // 启用手势支持
         rendition.on("touchstart", event => {
-            const touches = event.changedTouches[0];
-            touchStartX = touches.screenX;
+            // 只有当不在选择模式时才记录起始位置用于翻页
+            if (!isSelecting) {
+                const touches = event.changedTouches[0];
+                touchStartX = touches.screenX;
+            }
         });
 
         rendition.on("touchend", event => {
-            const touches = event.changedTouches[0];
-            const swipeDistance = touchStartX - touches.screenX;
-
-            if (Math.abs(swipeDistance) > 50) {
-                if (swipeDistance > 0) {
-                    rendition.next();
-                } else {
-                    rendition.prev();
+            // 只有当不在选择模式时才处理翻页
+            if (!isSelecting) {
+                const touches = event.changedTouches[0];
+                const swipeDistance = touchStartX - touches.screenX;
+                if (Math.abs(swipeDistance) > 50) {
+                    if (swipeDistance > 0) {
+                        rendition.next();
+                    } else {
+                        rendition.prev();
+                    }
                 }
             }
         });
