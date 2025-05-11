@@ -3,8 +3,10 @@ package cn.zhangjh.zhiyue.model;
 import com.google.gson.annotations.SerializedName;
 
 public class ReadingHistory {
-    @SerializedName("id")
     private String id;
+
+    @SerializedName("hash_id")
+    private String hashId;
 
     @SerializedName("create_time")
     private String startTime;
@@ -23,13 +25,11 @@ public class ReadingHistory {
 
     private String cfi;
 
-    @SerializedName("progress")
     private String progress;
 
     @SerializedName("file_id")
     private String fileId;
 
-    @SerializedName("summary")
     private String summary;
 
     private String contentSummary;
@@ -40,6 +40,14 @@ public class ReadingHistory {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getHashId() {
+        return hashId;
+    }
+
+    public void setHashId(String hashId) {
+        this.hashId = hashId;
     }
 
     public String getStartTime() {

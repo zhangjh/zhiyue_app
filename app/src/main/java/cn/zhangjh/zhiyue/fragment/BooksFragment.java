@@ -1,6 +1,7 @@
 package cn.zhangjh.zhiyue.fragment;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -27,6 +29,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.activity.MainActivity;
@@ -34,8 +37,11 @@ import cn.zhangjh.zhiyue.adapter.BookAdapter;
 import cn.zhangjh.zhiyue.adapter.RecommendBookAdapter;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.model.BizListResponse;
+import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.Book;
 import cn.zhangjh.zhiyue.model.BookDetail;
+import cn.zhangjh.zhiyue.model.HistoryResponse;
+import cn.zhangjh.zhiyue.model.ReadingHistory;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -226,52 +232,98 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         
         // 确保推荐书目列表在加载时不可见，避免空白区域
         recommendRecyclerView.setVisibility(View.GONE);
+
+        // 获取用户ID
+        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
+        String userId = prefs.getString("userId", "");
         
-        ApiClient.getBookService().getRecommendBooks().enqueue(new Callback<>() {
+        // 先获取用户阅读历史
+        ApiClient.getBookService().getHistory(1, 10, userId).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Response<BizListResponse<BookDetail>> response) {
+            public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Response<BizResponse<HistoryResponse>> response) {
                 if (!isAdded()) return;
-                recommendProgressBar.setVisibility(View.GONE);
-                // 数据加载完成后显示列表
-                recommendRecyclerView.setVisibility(View.VISIBLE);
                 
-                if (!response.isSuccessful()) {
-                    try {
-                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-                        Log.e(TAG, "Error response: " + errorBody);
-                        showError("获取推荐书目失败 (" + response.code() + "): " + errorBody);
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error reading error response", e);
-                        showError("获取推荐书目失败 (" + response.code() + ")");
-                    }
+                if (!response.isSuccessful() || response.body() == null || !response.body().isSuccess()) {
+                    showNoHistoryView();
                     return;
                 }
                 
-                if (response.body() != null && response.body().isSuccess()) {
-                    List<Book> books = convertToBooks(response.body().getData());
-                    Log.d(TAG, "Recommend successful. Found " + books.size() + " books");
-                    recommendBookAdapter.setBooks(books);
-                } else {
-                    Log.e(TAG, "Response body was null or not successful");
-                    showError("获取推荐书目失败：返回数据无效");
+                HistoryResponse historyResponse = response.body().getData();
+                List<ReadingHistory> histories = historyResponse != null ? historyResponse.getResults() : new ArrayList<>();
+                
+                if (histories.isEmpty()) {
+                    showNoHistoryView();
+                    return;
                 }
+                
+                // 收集阅读过的书籍ID
+                List<String> bookIds = histories.stream()
+                        .map(ReadingHistory::getHashId)
+                        .collect(Collectors.toList());
+                
+                // 调用推荐接口
+                ApiClient.getBookService().getRecommendBooks(bookIds).enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Response<BizListResponse<BookDetail>> response) {
+                        if (!isAdded()) return;
+                        recommendProgressBar.setVisibility(View.GONE);
+                        recommendRecyclerView.setVisibility(View.VISIBLE);
+                        
+                        if (!response.isSuccessful()) {
+                            try {
+                                String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+                                Log.e(TAG, "Error response: " + errorBody);
+                                showError("获取推荐书目失败 (" + response.code() + "): " + errorBody);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error reading error response", e);
+                                showError("获取推荐书目失败 (" + response.code() + ")");
+                            }
+                            return;
+                        }
+                        
+                        if (response.body() != null && response.body().isSuccess()) {
+                            List<Book> books = convertToBooks(response.body().getData());
+                            Log.d(TAG, "Recommend successful. Found " + books.size() + " books");
+                            recommendBookAdapter.setBooks(books);
+                        } else {
+                            Log.e(TAG, "Response body was null or not successful");
+                            showError("获取推荐书目失败：返回数据无效");
+                        }
+                    }
+                    
+                    @Override
+                    public void onFailure(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Throwable t) {
+                        if (!isAdded()) return;
+                        recommendProgressBar.setVisibility(View.GONE);
+                        recommendRecyclerView.setVisibility(View.VISIBLE);
+                        
+                        Log.e(TAG, "Recommend failed", t);
+                        String errorMessage = "网络错误: " + t.getClass().getSimpleName();
+                        if (t.getMessage() != null) {
+                            errorMessage += " - " + t.getMessage();
+                        }
+                        showError(errorMessage);
+                    }
+                });
             }
             
             @Override
-            public void onFailure(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
-                recommendProgressBar.setVisibility(View.GONE);
-                // 即使加载失败也显示列表（可能有缓存数据）
-                recommendRecyclerView.setVisibility(View.VISIBLE);
-                
-                Log.e(TAG, "Recommend failed", t);
-                String errorMessage = "网络错误: " + t.getClass().getSimpleName();
-                if (t.getMessage() != null) {
-                    errorMessage += " - " + t.getMessage();
-                }
-                showError(errorMessage);
+                showNoHistoryView();
             }
         });
+    }
+
+    private void showNoHistoryView() {
+        recommendProgressBar.setVisibility(View.GONE);
+        recommendRecyclerView.setVisibility(View.VISIBLE);
+        // 显示提示信息
+        TextView noHistoryText = new TextView(requireContext());
+        noHistoryText.setText("至少阅读一本书开启推荐书目");
+        noHistoryText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        ((ViewGroup) recommendRecyclerView.getParent()).addView(noHistoryText);
+        recommendRecyclerView.setVisibility(View.GONE);
     }
 
     private void performNewSearch(TextInputEditText searchEditText) {

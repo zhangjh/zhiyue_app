@@ -1,5 +1,7 @@
 package cn.zhangjh.zhiyue.api;
 
+import java.util.List;
+
 import cn.zhangjh.zhiyue.model.Annotation;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
@@ -25,7 +27,7 @@ public interface BookService {
     );
 
     @GET("/books/recommend")
-    Call<BizListResponse<BookDetail>> getRecommendBooks();
+    Call<BizListResponse<BookDetail>> getRecommendBooks(@Query("bookIds") List<String> bookIds);
 
 	@FormUrlEncoded
 	@POST("/books/download")
@@ -57,17 +59,18 @@ public interface BookService {
 	);
 
 	@FormUrlEncoded
-    @POST("parse/saveRecord")
+    @POST("/parse/saveRecord")
     Call<BizResponse<Void>> saveRecord(@Field("userId") String userId,
-									   @Field("fileId") String fileId);
+									   @Field("fileId") String fileId,
+									   @Field("hashId") String hashId);
 
 	@FormUrlEncoded
-    @POST("books/deleteHistory")
+    @POST("/books/deleteHistory")
     Call<BizResponse<Void>> deleteHistory(
             @Field("userId") String userId,
             @Field("fileId") String fileId
     );
 
-    @POST("parse/updateRecord")
+    @POST("/parse/updateRecord")
     Call<BizResponse<Void>> updateRecord(@Body ReadingRecord readingRecord);
 }

@@ -73,7 +73,7 @@ public class ReadingHistoryAdapter extends RecyclerView.Adapter<ReadingHistoryAd
 	class ViewHolder extends RecyclerView.ViewHolder {
 		private final TextView bookTitle;
 		private final TextView bookAuthor;
-		private final CircularProgressIndicator progressBar;  // 修改类型为 CircularProgressIndicator
+		private final CircularProgressIndicator progressBar;
 		private final TextView readingProgress;
 		private final TextView startReadingTime;
 		private final TextView lastReadingTime;
