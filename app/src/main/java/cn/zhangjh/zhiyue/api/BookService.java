@@ -27,7 +27,10 @@ public interface BookService {
     );
 
     @GET("/books/recommend")
-    Call<BizListResponse<BookDetail>> getRecommendBooks(@Query("bookIds") List<String> bookIds);
+    Call<BizListResponse<BookDetail>> getRecommendBooks(
+            @Query("bookIds") List<String> bookIds,
+            @Query("pageIndex") Integer pageIndex
+    );
 
 	@FormUrlEncoded
 	@POST("/books/download")
@@ -58,11 +61,8 @@ public interface BookService {
 			@Query("fileId") String fileId
 	);
 
-	@FormUrlEncoded
     @POST("/parse/saveRecord")
-    Call<BizResponse<Void>> saveRecord(@Field("userId") String userId,
-									   @Field("fileId") String fileId,
-									   @Field("hashId") String hashId);
+    Call<BizResponse<Void>> saveRecord(@Body ReadingRecord readingRecord);
 
 	@FormUrlEncoded
     @POST("/books/deleteHistory")

@@ -57,6 +57,8 @@ public class ReaderFragment extends Fragment {
 	private WebView webViewReader;
     private View loadingView;
 
+    private final ReadingRecord readingRecord = new ReadingRecord();
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,7 +91,6 @@ public class ReaderFragment extends Fragment {
         // 观察数据变化
         viewModel.getSummary().observe(this, summary -> {
             // 更新总结到记录
-            ReadingRecord readingRecord = new ReadingRecord();
             readingRecord.setUserId(userId);
             readingRecord.setFileId(fileId);
             readingRecord.setSummary(summary);
@@ -323,14 +324,12 @@ public class ReaderFragment extends Fragment {
     private class WebAppInterface {
         @JavascriptInterface
         public void onBookMetadata(String title, String author) {
-            // 调用更新记录接口
-            ReadingRecord readingRecord = new ReadingRecord();
+            Log.d(TAG, "onBookMetaData update: " + title + ", author: " + author);
+            // 更新记录，先与onBookLoaded执行
             readingRecord.setFileId(fileId);
             readingRecord.setUserId(userId);
             readingRecord.setTitle(title);
             readingRecord.setAuthor(author);
-
-            updateReadingRecord(readingRecord);
         }
 
         @JavascriptInterface
@@ -357,7 +356,6 @@ public class ReaderFragment extends Fragment {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     // 这里可以保存进度到本地存储
-                    ReadingRecord readingRecord = new ReadingRecord();
                     readingRecord.setUserId(userId);
                     readingRecord.setFileId(fileId);
                     readingRecord.setProgress(progress);
@@ -472,7 +470,7 @@ public class ReaderFragment extends Fragment {
         }
 
         // 调用保存记录接口
-        ApiClient.getBookService().saveRecord(userId, fileId, hashId)
+        ApiClient.getBookService().saveRecord(readingRecord)
             .enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<BizResponse<Void>> call,

@@ -4,6 +4,7 @@ public class ReadingRecord {
 
     private String userId;
     private String fileId;
+    private String hashId;
     private String title;
     private String author;
     private int progress;
@@ -24,6 +25,14 @@ public class ReadingRecord {
 
     public void setFileId(String fileId) {
         this.fileId = fileId;
+    }
+
+    public String getHashId() {
+        return hashId;
+    }
+
+    public void setHashId(String hashId) {
+        this.hashId = hashId;
     }
 
     public String getTitle() {

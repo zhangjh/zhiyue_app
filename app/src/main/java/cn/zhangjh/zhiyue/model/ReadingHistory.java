@@ -14,11 +14,9 @@ public class ReadingHistory {
     @SerializedName("modify_time")
     private String lastReadTime;
 
-    @SerializedName("title")
-    private String bookTitle;
+    private String title;
 
-    @SerializedName("author")
-    private String bookAuthor;
+    private String author;
 
     @SerializedName("cover")
     private String coverUrl;
@@ -66,20 +64,20 @@ public class ReadingHistory {
         this.lastReadTime = lastReadTime;
     }
 
-    public String getBookTitle() {
-        return bookTitle;
+    public String getTitle() {
+        return title;
     }
 
-    public void setBookTitle(String bookTitle) {
-        this.bookTitle = bookTitle;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public String getBookAuthor() {
-        return bookAuthor;
+    public String getAuthor() {
+        return author;
     }
 
-    public void setBookAuthor(String bookAuthor) {
-        this.bookAuthor = bookAuthor;
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
     public String getCoverUrl() {

@@ -93,8 +93,8 @@ public class ReadingHistoryAdapter extends RecyclerView.Adapter<ReadingHistoryAd
 		}
 
 		void bind(ReadingHistory history) throws ParseException {
-			bookTitle.setText(history.getBookTitle());
-			bookAuthor.setText(history.getBookAuthor());
+			bookTitle.setText(history.getTitle());
+			bookAuthor.setText(history.getAuthor());
 			readingProgress.setText(String.format("%s%%", history.getProgress()));
 			// 格式化时间
 			SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());

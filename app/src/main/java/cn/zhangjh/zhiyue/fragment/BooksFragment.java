@@ -68,6 +68,9 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     private boolean hasMoreData = true;
     private View emptyView;
 
+    private int recommendCurrentPage = 1;
+    private List<String> cachedBookIds = new ArrayList<>();
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -118,6 +121,9 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         currentPage = 1;
         hasMoreData = true;
         lastSearchQuery = "";
+
+        // 推荐分页
+        recommendCurrentPage = 1;
     }
 
     private void initViews(View view) {
@@ -220,7 +226,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     private void setupRecommendBooks() {
         // 设置刷新按钮点击事件
-        refreshRecommendButton.setOnClickListener(v -> loadRecommendBooks());
+        refreshRecommendButton.setOnClickListener(v -> {
+            recommendCurrentPage++;
+            loadRecommendBooks();
+        });
         
         // 加载推荐书目
         loadRecommendBooks();
@@ -237,47 +246,58 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
         String userId = prefs.getString("userId", "");
         
-        // 先获取用户阅读历史
-        ApiClient.getBookService().getHistory(1, 10, userId).enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Response<BizResponse<HistoryResponse>> response) {
-                if (!isAdded()) return;
-                
-                if (!response.isSuccessful() || response.body() == null || !response.body().isSuccess()) {
-                    showNoHistoryView();
-                    return;
+        // 如果是第一页，需要先获取阅读历史
+        if (recommendCurrentPage == 1) {
+            ApiClient.getBookService().getHistory(1, 10, userId).enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Response<BizResponse<HistoryResponse>> response) {
+                    if (!isAdded()) return;
+                    
+                    if (!response.isSuccessful() || response.body() == null || !response.body().isSuccess()) {
+                        showNoHistoryView();
+                        return;
+                    }
+                    
+                    HistoryResponse historyResponse = response.body().getData();
+                    List<ReadingHistory> histories = historyResponse != null ? historyResponse.getResults() : new ArrayList<>();
+                    
+                    if (histories.isEmpty()) {
+                        showNoHistoryView();
+                        return;
+                    }
+                    
+                    // 缓存书籍ID用于分页
+                    cachedBookIds = histories.stream()
+                            .map(ReadingHistory::getHashId)
+                            .collect(Collectors.toList());
+                    
+                    // 获取第一页推荐
+                    fetchRecommendBooks();
                 }
                 
-                HistoryResponse historyResponse = response.body().getData();
-                List<ReadingHistory> histories = historyResponse != null ? historyResponse.getResults() : new ArrayList<>();
-                
-                if (histories.isEmpty()) {
+                @Override
+                public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
+                    if (!isAdded()) return;
                     showNoHistoryView();
-                    return;
                 }
-                
-                // 收集阅读过的书籍ID
-                List<String> bookIds = histories.stream()
-                        .map(ReadingHistory::getHashId)
-                        .collect(Collectors.toList());
-                
-                // 调用推荐接口
-                ApiClient.getBookService().getRecommendBooks(bookIds).enqueue(new Callback<>() {
+            });
+        } else {
+            // 直接获取下一页推荐
+            fetchRecommendBooks();
+        }
+    }
+
+    private void fetchRecommendBooks() {
+        ApiClient.getBookService().getRecommendBooks(cachedBookIds, recommendCurrentPage)
+                .enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Response<BizListResponse<BookDetail>> response) {
                         if (!isAdded()) return;
                         recommendProgressBar.setVisibility(View.GONE);
                         recommendRecyclerView.setVisibility(View.VISIBLE);
-                        
+
                         if (!response.isSuccessful()) {
-                            try {
-                                String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-                                Log.e(TAG, "Error response: " + errorBody);
-                                showError("获取推荐书目失败 (" + response.code() + "): " + errorBody);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error reading error response", e);
-                                showError("获取推荐书目失败 (" + response.code() + ")");
-                            }
+                            handleRecommendError(response);
                             return;
                         }
                         
@@ -296,7 +316,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         if (!isAdded()) return;
                         recommendProgressBar.setVisibility(View.GONE);
                         recommendRecyclerView.setVisibility(View.VISIBLE);
-                        
+
                         Log.e(TAG, "Recommend failed", t);
                         String errorMessage = "网络错误: " + t.getClass().getSimpleName();
                         if (t.getMessage() != null) {
@@ -305,14 +325,17 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         showError(errorMessage);
                     }
                 });
-            }
-            
-            @Override
-            public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
-                if (!isAdded()) return;
-                showNoHistoryView();
-            }
-        });
+    }
+
+    private void handleRecommendError(Response<BizListResponse<BookDetail>> response) {
+        try {
+            String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+            Log.e(TAG, "Error response: " + errorBody);
+            showError("获取推荐书目失败 (" + response.code() + "): " + errorBody);
+        } catch (Exception e) {
+            Log.e(TAG, "Error reading error response", e);
+            showError("获取推荐书目失败 (" + response.code() + ")");
+        }
     }
 
     private void showNoHistoryView() {
