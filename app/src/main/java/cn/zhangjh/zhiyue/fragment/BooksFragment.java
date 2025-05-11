@@ -304,7 +304,18 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         if (response.body() != null && response.body().isSuccess()) {
                             List<Book> books = convertToBooks(response.body().getData());
                             Log.d(TAG, "Recommend successful. Found " + books.size() + " books");
+                            
+                            // 重置推荐书目容器
+                            ViewGroup parent = (ViewGroup) recommendRecyclerView.getParent();
+                            parent.removeAllViews();
+                            parent.addView(recommendRecyclerView);
+                            parent.addView(recommendProgressBar);
+                            
+                            // 设置新数据
                             recommendBookAdapter.setBooks(books);
+                            
+                            // 确保 RecyclerView 显示在顶部
+                            recommendRecyclerView.scrollToPosition(0);
                         } else {
                             Log.e(TAG, "Response body was null or not successful");
                             showError("获取推荐书目失败：返回数据无效");
