@@ -72,7 +72,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void handleGoogleSignIn() {
         // 显示加载提示
-        Toast.makeText(this, getString(R.string.google_sign_in_loading), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.google_sign_in_loading), Toast.LENGTH_LONG).show();
         
         googleSignInManager.signIn(new GoogleSignInManager.GoogleSignInCallback() {
             @Override

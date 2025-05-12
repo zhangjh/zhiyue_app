@@ -14,7 +14,6 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
-import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface BookService {
@@ -45,8 +44,8 @@ public interface BookService {
     @GET("/books/getAnnotations")
     Call<BizListResponse<Annotation>> getAnnotations(@Query("userId") String userId, @Query("fileId") String fileId);
 
-	@POST("/books/deleteAnnotation/{annotationText}")
-	Call<BizResponse<Void>> deleteAnnotation(@Path("annotationText") String annotationText);
+	@POST("/books/deleteAnnotation")
+	Call<BizResponse<Void>> deleteAnnotation(@Body Annotation annotation);
 
 	@GET("/books/getHistory")
 	Call<BizResponse<HistoryResponse>> getHistory(

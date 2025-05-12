@@ -58,8 +58,7 @@
             user-select: text !important;
         }
         
-        /* 确保选择菜单在最顶层 */
-        #selection-menu {
+        #selection-menu, #annotation-menu {
             position: fixed;
             background: white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
@@ -238,84 +237,189 @@
     <button class="menu-button" id="underline-btn">划线</button>
 </div>
 
+<div id="annotation-menu">
+    <button class="menu-button" id="delete-annotation-btn">删除</button>
+</div>
+
 <script>
     let book;
     let rendition;
     let isSelecting = false;
+    const annotationMenu = document.getElementById('annotation-menu');
+    const selectionMenu = document.getElementById('selection-menu');
+    let currentCfiRange = null;
+    let currentContents = null;
+    let currentAnnotationElement = null;
+    let startX, startY;
+    let touchStartTime = 0;
+    let longPressTimer = null;
+    const SWIPE_THRESHOLD = 50;
+    const TAP_THRESHOLD = 200;
+    const LONG_PRESS_THRESHOLD = 500;
+
+    // 在加载书籍时保存标注数据的数组
+    let annotations = [];
+    // 添加当前页面引用，用于切换时重新标注
+    let currentLocation = null;
+
+    // 操作处理函数
+    function handleCopy() {
+        const selection = currentContents.document.getSelection();
+        if (selection && window.Android) {
+            window.Android.copyText(selection.toString());
+        }
+        selectionMenu.style.display = 'none';
+    }
+
+    async function handleHighlight() {
+        if (currentCfiRange) {
+            const selection = currentContents.document.getSelection();
+            const text = selection.toString();
+            const annotationId = 'highlight-' + Date.now();
+            annotations.push({
+                type: "highlight",
+                cfi: currentCfiRange,
+                data: { id: annotationId, text },
+                className: "highlight"
+            });
+            await rendition.annotations.highlight(currentCfiRange, {}, (e) => {
+                e.target.style.backgroundColor = 'rgba(255,255,0,0.3)';
+                // 添加点击事件用于删除
+                e.target.classList.add('annotation-highlight');
+                e.target.setAttribute('data-id', annotationId);
+                e.target.setAttribute('data-cfi', currentCfiRange);
+                e.target.addEventListener('click', handleAnnotationClick);
+            });
+            // 保存高亮
+            if (window.Android) {
+                window.Android.saveAnnotation(
+                    currentCfiRange,
+                    'highlight',
+                    'rgba(255,255,0,0.3)',
+                    text
+                );
+            }
+            selectionMenu.style.display = 'none';
+        }
+    }
+
+    async function handleUnderline() {
+        if (currentCfiRange) {
+            const selection = currentContents.document.getSelection();
+            const text = selection.toString();
+            const annotationId = 'underline-' + Date.now();
+            annotations.push({
+                type: "underline",
+                cfi: currentCfiRange,
+                data: { id: annotationId, text },
+                className: "underline"
+            });
+            rendition.annotations.underline(currentCfiRange,
+                {},
+                undefined,
+                "ul",
+                {
+                    "border": "none",
+                    "stroke": "#3366ff",
+                    "stroke-width": "2px"
+                },
+                (e) => {
+                    // 添加点击事件用于删除
+                    e.target.classList.add('annotation-underline');
+                    e.target.setAttribute('data-id', annotationId);
+                    e.target.setAttribute('data-cfi', currentCfiRange);
+                    e.target.addEventListener('click', handleAnnotationClick);
+                }
+            );
+            // 保存下划线
+            if (window.Android) {
+                window.Android.saveAnnotation(
+                    currentCfiRange,
+                    'underline',
+                    '#3366ff',
+                    text
+                );
+            }
+            selectionMenu.style.display = 'none';
+        }
+    }
+
+    // 添加删除标注处理函数
+    function handleDeleteAnnotation() {
+        if (currentAnnotationElement) {
+            const cfi = currentAnnotationElement.getAttribute('data-cfi');
+            const text = currentAnnotationElement.getAttribute('data-text');
+            const id = currentAnnotationElement.getAttribute('data-id');
+            console.log("删除标注: cfi:" + cfi + "text:" + text);
+            if (cfi && text) {
+                annotations = annotations.filter(annotation => {
+                    annotation.data.id !== id;
+                });
+                // 通知Android删除标注
+                if (window.Android) {
+                    window.Android.deleteAnnotation(cfi, text);
+                }
+                // 删除标注
+                console.log(currentAnnotationElement.classList);
+                if (currentAnnotationElement.classList.contains('annotation-highlight')) {
+                    currentAnnotationElement.style.backgroundColor = '';
+                }
+                currentAnnotationElement.classList.remove('annotation-highlight', 'annotation-underline');
+                currentAnnotationElement.removeAttribute('data-id');
+                currentAnnotationElement.removeAttribute('data-cfi');
+            }
+            // 隐藏菜单
+            annotationMenu.style.display = 'none';
+            currentAnnotationElement = null;
+        }
+    }
+
+    // 添加标注点击处理函数
+    function handleAnnotationClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // 保存当前点击的标注元素
+        currentAnnotationElement = event.target;
+        const cfi = currentAnnotationElement.getAttribute('data-cfi');
+        const id = currentAnnotationElement.getAttribute('data-id');
+        if (!cfi || !id) return;
+
+        // 获取点击位置
+        const rect = event.target.getBoundingClientRect();
+        const iframe = document.querySelector('#viewer iframe');
+        const iframeRect = iframe.getBoundingClientRect();
+
+        // 计算菜单位置
+        const menuWidth = annotationMenu.offsetWidth;
+        const menuHeight = annotationMenu.offsetHeight;
+
+        let menuLeft = iframeRect.left + rect.left + (rect.width / 2) - (menuWidth / 2);
+        let menuTop = iframeRect.top + rect.bottom + 10;
+
+        // 确保菜单在视口内
+        menuLeft = Math.max(10, Math.min(menuLeft, window.innerWidth - menuWidth - 10));
+        if (menuTop + menuHeight > window.innerHeight) {
+            menuTop = iframeRect.top + rect.top - menuHeight - 10;
+        }
+
+        // 显示菜单
+        annotationMenu.style.left = `${menuLeft}px`;
+        annotationMenu.style.top = `${menuTop}px`;
+        annotationMenu.style.display = 'flex';
+
+        // 隐藏选择菜单（如果有）
+        selectionMenu.style.display = 'none';
+    }
 
     function initializeSelection() {
-        const selectionMenu = document.getElementById('selection-menu');
-        let currentCfiRange = null;
-        let currentContents = null;
-        let startX, startY;
-        let touchStartTime = 0;
-        let longPressTimer = null;
-        const SWIPE_THRESHOLD = 50;
-        const TAP_THRESHOLD = 200;
-        const LONG_PRESS_THRESHOLD = 500; // 长按阈值设为500毫秒
-
         // 添加操作按钮事件监听
         document.body.addEventListener('click', function(e) {
             if (e.target.id === 'copy-btn') handleCopy();
             if (e.target.id === 'highlight-btn') handleHighlight();
             if (e.target.id === 'underline-btn') handleUnderline();
+            if (e.target.id === 'delete-annotation-btn') handleDeleteAnnotation();
         });
-
-        // 操作处理函数
-        function handleCopy() {
-            const selection = currentContents.document.getSelection();
-            if (selection && window.Android) {
-                window.Android.copyText(selection.toString());
-            }
-            selectionMenu.style.display = 'none';
-        }
-
-        async function handleHighlight() {
-            if (currentCfiRange) {
-                const selection = currentContents.document.getSelection();
-                const text = selection.toString();
-                await rendition.annotations.highlight(currentCfiRange, {}, (e) => {
-                    e.target.style.backgroundColor = 'rgba(255,255,0,0.3)';
-                });
-                // 保存高亮
-                if (window.Android) {
-                    window.Android.saveAnnotation(
-                        currentCfiRange,
-                        'highlight',
-                        'rgba(255,255,0,0.3)',
-                        text
-                    );
-                }
-                selectionMenu.style.display = 'none';
-            }
-        }
-
-        async function handleUnderline() {
-            if (currentCfiRange) {
-                const selection = currentContents.document.getSelection();
-                const text = selection.toString();
-                rendition.annotations.underline(currentCfiRange,
-                    {},
-                    undefined,
-                    "ul",
-                    {
-                        "border": "none",
-                        "stroke": "#3366ff",
-                        "stroke-width": "2px"
-                    }
-                );
-                // 保存下划线
-                if (window.Android) {
-                    window.Android.saveAnnotation(
-                        currentCfiRange,
-                        'underline',
-                        '#3366ff',
-                        text
-                    );
-                }
-                selectionMenu.style.display = 'none';
-            }
-        }
 
         // 添加目录按钮点击事件
         document.getElementById('toc-button').addEventListener('click', toggleToc);
@@ -412,8 +516,9 @@
 
             // 点击其他区域隐藏菜单
             doc.addEventListener('click', (e) => {
-                if (!selectionMenu.contains(e.target)) {
+                if (!selectionMenu.contains(e.target) && !annotationMenu.contains(e.target)) {
                     selectionMenu.style.display = 'none';
+                    annotationMenu.style.display = 'none';
                 }
             });
 
@@ -452,11 +557,7 @@
         book.ready.then(() => {
             return book.locations.generate();
         }).then(() => {
-            if(cfi) {
-                return rendition.display(cfi);
-            } else {
-                return rendition.display();
-            }
+            return rendition.display(cfi || 0);
         }).then(() => {
             // 位置信息生成完成后，再加载标注
             if (window.Android) {
@@ -470,7 +571,7 @@
         book.loaded.navigation.then(nav => {
             const toc = nav.toc;
             const tocContent = document.getElementById('toc-content');
-            tocContent.innerHTML = ''; // 清空现有内容
+            tocContent.innerHTML = '';
 
             toc.forEach(chapter => {
                 const div = document.createElement('div');
@@ -484,17 +585,24 @@
             });
         });
 
-        // 添加加载标注方法
-        window.loadAnnotations = function(annotationsJson) {
-            const annotations = JSON.parse(annotationsJson);
-
+        window.renderAnnotations = function(annotations) {
+            if(!annotations || annotations.length <= 0) {
+                return;
+            }
             annotations.forEach(annotation => {
                 if (annotation.type === 'highlight') {
                     rendition.annotations.highlight(
                         annotation.cfi,
                         {},
                         (e) => {
-                            e.target.style.backgroundColor = annotation.color;
+                            e.target.style.backgroundColor = annotation.color || 'rgba(255,255,0,0.3)';
+                            // 添加点击事件用于删除
+                            e.target.classList.add('annotation-highlight');
+                            e.target.setAttribute('data-cfi', annotation.cfi);
+                            e.target.setAttribute('data-id', annotation.data.id);
+                            e.target.setAttribute('data-text', annotation.text);
+                            e.target.addEventListener('click', handleAnnotationClick);
+                            console.log("add highlight event：" + annotation.text);
                         }
                     );
                 } else if (annotation.type === 'underline') {
@@ -505,12 +613,27 @@
                         "ul",
                         {
                             "border": "none",
-                            "stroke": annotation.color,
+                            "stroke": annotation.color || "#3366ff",
                             "stroke-width": "2px"
+                        },
+                        (e) => {
+                            // 添加点击事件用于删除
+                            e.target.classList.add('annotation-underline');
+                            e.target.setAttribute('data-id', annotation.data.id);
+                            e.target.setAttribute('data-cfi', annotation.cfi);
+                            e.target.setAttribute('data-text', annotation.text);
+                            e.target.addEventListener('click', handleAnnotationClick);
+                            console.log("add underline event：" + annotation.text);
                         }
                     );
                 }
             });
+        }
+
+        // 添加加载已有标注时添加点击事件
+        window.loadAnnotations = function(annotationsJson) {
+            annotations = JSON.parse(annotationsJson);
+            window.renderAnnotations(annotations);
         };
 
         // 启用手势支持
@@ -539,11 +662,12 @@
 
         // 添加章节变化监听
         rendition.on('relocated', (location) => {
+            currentLocation = location;
             // 获取当前章节信息
             for(let item of book.navigation.toc) {
                 if(item.href.indexOf(location.start.href) !== -1) {
                     let chapterTitle = item.label.trim();
-                    document.getElementById('chapter-title').textContent = chapterTitle || '无标题';
+                    document.getElementById('chapter-title').textContent = chapterTitle || '';
                     break;
                 }
             }
@@ -558,7 +682,29 @@
                     window.Android.onProgressUpdate(progressPercent, location.start.cfi);
                 }
             }
+            // 重新应用标注
+            reapplyAnnotations();
         });
+    }
+
+    function reapplyAnnotations() {
+        // 清除当前所有标注
+        const currentView = rendition.manager.views._views[0];
+        if(currentView) {
+            const doc = currentView.document;
+            const annotations = doc.querySelectorAll('.annotation-highlight, .annotation-underline');
+            annotations.forEach(annotation => {
+                if (annotation.classList.contains('annotation-highlight')) {
+                    annotation.style.backgroundColor = '';
+                }
+                annotation.classList.remove('annotation-highlight', 'annotation-underline');
+                annotation.removeEventListener('click', handleAnnotationClick);
+                annotation.removeAttribute('data-cfi');
+                annotation.removeAttribute('data-text');
+            });
+        }
+        // 重新应用
+        window.renderAnnotations(annotations);
     }
 
     // 添加目录控制函数

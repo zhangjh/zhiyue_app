@@ -438,25 +438,32 @@ public class ReaderFragment extends Fragment {
         }
 
         @JavascriptInterface
-        public void deleteAnnotation(String annotationText) {
+        public void deleteAnnotation(String cfi, String text) {
+            if (TextUtils.isEmpty(cfi) || TextUtils.isEmpty(userId) || TextUtils.isEmpty(text)) {
+                return;
+            }
+            
+            // 调用API删除标注
+            Annotation annotation = new Annotation();
+            annotation.setUserId(userId);
+            annotation.setFileId(fileId);
+            annotation.setCfi(cfi);
+            annotation.setText(text);
+            ApiClient.getBookService().deleteAnnotation(annotation).enqueue(new Callback<>() {
+	            @Override
+	            public void onResponse(@NonNull Call<BizResponse<Void>> call, @NonNull Response<BizResponse<Void>> response) {
+		            if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+			            Log.d(TAG, "标注删除成功: " + cfi);
+		            } else {
+			            Log.e(TAG, "标注删除失败: " + cfi);
+		            }
+	            }
 
-            ApiClient.getBookService().deleteAnnotation(annotationText)
-                .enqueue(new Callback<>() {
-	                @Override
-	                public void onResponse(@NonNull Call<BizResponse<Void>> call, @NonNull Response<BizResponse<Void>> response) {
-		                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-			                Log.d(TAG, "标注删除成功");
-		                } else {
-			                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "删除失败", Toast.LENGTH_SHORT).show());
-		                }
-	                }
-
-	                @Override
-	                public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
-		                Log.e(TAG, "标注删除请求失败", t);
-		                requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "网络错误，删除失败", Toast.LENGTH_SHORT).show());
-	                }
-                });
+	            @Override
+	            public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
+		            Log.e(TAG, "标注删除请求失败", t);
+	            }
+            });
         }
     }
 

@@ -9,6 +9,9 @@ public class Annotation {
     private String color;
     private String text;
 
+    public Annotation() {
+    }
+
     public Annotation(String fileId, String cfi, String type, String color, String text) {
         this.fileId = fileId;
         this.cfi = cfi;
