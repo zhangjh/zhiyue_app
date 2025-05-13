@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.adapter.BookAdapter;
 import cn.zhangjh.zhiyue.adapter.RecommendBookAdapter;
 import cn.zhangjh.zhiyue.api.ApiClient;
+import cn.zhangjh.zhiyue.billing.BillingManager;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.Book;
@@ -70,6 +72,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     private int recommendCurrentPage = 1;
     private List<String> cachedBookIds = new ArrayList<>();
+
+    private BillingManager billingManager;
 
     @Nullable
     @Override
