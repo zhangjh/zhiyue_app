@@ -100,8 +100,32 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                     }
                 }
             });
+        
+        // 初始化支付管理器
+        billingManager = new BillingManager(requireActivity());
+        billingManager.setBillingCallback(new BillingManager.BillingCallback() {
+            @Override
+            public void onPurchaseSuccess() {
+                // 支付成功后的处理
+                Toast.makeText(requireContext(), "购买成功!", Toast.LENGTH_SHORT).show();
+                // TODO: 调用后端API更新用户权限
+            }
+
+            @Override
+            public void onPurchaseFailure(int errorCode, String message) {
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (billingManager != null) {
+            billingManager.destroy();
+        }
+    }
+    
     // 添加重置视图的方法
     private void resetToDefaultSearchView() {
         searchResultContainer.setVisibility(View.GONE);
@@ -511,6 +535,21 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     @Override
     public void onBookClick(Book book) {
+        // 检查用户是否已购买
+        if (!book.isPurchased()) {
+            // 显示购买对话框
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("购买提示")
+                    .setMessage("需要购买才能阅读此书,是否立即购买?")
+                    .setPositiveButton("购买", (dialog, which) -> {
+                        // 调用购买方法
+                        billingManager.purchaseBook(book.getProductId());
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+            return;
+        }
+
         if (getActivity() instanceof MainActivity) {
             // 显示加载进度条
             progressBar.setVisibility(View.VISIBLE);

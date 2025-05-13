@@ -9,7 +9,9 @@ public class Book {
     private String format;
     private String coverUrl;
     private String description;
-
+    private boolean purchased;
+    private String productId;
+    
     public Book(BookDetail bookDetail) {
         this.id = bookDetail.getId();
         this.title = bookDetail.getTitle();
@@ -40,4 +42,20 @@ public class Book {
     public void setFormat(String format) { this.format = format; }
     public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
     public void setDescription(String description) { this.description = description; }
+    
+    public boolean isPurchased() {
+        return purchased;
+    }
+    
+    public void setPurchased(boolean purchased) {
+        this.purchased = purchased;
+    }
+    
+    public String getProductId() {
+        return productId;
+    }
+    
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
 }

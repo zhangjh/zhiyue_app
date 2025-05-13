@@ -1,5 +1,6 @@
 [versions]
 agp = "8.9.2"
+billing = "7.1.1"
 compiler = "4.15.1"
 core = "4.6.2"
 credentials = "1.5.0"
@@ -22,6 +23,7 @@ recyclerview = "1.4.0"
 retrofit = "2.9.0"
 
 [libraries]
+billing = { module = "com.android.billingclient:billing", version.ref = "billing" }
 compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "compiler" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 converter-scalars = { module = "com.squareup.retrofit2:converter-scalars", version.ref = "retrofit" }
