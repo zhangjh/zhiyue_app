@@ -62,6 +62,8 @@ public class ReaderFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        WebView.setWebContentsDebuggingEnabled(true);
+
         // 设置返回键监听
         requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
