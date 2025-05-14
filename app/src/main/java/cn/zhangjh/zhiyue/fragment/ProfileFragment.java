@@ -2,13 +2,17 @@ package cn.zhangjh.zhiyue.fragment;
 
 import static android.content.Context.MODE_PRIVATE;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,13 +26,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.imageview.ShapeableImageView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.adapter.ReadingHistoryAdapter;
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
+import cn.zhangjh.zhiyue.billing.BillingManager;
+import cn.zhangjh.zhiyue.billing.SubscriptionInfo;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.HistoryResponse;
 import cn.zhangjh.zhiyue.model.ReadingHistory;
@@ -46,9 +55,20 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     private ProgressBar loadingProgressBar;
     private View emptyView;
     
+    // 订阅相关视图
+    private TextView subscriptionStatus;
+    private TextView subscriptionType;
+    private TextView subscriptionExpireDate;
+    private LinearLayout subscriptionInfoLayout;
+    private Button subscribeButton;
+    private Button manageSubscriptionButton;
+    
     private boolean isLoading = false;
     private boolean hasMoreData = true;
     private int currentPage = 1;
+    
+    private BillingManager billingManager;
+    private boolean isUserSubscribed = false;
 
     private static final String TAG = ProfileFragment.class.getName();
 
@@ -65,6 +85,52 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         setupRecyclerView();
         loadUserInfo();
         loadReadingHistory(1);
+        
+        // 初始化订阅管理
+        initBillingManager();
+
+        // 修改订阅按钮点击事件
+        subscribeButton.setOnClickListener(v -> {
+            // 在测试阶段使用模拟订阅
+            mockSubscription();
+
+            // 正式环境下使用实际订阅
+            // if (billingManager != null) {
+            //     billingManager.subscribeMonthly();
+            // }
+        });
+        
+        manageSubscriptionButton.setOnClickListener(v -> {
+            // 打开订阅管理页面
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("https://play.google.com/store/account/subscriptions"));
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(requireContext(), "无法打开订阅管理页面", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void mockSubscription() {
+        // 模拟订阅成功
+        isUserSubscribed = true;
+        updateSubscriptionUI(true);
+
+        // 模拟订阅详情
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Date expireDate = new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000);
+
+        SubscriptionInfo mockInfo = new SubscriptionInfo(
+                true,
+                "包月服务（测试）",
+                expireDate,
+                "smart_reader_monthly_subscription"
+        );
+
+        updateSubscriptionDetails(mockInfo);
+
+        Toast.makeText(requireContext(), "测试模式：订阅成功", Toast.LENGTH_SHORT).show();
     }
 
     private void initViews(View view) {
@@ -73,6 +139,98 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         readingHistoryRecyclerView = view.findViewById(R.id.readingHistoryRecyclerView);
         loadingProgressBar = view.findViewById(R.id.loadingProgressBar);
         emptyView = view.findViewById(R.id.emptyView);
+        
+        // 初始化订阅相关视图
+        subscriptionStatus = view.findViewById(R.id.subscriptionStatus);
+        subscriptionType = view.findViewById(R.id.subscriptionType);
+        subscriptionExpireDate = view.findViewById(R.id.subscriptionExpireDate);
+        subscriptionInfoLayout = view.findViewById(R.id.subscriptionInfoLayout);
+        subscribeButton = view.findViewById(R.id.subscribeButton);
+        manageSubscriptionButton = view.findViewById(R.id.manageSubscriptionButton);
+        
+        // 默认隐藏订阅详情
+        subscriptionInfoLayout.setVisibility(View.GONE);
+    }
+    
+    private void initBillingManager() {
+        billingManager = new BillingManager(requireActivity(), new BillingManager.BillingCallback() {
+            @Override
+            public void onBillingSetupFinished() {
+                // 查询订阅状态
+                billingManager.querySubscriptionStatus();
+            }
+
+            @Override
+            public void onSubscriptionStatusChecked(boolean isSubscribed) {
+                isUserSubscribed = isSubscribed;
+                
+                // 在UI线程更新订阅状态
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> updateSubscriptionUI(isSubscribed));
+                }
+                
+                // 如果已订阅，获取详细信息
+                if (isSubscribed && billingManager != null) {
+                    billingManager.getSubscriptionDetails(subscriptionInfo -> {
+                        if (getActivity() != null && subscriptionInfo != null) {
+                            getActivity().runOnUiThread(() -> updateSubscriptionDetails(subscriptionInfo));
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onPurchaseSuccess() {
+                // 购买成功后重新查询订阅状态
+                if (billingManager != null) {
+                    billingManager.querySubscriptionStatus();
+                }
+                Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onPurchaseFailure(int responseCode, String message) {
+                Toast.makeText(requireContext(), "订阅失败: " + message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void updateSubscriptionUI(boolean isSubscribed) {
+        if (isSubscribed) {
+            // 已订阅状态
+            subscriptionStatus.setText("已订阅");
+            subscriptionStatus.setTextColor(getResources().getColor(R.color.primary, null));
+            
+            // 显示订阅类型和到期时间
+            subscriptionInfoLayout.setVisibility(View.VISIBLE);
+            
+            // 显示管理订阅按钮，隐藏订阅按钮
+            subscribeButton.setVisibility(View.GONE);
+            manageSubscriptionButton.setVisibility(View.VISIBLE);
+        } else {
+            // 未订阅状态
+            subscriptionStatus.setText("未订阅");
+            subscriptionStatus.setTextColor(getResources().getColor(R.color.text_secondary, null));
+            
+            // 隐藏订阅类型和到期时间
+            subscriptionInfoLayout.setVisibility(View.GONE);
+            
+            // 显示订阅按钮，隐藏管理订阅按钮
+            subscribeButton.setVisibility(View.VISIBLE);
+            manageSubscriptionButton.setVisibility(View.GONE);
+        }
+    }
+    
+    private void updateSubscriptionDetails(SubscriptionInfo info) {
+        if (info != null) {
+            // 格式化到期时间
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            String expireDate = sdf.format(info.getExpireDate());
+            
+            // 更新UI
+            subscriptionType.setText(info.getSubscriptionName());
+            subscriptionExpireDate.setText(expireDate);
+        }
     }
 
     private void setupRecyclerView() {
@@ -236,5 +394,13 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
                     Log.e(TAG, "Delete history failed", t);
                 }
             });
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (billingManager != null) {
+            billingManager.destroy();
+        }
     }
 }
