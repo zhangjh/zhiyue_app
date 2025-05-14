@@ -1,5 +1,7 @@
 package cn.zhangjh.zhiyue.model;
 
+import android.text.TextUtils;
+
 public class Book {
     private String id;
     private String hash;
@@ -18,7 +20,12 @@ public class Book {
         this.format = bookDetail.getExtension();
         this.coverUrl = bookDetail.getCover();
         this.description = bookDetail.getDescription();
-        this.hash = bookDetail.getHash();
+        String url = bookDetail.getUrl();
+        if(!TextUtils.isEmpty(url)) {
+            // /book/3658844/075255/%E6%9B%BE%E5%9B%BD%E8%97%A9%E4%BC%A0.html，分隔符第一段为bookId，第二段为hashId
+            String[] parts = url.split("/");
+            this.hash = parts[parts.length - 2];
+        }
     }
 
     // Getters

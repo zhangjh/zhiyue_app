@@ -1,15 +1,20 @@
 package cn.zhangjh.zhiyue.fragment;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -50,6 +55,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     private static final String TAG = "BooksFragment";
     private static final int DEFAULT_PAGE_SIZE = 5;
 
+    private String currentUserId;
+
     private TextInputEditText centerSearchEditText;
     private TextInputEditText topSearchEditText;
     private RecyclerView recyclerView;
@@ -70,6 +77,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     private int recommendCurrentPage = 1;
     private List<String> cachedBookIds = new ArrayList<>();
+    private List<ReadingHistory> cachedHistories = new ArrayList<>();
 
     @Nullable
     @Override
@@ -80,6 +88,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        // 获取用户ID
+        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
+        currentUserId = prefs.getString("userId", "");
+
         initViews(view);
         setupRecyclerView();
         setupSearchViews();
@@ -241,14 +253,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         
         // 确保推荐书目列表在加载时不可见，避免空白区域
         recommendRecyclerView.setVisibility(View.GONE);
-
-        // 获取用户ID
-        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
-        String userId = prefs.getString("userId", "");
         
         // 如果是第一页，需要先获取阅读历史
         if (recommendCurrentPage == 1) {
-            ApiClient.getBookService().getHistory(1, 10, userId).enqueue(new Callback<>() {
+            ApiClient.getBookService().getHistory(1, 10, currentUserId).enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Response<BizResponse<HistoryResponse>> response) {
                     if (!isAdded()) return;
@@ -502,17 +510,136 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     @Override
     public void onReadButtonClick(Book book) {
-        if (getActivity() instanceof MainActivity) {
-            // 只显示加载进度条，保持其他视图状态不变
-            progressBar.setVisibility(View.VISIBLE);
-            ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash(), "", "");
-        }
+        // 检查订阅状态
+        checkSubscriptionAndReadCount(book);
     }
 
     @Override
     public void onBookClick(Book book) {
+        // 检查订阅状态
+        checkSubscriptionAndReadCount(book);
+    }
+    
+    private void checkSubscriptionAndReadCount(Book book) {
+        if (TextUtils.isEmpty(currentUserId)) {
+            Toast.makeText(requireContext(), "请先登录", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // 显示加载进度
+        progressBar.setVisibility(View.VISIBLE);
+        
+        // 1. 首先检查用户是否已订阅
+        SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
+        boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
+        
+        if (isSubscribed) {
+            // 已订阅用户直接阅读
+            navigateToReader(book);
+            progressBar.setVisibility(View.GONE);
+            return;
+        }
+        
+        // 2. 未订阅用户，检查阅读记录数量
+        ApiClient.getBookService().getHistory(1, 100, currentUserId)
+            .enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call,
+                                      @NonNull Response<BizResponse<HistoryResponse>> response) {
+                    progressBar.setVisibility(View.GONE);
+                    
+                    if (!response.isSuccessful()) {
+                        Toast.makeText(requireContext(), "获取阅读记录失败", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    
+                    BizResponse<HistoryResponse> bizResponse = response.body();
+                    if (bizResponse == null || !bizResponse.isSuccess()) {
+                        String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "未知错误";
+                        Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    
+                    HistoryResponse historyResponse = bizResponse.getData();
+                    List<ReadingHistory> histories = historyResponse != null ? historyResponse.getResults() : new ArrayList<>();
+                    
+                    if (histories.isEmpty()) {
+                        // 没有阅读记录，可以试用一次
+                        Toast.makeText(requireContext(), "首次阅读免费试用", Toast.LENGTH_SHORT).show();
+                        navigateToReader(book);
+                    } else {
+                        // 需要订阅
+                        showSubscriptionDialog(book);
+                    }
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(requireContext(), "网络请求失败", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Get reading history failed", t);
+                }
+            });
+    }
+    
+    private void showSubscriptionDialog(Book book) {
+        // 创建自定义对话框
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_subscription, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setView(dialogView);
+        
+        // 获取对话框中的视图
+        TextView titleTextView = dialogView.findViewById(R.id.dialogTitle);
+        TextView messageTextView = dialogView.findViewById(R.id.dialogMessage);
+        Button subscribeButton = dialogView.findViewById(R.id.subscribeButton);
+        Button cancelButton = dialogView.findViewById(R.id.cancelButton);
+        
+        // 设置对话框内容
+        titleTextView.setText("需要订阅");
+        messageTextView.setText("免费试用一次，请订阅后继续使用。订阅后每月可免费阅读10本书籍。");
+        
+        // 创建对话框
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        
+        // 设置按钮点击事件
+        subscribeButton.setOnClickListener(v -> {
+            dialog.dismiss();
+            // 在当前页面进行订阅
+            mockSubscription(book);
+        });
+        
+        cancelButton.setOnClickListener(v -> {
+            dialog.dismiss();
+        });
+    }
+
+    private void mockSubscription(Book book) {
+        // 显示加载进度
+        ProgressBar progressBar = new ProgressBar(requireContext());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setView(progressBar);
+        AlertDialog loadingDialog = builder.create();
+        loadingDialog.show();
+        
+        // 模拟订阅过程
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            loadingDialog.dismiss();
+            
+            // 保存订阅状态
+            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("isSubscribed", true).apply();
+            
+            // 显示订阅成功提示
+            Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
+            
+            // 直接进入阅读页面
+            navigateToReader(book);
+        }, 1500);
+    }
+    
+    private void navigateToReader(Book book) {
         if (getActivity() instanceof MainActivity) {
-            // 显示加载进度条
+            // 只显示加载进度条，保持其他视图状态不变
             progressBar.setVisibility(View.VISIBLE);
             ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash(), "", "");
         }

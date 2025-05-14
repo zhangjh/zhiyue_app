@@ -2,6 +2,7 @@ package cn.zhangjh.zhiyue.fragment;
 
 import static android.content.Context.MODE_PRIVATE;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -33,8 +34,8 @@ import java.util.List;
 import java.util.Locale;
 
 import cn.zhangjh.zhiyue.R;
-import cn.zhangjh.zhiyue.adapter.ReadingHistoryAdapter;
 import cn.zhangjh.zhiyue.activity.MainActivity;
+import cn.zhangjh.zhiyue.adapter.ReadingHistoryAdapter;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.billing.BillingManager;
 import cn.zhangjh.zhiyue.billing.SubscriptionInfo;
@@ -47,6 +48,7 @@ import retrofit2.Response;
 
 public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.OnHistoryItemClickListener {
     private static final int PAGE_SIZE = 5;
+    private String currentUserId;
     
     private ShapeableImageView userAvatar;
     private TextView userName;
@@ -81,6 +83,9 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
+        currentUserId = prefs.getString("userId", "");
+
         initViews(view);
         setupRecyclerView();
         loadUserInfo();
@@ -207,6 +212,10 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
             // 显示管理订阅按钮，隐藏订阅按钮
             subscribeButton.setVisibility(View.GONE);
             manageSubscriptionButton.setVisibility(View.VISIBLE);
+            
+            // 保存订阅状态到SharedPreferences
+            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("isSubscribed", true).apply();
         } else {
             // 未订阅状态
             subscriptionStatus.setText("未订阅");
@@ -218,6 +227,10 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
             // 显示订阅按钮，隐藏管理订阅按钮
             subscribeButton.setVisibility(View.VISIBLE);
             manageSubscriptionButton.setVisibility(View.GONE);
+            
+            // 保存订阅状态到SharedPreferences
+            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("isSubscribed", false).apply();
         }
     }
     
@@ -288,12 +301,8 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         }
         isLoading = true;
         currentPage = page;
-        
-        // 获取用户ID
-        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
-        String userId = prefs.getString("userId", "");
-        if (TextUtils.isEmpty(userId)) {
-            // todo: 跳转登录
+
+        if (TextUtils.isEmpty(currentUserId)) {
             loadingProgressBar.setVisibility(View.GONE);
             readingHistoryRecyclerView.setVisibility(View.GONE);
             emptyView.setVisibility(View.VISIBLE);
@@ -301,7 +310,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
             return;
         }
         // 调用API获取历史记录
-        ApiClient.getBookService().getHistory(page, PAGE_SIZE, userId)
+        ApiClient.getBookService().getHistory(page, PAGE_SIZE, currentUserId)
             .enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call,
@@ -358,16 +367,13 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
 
     @Override
     public void onDeleteHistory(ReadingHistory history) {
-        // 获取用户ID
-        SharedPreferences prefs = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
-        String userId = prefs.getString("userId", "");
-        if (TextUtils.isEmpty(userId)) {
+        if (TextUtils.isEmpty(currentUserId)) {
             Toast.makeText(requireContext(), "请先登录", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // 调用删除接口
-        ApiClient.getBookService().deleteHistory(userId, history.getFileId())
+        ApiClient.getBookService().deleteHistory(currentUserId, history.getFileId())
             .enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<BizResponse<Void>> call,

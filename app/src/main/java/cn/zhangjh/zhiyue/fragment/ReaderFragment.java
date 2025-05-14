@@ -51,8 +51,7 @@ public class ReaderFragment extends Fragment {
     private static final String TAG = ReaderFragment.class.getName();
     private String userId;
     private String fileId;
-    private String hashId;
-    private String cfi;
+	private String cfi;
     private String bookUrl;
 	private WebView webViewReader;
     private View loadingView;
@@ -76,7 +75,7 @@ public class ReaderFragment extends Fragment {
         });
         if (getArguments() != null) {
 	        String bookId = getArguments().getString("book_id");
-            hashId = getArguments().getString("hash_id");
+	        String hashId = getArguments().getString("hash_id");
             fileId = getArguments().getString("file_id");
             cfi = getArguments().getString("cfi");
             // for test only

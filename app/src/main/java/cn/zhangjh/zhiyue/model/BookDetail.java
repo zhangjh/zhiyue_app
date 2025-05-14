@@ -5,6 +5,7 @@ public class BookDetail {
 	private String title;
 	private String author;
 	private String cover;
+	private String url;
 	private String filesize;
 	private String filesizeString;
 	private String extension;
@@ -41,6 +42,14 @@ public class BookDetail {
 
 	public void setCover(String cover) {
 		this.cover = cover;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 	public String getFilesize() {
