@@ -52,10 +52,9 @@ dependencies {
 
     implementation libs.converter.scalars
     implementation libs.play.services.auth
-    implementation libs.play.services.auth.v2070
 
     implementation libs.credentials
     implementation libs.credentials.play.services.auth
     implementation libs.googleid
-    implementation libs.billing.v610
+    implementation libs.billing
 }

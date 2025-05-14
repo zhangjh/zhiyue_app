@@ -68,4 +68,8 @@ public class ApiClient {
         Log.d(TAG, "Created UserService instance");
         return service;
     }
+
+    public static AuthService getAuthService() {
+        return getClient().create(AuthService.class);
+    }
 }
