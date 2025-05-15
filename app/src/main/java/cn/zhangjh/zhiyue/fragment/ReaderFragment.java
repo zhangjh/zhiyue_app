@@ -75,6 +75,7 @@ public class ReaderFragment extends Fragment {
                     tabLayout.selectTab(tabLayout.getTabAt(0));
                 } else {
                     // 否则返回到找书页面
+                    ChatFragment.closeWs();
                     if (getActivity() instanceof MainActivity) {
                         ((MainActivity) getActivity()).navigateToSearch();
                     }

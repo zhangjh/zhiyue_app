@@ -99,8 +99,8 @@ public class ChatFragment extends Fragment {
             @Override
             public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
                 Log.d(TAG, "ChatWebSocket connection opened");
-
-                webSocket.send("{\"type\":\"ping\"}");
+                // 每隔30s发送一个ping消息保活
+                handler.postDelayed(() -> webSocket.send("{\"type\":\"ping\"}"), 30000);
             }
 
             @Override
@@ -118,8 +118,9 @@ public class ChatFragment extends Fragment {
                                 updateLastAIMessage(currentResponse.toString(), false);
                                 break;
                             case "finish":
-                                // todo: 聊天记录持久化
                                 updateLastAIMessage(currentResponse.toString(), true);
+                                // 一轮问答结束清空缓冲
+                                currentResponse.setLength(0);
                                 break;
                         }
                     });
@@ -237,7 +238,9 @@ public class ChatFragment extends Fragment {
         if (getActivity() != null) {
             getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
         }
-        
+    }
+
+    public static void closeWs() {
         if (chatSocket != null) {
             chatSocket.close(1000, "Fragment closing");
             chatSocket = null;
