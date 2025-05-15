@@ -55,7 +55,9 @@ public class ReaderFragment extends Fragment {
     private String bookUrl;
 	private WebView webViewReader;
     private View loadingView;
-
+    private TabLayout tabLayout;
+    private boolean isBookLoading = true;
+    
     private final ReadingRecord readingRecord = new ReadingRecord();
 
     @Override
@@ -251,10 +253,22 @@ public class ReaderFragment extends Fragment {
         View aiReadingLayout = view.findViewById(R.id.ai_reading_layout);
 
         // 初始化TabLayout
-        TabLayout tabLayout = view.findViewById(R.id.tab_layout);
+        tabLayout = view.findViewById(R.id.tab_layout);
+        
+        // 初始时禁用TabLayout
+        setTabLayoutEnabled(false);
+        
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
+                // 如果书籍正在加载中，不处理Tab切换事件
+                if (isBookLoading) {
+                    // 恢复到第一个Tab
+                    tabLayout.selectTab(tabLayout.getTabAt(0));
+                    Toast.makeText(getContext(), "请等待书籍加载完成", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                
                 switch (tab.getPosition()) {
                     case 0: // 阅读器
                         webViewReader.setVisibility(View.VISIBLE);
@@ -290,6 +304,20 @@ public class ReaderFragment extends Fragment {
         });
 
         return view;
+    }
+
+    // 添加一个方法来设置TabLayout的启用/禁用状态
+    private void setTabLayoutEnabled(boolean enabled) {
+        if (tabLayout != null) {
+            ViewGroup tabStrip = (ViewGroup) tabLayout.getChildAt(0);
+            if (tabStrip != null) {
+                for (int i = 0; i < tabStrip.getChildCount(); i++) {
+                    tabStrip.getChildAt(i).setEnabled(enabled);
+                }
+            }
+            // 视觉上的反馈
+            tabLayout.setAlpha(enabled ? 1.0f : 0.5f);
+        }
     }
 
     @Override
@@ -335,9 +363,16 @@ public class ReaderFragment extends Fragment {
 
         @JavascriptInterface
         public void onBookLoaded() {
-            hideLoading();
-            // 保存阅读记录
-            saveReadingRecord();
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    hideLoading();
+                    // 书籍加载完成，更新状态并启用TabLayout
+                    isBookLoading = false;
+                    setTabLayoutEnabled(true);
+                    // 保存阅读记录
+                    saveReadingRecord();
+                });
+            }
         }
 
         @JavascriptInterface

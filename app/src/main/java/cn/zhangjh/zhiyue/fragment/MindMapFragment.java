@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -190,6 +192,10 @@ public class MindMapFragment extends Fragment {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 Log.d(TAG, "开始加载map data");
+                if(TextUtils.isEmpty(title) || TextUtils.isEmpty(author) || TextUtils.isEmpty(summary)) {
+                    Toast.makeText(getActivity(), "请等待AI总结完成", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 loadMindMapData();
             }
 

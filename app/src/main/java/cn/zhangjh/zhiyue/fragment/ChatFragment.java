@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -154,6 +155,10 @@ public class ChatFragment extends Fragment {
     private final List<ChatContext> chatContexts = new ArrayList<>();
 
     private void sendQuestion(String question) {
+        if(TextUtils.isEmpty(title) || TextUtils.isEmpty(author) || TextUtils.isEmpty(summary)) {
+            Toast.makeText(getActivity(), "请等待AI总结完成", Toast.LENGTH_SHORT).show();
+            return;
+        }
         // 隐藏软键盘
         View view = requireActivity().getCurrentFocus();
         if (view != null) {
