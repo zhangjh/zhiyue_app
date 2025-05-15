@@ -54,10 +54,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         ChatMsg message = messages.get(position);
         if (message.getType() == ChatMsg.TYPE_AI) {
             String content = message.getContent();
-            if (content.isEmpty()) {
-                content = " "; // 确保空内容时也有最小高度
-            }
-            
+
             // 使用预先计算的宽度来设置文本
             holder.messageText.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
                     View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));

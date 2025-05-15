@@ -8,15 +8,11 @@
 
     <TextView
         android:id="@+id/message_text"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="0.95"
         android:background="@drawable/bg_chat_ai"
+        android:maxWidth="320dp"
         android:padding="12dp"
         android:textColor="@color/text_primary"
-        android:textSize="14sp"
-        android:minHeight="24dp"
-        android:lineSpacingExtra="4dp"
-        android:freezesText="true"
-        tools:text="AI回复内容" />
+        android:textSize="14sp" />
 </LinearLayout>
