@@ -20,11 +20,15 @@ public class Book {
         this.format = bookDetail.getExtension();
         this.coverUrl = bookDetail.getCover();
         this.description = bookDetail.getDescription();
-        String url = bookDetail.getUrl();
-        if(!TextUtils.isEmpty(url)) {
-            // /book/3658844/075255/%E6%9B%BE%E5%9B%BD%E8%97%A9%E4%BC%A0.html，分隔符第一段为bookId，第二段为hashId
-            String[] parts = url.split("/");
-            this.hash = parts[parts.length - 2];
+        this.hash = bookDetail.getHash();
+        // 推荐书目没有直接的hash，使用url解析一下
+        if(TextUtils.isEmpty(this.hash)) {
+            String url = bookDetail.getUrl();
+            if(!TextUtils.isEmpty(url)) {
+                // /book/3658844/075255/%E6%9B%BE%E5%9B%BD%E8%97%A9%E4%BC%A0.html，分隔符第一段为bookId，第二段为hashId
+                String[] parts = url.split("/");
+                this.hash = parts[parts.length - 2];
+            }
         }
     }
 
