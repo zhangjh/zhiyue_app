@@ -234,10 +234,11 @@ public class AISummaryFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        super.onDestroyView();
         if (!isLoadingFromHistory) {
             summaryContent = new StringBuilder();
         }
-        super.onDestroyView();
+        isWebSocketInitialized = false;
     }
 
     public static void closeWebSocket() {
