@@ -75,9 +75,11 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     private boolean hasMoreData = true;
     private View emptyView;
 
-    private int recommendCurrentPage = 1;
-    private List<String> cachedBookIds = new ArrayList<>();
-    private List<ReadingHistory> cachedHistories = new ArrayList<>();
+    private int recommendCurrentPage;
+    // 阅读记录bookId缓存
+    private static List<String> cachedBookIds = new ArrayList<>();
+    // 推荐书目缓存
+    private static List<Book> cacheRecommendBooks = new ArrayList<>();
 
     @Nullable
     @Override
@@ -237,6 +239,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     }
 
     private void setupRecommendBooks() {
+        recommendCurrentPage = 1;
+
         // 设置刷新按钮点击事件
         refreshRecommendButton.setOnClickListener(v -> {
             recommendCurrentPage++;
@@ -254,41 +258,47 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         // 确保推荐书目列表在加载时不可见，避免空白区域
         recommendRecyclerView.setVisibility(View.GONE);
         
-        // 如果是第一页，需要先获取阅读历史
+        // 如果是第一页并且没有缓存的bookId，需要先获取阅读历史
         if (recommendCurrentPage == 1) {
-            ApiClient.getBookService().getHistory(1, 10, currentUserId).enqueue(new Callback<>() {
-                @Override
-                public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Response<BizResponse<HistoryResponse>> response) {
-                    if (!isAdded()) return;
-                    
-                    if (!response.isSuccessful() || response.body() == null || !response.body().isSuccess()) {
-                        showNoHistoryView();
-                        return;
+            // 直接展示缓存书目，大部分场景下不会翻页
+            if(!cacheRecommendBooks.isEmpty()) {
+                showRecommendView(cacheRecommendBooks);
+            }
+            if(cachedBookIds.isEmpty()) {
+                ApiClient.getBookService().getHistory(1, 10, currentUserId).enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Response<BizResponse<HistoryResponse>> response) {
+                        if (!isAdded()) return;
+
+                        if (!response.isSuccessful() || response.body() == null || !response.body().isSuccess()) {
+                            showNoHistoryView();
+                            return;
+                        }
+
+                        HistoryResponse historyResponse = response.body().getData();
+                        List<ReadingHistory> histories = historyResponse != null ? historyResponse.getResults() : new ArrayList<>();
+
+                        if (histories.isEmpty()) {
+                            showNoHistoryView();
+                            return;
+                        }
+
+                        // 缓存书籍ID用于分页
+                        cachedBookIds = histories.stream()
+                                .map(ReadingHistory::getHashId)
+                                .collect(Collectors.toList());
+
+                        // 获取第一页推荐
+                        fetchRecommendBooks();
                     }
-                    
-                    HistoryResponse historyResponse = response.body().getData();
-                    List<ReadingHistory> histories = historyResponse != null ? historyResponse.getResults() : new ArrayList<>();
-                    
-                    if (histories.isEmpty()) {
+
+                    @Override
+                    public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
+                        if (!isAdded()) return;
                         showNoHistoryView();
-                        return;
                     }
-                    
-                    // 缓存书籍ID用于分页
-                    cachedBookIds = histories.stream()
-                            .map(ReadingHistory::getHashId)
-                            .collect(Collectors.toList());
-                    
-                    // 获取第一页推荐
-                    fetchRecommendBooks();
-                }
-                
-                @Override
-                public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
-                    if (!isAdded()) return;
-                    showNoHistoryView();
-                }
-            });
+                });
+            }
         } else {
             // 直接获取下一页推荐
             fetchRecommendBooks();
@@ -301,8 +311,6 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                     @Override
                     public void onResponse(@NonNull Call<BizListResponse<BookDetail>> call, @NonNull Response<BizListResponse<BookDetail>> response) {
                         if (!isAdded()) return;
-                        recommendProgressBar.setVisibility(View.GONE);
-                        recommendRecyclerView.setVisibility(View.VISIBLE);
 
                         if (!response.isSuccessful()) {
                             handleRecommendError(response);
@@ -312,18 +320,11 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         if (response.body() != null && response.body().isSuccess()) {
                             List<Book> books = convertToBooks(response.body().getData());
                             Log.d(TAG, "Recommend successful. Found " + books.size() + " books");
-                            
-                            // 重置推荐书目容器
-                            ViewGroup parent = (ViewGroup) recommendRecyclerView.getParent();
-                            parent.removeAllViews();
-                            parent.addView(recommendRecyclerView);
-                            parent.addView(recommendProgressBar);
-                            
-                            // 设置新数据
-                            recommendBookAdapter.setBooks(books);
-                            
-                            // 确保 RecyclerView 显示在顶部
-                            recommendRecyclerView.scrollToPosition(0);
+                            // 只缓存第一页
+                            if(cacheRecommendBooks.isEmpty()) {
+                                cacheRecommendBooks = books;
+                            }
+                            showRecommendView(books);
                         } else {
                             Log.e(TAG, "Response body was null or not successful");
                             showError("获取推荐书目失败：返回数据无效");
@@ -366,6 +367,23 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         noHistoryText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         ((ViewGroup) recommendRecyclerView.getParent()).addView(noHistoryText);
         recommendRecyclerView.setVisibility(View.GONE);
+    }
+
+    private void showRecommendView(List<Book> books) {
+        recommendProgressBar.setVisibility(View.GONE);
+        recommendRecyclerView.setVisibility(View.VISIBLE);
+
+        // 重置推荐书目容器
+        ViewGroup parent = (ViewGroup) recommendRecyclerView.getParent();
+        parent.removeAllViews();
+        parent.addView(recommendRecyclerView);
+        parent.addView(recommendProgressBar);
+
+        // 设置新数据
+        recommendBookAdapter.setBooks(books);
+
+        // 确保 RecyclerView 显示在顶部
+        recommendRecyclerView.scrollToPosition(0);
     }
 
     private void performNewSearch(TextInputEditText searchEditText) {
@@ -641,6 +659,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         if (getActivity() instanceof MainActivity) {
             // 只显示加载进度条，保持其他视图状态不变
             progressBar.setVisibility(View.VISIBLE);
+            // 跳转到阅读器后失效当前阅读记录bookIds缓存
+            cachedBookIds.clear();
             ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash(), "", "");
         }
     }
