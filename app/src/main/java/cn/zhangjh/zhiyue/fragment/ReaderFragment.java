@@ -69,9 +69,15 @@ public class ReaderFragment extends Fragment {
         requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // 返回到找书页面
-                if (getActivity() instanceof MainActivity) {
-                    ((MainActivity) getActivity()).navigateToSearch();
+                // 检查当前是否在AI伴读页面
+                if (tabLayout != null && tabLayout.getSelectedTabPosition() == 1) {
+                    // 如果在AI伴读页面，返回到阅读器页面
+                    tabLayout.selectTab(tabLayout.getTabAt(0));
+                } else {
+                    // 否则返回到找书页面
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).navigateToSearch();
+                    }
                 }
             }
         });
