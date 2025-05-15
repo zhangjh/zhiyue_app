@@ -99,8 +99,8 @@ public class ChatFragment extends Fragment {
             @Override
             public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
                 Log.d(TAG, "ChatWebSocket connection opened");
-                // 每隔30s发送一个ping消息保活
-                handler.postDelayed(() -> webSocket.send("{\"type\":\"ping\"}"), 30000);
+                // 每隔10s发送一个ping消息保活
+                handler.postDelayed(() -> webSocket.send("{\"type\":\"ping\"}"), 10000);
             }
 
             @Override
@@ -218,10 +218,24 @@ public class ChatFragment extends Fragment {
         if (!chatMessages.isEmpty()) {
             ChatMsg lastMessage = chatMessages.get(chatMessages.size() - 1);
             if (lastMessage.getType() == ChatMsg.TYPE_AI) {
+                // 保存旧内容长度，用于判断是否需要滚动
+                int oldContentLength = lastMessage.getContent().length();
+                
+                // 更新消息内容
                 lastMessage.setContent(content);
                 lastMessage.setComplete(isComplete);
-                chatAdapter.notifyItemChanged(chatMessages.size() - 1);
-                chatRecyclerView.scrollToPosition(chatMessages.size() - 1);
+                
+                // 使用更精确的局部更新方式
+                int position = chatMessages.size() - 1;
+                chatAdapter.notifyItemChanged(position, "content_update");
+                
+                // 如果内容增加了，确保滚动到底部
+                if (content.length() > oldContentLength) {
+                    // 使用smoothScrollToPosition而不是scrollToPosition，使滚动更平滑
+                    chatRecyclerView.postDelayed(() -> {
+                        chatRecyclerView.smoothScrollToPosition(chatMessages.size() - 1);
+                    }, 100); // 短暂延迟确保布局已更新
+                }
                 
                 // 当AI回复完成时，将回复添加到上下文
                 if (isComplete) {

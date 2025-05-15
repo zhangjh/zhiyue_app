@@ -37,9 +37,36 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
+        bindMessage(holder, position);
+    }
+    
+    @Override
+    public void onBindViewHolder(@NonNull ChatViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if (payloads.isEmpty()) {
+            super.onBindViewHolder(holder, position, payloads);
+        } else {
+            // 只更新内容，不重新创建整个视图
+            bindMessage(holder, position);
+        }
+    }
+    
+    private void bindMessage(ChatViewHolder holder, int position) {
         ChatMsg message = messages.get(position);
         if (message.getType() == ChatMsg.TYPE_AI) {
-            markwon.setMarkdown(holder.messageText, message.getContent());
+            String content = message.getContent();
+            if (content.isEmpty()) {
+                content = " "; // 确保空内容时也有最小高度
+            }
+            
+            // 使用预先计算的宽度来设置文本
+            holder.messageText.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            
+            // 使用Markwon渲染Markdown内容
+            markwon.setMarkdown(holder.messageText, content);
+            
+            // 确保视图立即重新测量和布局
+            holder.messageText.requestLayout();
         } else {
             holder.messageText.setText(message.getContent());
         }
