@@ -16,6 +16,7 @@ import java.util.Objects;
 
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.fragment.AISummaryFragment;
+import cn.zhangjh.zhiyue.fragment.ChatFragment;
 import cn.zhangjh.zhiyue.fragment.MindMapFragment;
 
 public class MainActivity extends AppCompatActivity {
@@ -98,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         AISummaryFragment.closeWebSocket();
+        ChatFragment.closeWebSocket();
         MindMapFragment.closeWebSocket();
         super.onDestroy();
     }

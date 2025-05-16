@@ -254,7 +254,7 @@ public class ChatFragment extends Fragment {
         }
     }
 
-    public static void closeWs() {
+    public static void closeWebSocket() {
         if (chatSocket != null) {
             chatSocket.close(1000, "Fragment closing");
             chatSocket = null;
