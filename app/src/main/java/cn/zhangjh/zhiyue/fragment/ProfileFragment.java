@@ -39,6 +39,7 @@ import cn.zhangjh.zhiyue.adapter.ReadingHistoryAdapter;
 import cn.zhangjh.zhiyue.api.ApiClient;
 import cn.zhangjh.zhiyue.billing.BillingManager;
 import cn.zhangjh.zhiyue.billing.SubscriptionInfo;
+import cn.zhangjh.zhiyue.billing.SubscriptionManager;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.HistoryResponse;
 import cn.zhangjh.zhiyue.model.ReadingHistory;
@@ -96,13 +97,23 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
 
         // 修改订阅按钮点击事件
         subscribeButton.setOnClickListener(v -> {
-            // 在测试阶段使用模拟订阅
-            mockSubscription();
+            // 显示加载进度
+            ProgressBar progressBar = new ProgressBar(requireContext());
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(requireContext());
+            builder.setView(progressBar);
+            android.app.AlertDialog loadingDialog = builder.create();
+            loadingDialog.show();
 
-            // 正式环境下使用实际订阅
-            // if (billingManager != null) {
-            //     billingManager.subscribeMonthly();
-            // }
+            // 在测试阶段使用模拟订阅
+            SubscriptionManager.getInstance(requireActivity()).mockSubscribe(info -> {
+                loadingDialog.dismiss();
+                if (info != null) {
+                    // 更新订阅状态UI
+                    updateSubscriptionUI(true);
+                    // 更新订阅详情
+                    updateSubscriptionDetails(info);
+                }
+            });
         });
         
         manageSubscriptionButton.setOnClickListener(v -> {
@@ -405,8 +416,6 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (billingManager != null) {
-            billingManager.destroy();
-        }
+        SubscriptionManager.getInstance(requireActivity()).destroy();
     }
 }

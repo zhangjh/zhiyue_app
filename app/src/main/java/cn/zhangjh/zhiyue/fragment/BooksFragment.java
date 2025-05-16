@@ -4,8 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -41,6 +39,7 @@ import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.adapter.BookAdapter;
 import cn.zhangjh.zhiyue.adapter.RecommendBookAdapter;
 import cn.zhangjh.zhiyue.api.ApiClient;
+import cn.zhangjh.zhiyue.billing.SubscriptionManager;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.Book;
@@ -537,7 +536,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         // 检查订阅状态
         checkSubscriptionAndReadCount(book);
     }
-    
+
     private void checkSubscriptionAndReadCount(Book book) {
         if (TextUtils.isEmpty(currentUserId)) {
             Toast.makeText(requireContext(), "请先登录", Toast.LENGTH_SHORT).show();
@@ -547,10 +546,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         progressBar.setVisibility(View.VISIBLE);
         
         // 1. 首先检查用户是否已订阅
-        SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
-        boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
-        
-        if (isSubscribed) {
+        if (SubscriptionManager.getInstance(requireActivity()).isSubscribed()) {
             // 已订阅用户直接阅读
             navigateToReader(book);
             progressBar.setVisibility(View.GONE);
@@ -639,20 +635,12 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         AlertDialog loadingDialog = builder.create();
         loadingDialog.show();
         
-        // 模拟订阅过程
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+        // 使用统一的订阅管理器
+        SubscriptionManager.getInstance(requireActivity()).mockSubscribe(info -> {
             loadingDialog.dismiss();
-            
-            // 保存订阅状态
-            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
-            prefs.edit().putBoolean("isSubscribed", true).apply();
-            
-            // 显示订阅成功提示
             Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
-            
-            // 直接进入阅读页面
             navigateToReader(book);
-        }, 1500);
+        });
     }
     
     private void navigateToReader(Book book) {
