@@ -7,12 +7,16 @@ import androidx.lifecycle.ViewModel;
 public class BookInfoViewModel extends ViewModel {
     private final MutableLiveData<String> title = new MutableLiveData<>();
     private final MutableLiveData<String> author = new MutableLiveData<>();
+    // 分片总结过的内容，用来整理脑图使用
+    private final MutableLiveData<String> partsSummary = new MutableLiveData<>();
+    // 全书总结，用来AI总结和聊天使用
     private final MutableLiveData<String> summary = new MutableLiveData<>();
 
-    public void setBookInfo(String title, String author, String summary) {
+    public void setBookInfo(String title, String author, String summary, String partsSummary) {
         this.title.setValue(title);
         this.author.setValue(author);
         this.summary.setValue(summary);
+        this.partsSummary.setValue(partsSummary);
     }
 
     public LiveData<String> getTitle() {
@@ -25,5 +29,9 @@ public class BookInfoViewModel extends ViewModel {
 
     public LiveData<String> getSummary() {
         return summary;
+    }
+
+    public MutableLiveData<String> getPartsSummary() {
+        return partsSummary;
     }
 }

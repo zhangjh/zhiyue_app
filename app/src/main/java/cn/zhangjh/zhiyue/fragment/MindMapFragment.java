@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,7 +43,7 @@ public class MindMapFragment extends Fragment {
     private ProgressBar loadingProgress;
     private TextView errorText;
     private MindMapManager mindMapManager;
-    private String title, author, summary;
+    private String title, author, partsSummary;
 
     private static WebSocket webSocket;
     private static boolean isWebSocketInitialized = false;
@@ -74,7 +76,7 @@ public class MindMapFragment extends Fragment {
         BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
         viewModel.getTitle().observe(this, title -> this.title = title);
         viewModel.getAuthor().observe(this, author -> this.author = author);
-        viewModel.getSummary().observe(this, summary -> this.summary = summary);
+        viewModel.getPartsSummary().observe(this, summary -> this.partsSummary = summary);
     }
 
     private void initWebSocket() {
@@ -109,8 +111,10 @@ public class MindMapFragment extends Fragment {
                         markdownData.append(data);
                     } else if ("finish".equals(type)) {
                         if (getActivity() != null) {
+                            Log.d(TAG, "markdownData: " + markdownData.toString());
                             getActivity().runOnUiThread(() -> mindMapManager.renderMarkdown(markdownData.toString()));
                         }
+                        closeWebSocket();
                     }
                 } catch (JSONException e) {
                     Log.e(TAG, "MindMapWs message parse error", e);
@@ -190,6 +194,10 @@ public class MindMapFragment extends Fragment {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 Log.d(TAG, "开始加载map data");
+                if(TextUtils.isEmpty(title) || TextUtils.isEmpty(author) || TextUtils.isEmpty(partsSummary)) {
+                    Toast.makeText(getActivity(), "请等待AI总结完成", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 loadMindMapData();
             }
 
@@ -209,7 +217,7 @@ public class MindMapFragment extends Fragment {
             JSONObject request = new JSONObject();
             request.put("title", title);
             request.put("author", author);
-            request.put("summary", summary);
+            request.put("summary", partsSummary);
             webSocket.send(request.toString());
         } catch (Exception e) {
             Log.e(TAG, "Error loading mind map data", e);
