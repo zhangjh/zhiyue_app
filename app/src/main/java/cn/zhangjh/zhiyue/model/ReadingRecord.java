@@ -1,5 +1,7 @@
 package cn.zhangjh.zhiyue.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ReadingRecord {
 
     private String userId;
@@ -10,6 +12,8 @@ public class ReadingRecord {
     private int progress;
     private String cfi;
     private String summary;
+    @SerializedName("contentSummary")
+    private String partsSummary;
 
     public String getUserId() {
         return userId;
@@ -73,5 +77,13 @@ public class ReadingRecord {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public String getPartsSummary() {
+        return partsSummary;
+    }
+
+    public void setPartsSummary(String partsSummary) {
+        this.partsSummary = partsSummary;
     }
 }

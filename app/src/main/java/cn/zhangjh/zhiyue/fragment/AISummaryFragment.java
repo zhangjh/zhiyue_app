@@ -47,7 +47,7 @@ public class AISummaryFragment extends Fragment {
     private static boolean isWebSocketInitialized = false;
     private StringBuilder summaryContent = new StringBuilder();
     private String title, author;
-    private final StringBuilder summary = new StringBuilder();
+    private final StringBuilder partsSummary = new StringBuilder();
     private boolean isLoadingFromHistory = false;
 
     public AISummaryFragment() {
@@ -116,7 +116,7 @@ public class AISummaryFragment extends Fragment {
 			            markwon.setMarkdown(summaryText, summaryContent.toString());
 
 			            // 更新书籍信息
-			            updateBookInfo(record.getTitle(), record.getAuthor(), record.getSummary());
+			            updateBookInfo(record.getTitle(), record.getAuthor(), record.getSummary(), record.getPartsSummary());
 			            isLoadingFromHistory = false;
 		            } else {
 			            // 没有历史总结，通过WebSocket获取
@@ -190,7 +190,7 @@ public class AISummaryFragment extends Fragment {
                                 author = data;
                                 break;
                             case "contentSummary":
-                                summary.append(data);
+                                partsSummary.append(data);
                                 break;
                             case "summaryProgress":
                                 progressLayout.setVisibility(View.VISIBLE);
@@ -206,7 +206,8 @@ public class AISummaryFragment extends Fragment {
                                 break;
                             case "finish":
                                 progressLayout.setVisibility(View.GONE);
-                                updateBookInfo(title, author, summaryContent.toString());
+                                updateBookInfo(title, author, summaryContent.toString(), partsSummary.toString());
+                                closeWebSocket();
                                 break;
                         }
                     } catch (JSONException e) {
@@ -236,7 +237,8 @@ public class AISummaryFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         if (!isLoadingFromHistory) {
-            summaryContent = new StringBuilder();
+            summaryContent.setLength(0);
+            partsSummary.setLength(0);
         }
         isWebSocketInitialized = false;
     }
@@ -257,8 +259,8 @@ public class AISummaryFragment extends Fragment {
         viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
     }
 
-    private void updateBookInfo(String title, String author, String summary) {
-        viewModel.setBookInfo(title, author, summary);
+    private void updateBookInfo(String title, String author, String summary, String partsSummary) {
+        viewModel.setBookInfo(title, author, summary, partsSummary);
     }
 
 }

@@ -19,16 +19,7 @@ public class ApiClient {
             try {
                 // 创建详细的日志拦截器
                 HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> {
-                    // 为所有网络相关日志添加自定义标签
-                    if (message.startsWith("-->")) {
-                        Log.d(TAG, "Sending request: " + message);
-                    } else if (message.startsWith("<--")) {
-                        Log.d(TAG, "Received response: " + message);
-                    } else if (message.startsWith("DNSResult:")) {
-                        Log.d(TAG, "DNS Resolution: " + message);
-                    } else {
-                        Log.d(TAG, "Network Log: " + message);
-                    }
+                    Log.d(TAG, "Network Log: " + message);
                 });
                 loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 

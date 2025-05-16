@@ -103,7 +103,13 @@ public class ReaderFragment extends Fragment {
             readingRecord.setUserId(userId);
             readingRecord.setFileId(fileId);
             readingRecord.setSummary(summary);
-
+            updateReadingRecord(readingRecord);
+        });
+        viewModel.getPartsSummary().observe(this, partsSummary -> {
+            // 更新部分总结到记录
+            readingRecord.setUserId(userId);
+            readingRecord.setFileId(fileId);
+            readingRecord.setPartsSummary(partsSummary);
             updateReadingRecord(readingRecord);
         });
     }
