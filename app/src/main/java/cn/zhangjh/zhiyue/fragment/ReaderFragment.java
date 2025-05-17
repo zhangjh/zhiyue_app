@@ -82,15 +82,17 @@ public class ReaderFragment extends Fragment {
             }
         });
         if (getArguments() != null) {
-	        String bookId = getArguments().getString("book_id");
-	        String hashId = getArguments().getString("hash_id");
+            String bookId = getArguments().getString("book_id");
+            String hashId = getArguments().getString("hash_id");
             fileId = getArguments().getString("file_id");
             cfi = getArguments().getString("cfi");
-            // for test only
-//            fileId = "一句顶一万句 (刘震云) (Z-Library).epub";
+            
+            // 清除之前的数据
+            BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
+            viewModel.clearBookInfo();
+            
             if(fileId == null || fileId.isEmpty()) {
-                // 获取书籍url, 阅读记录里已有则不重复下载
-                 getEbookUrl(bookId, hashId);
+                getEbookUrl(bookId, hashId);
             } else {
                 bookUrl = getString(R.string.biz_domain) + fileId;
             }
@@ -356,6 +358,7 @@ public class ReaderFragment extends Fragment {
             webViewReader = null;
         }
         super.onDestroyView();
+
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).showBottomNavigation();
         }

@@ -34,4 +34,11 @@ public class BookInfoViewModel extends ViewModel {
     public MutableLiveData<String> getPartsSummary() {
         return partsSummary;
     }
+
+    public void clearBookInfo() {
+        title.setValue("");
+        author.setValue("");
+        summary.setValue("");
+        partsSummary.setValue("");
+    }
 }
