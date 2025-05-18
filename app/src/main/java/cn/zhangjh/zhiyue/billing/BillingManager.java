@@ -40,26 +40,50 @@ public class BillingManager implements PurchasesUpdatedListener {
     }
     
     private void connectToPlayBillingService() {
+        Log.d(TAG, "开始连接 Google Play Billing 服务");
+        
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    Log.d(TAG, "Google Play Billing 服务已连接");
+                    Log.d(TAG, "Google Play Billing 服务已连接成功");
                     if (billingCallback != null) {
                         billingCallback.onBillingSetupFinished();
                     }
                 } else {
-                    Log.e(TAG, "Google Play Billing 服务连接失败: " + billingResult.getDebugMessage());
+                    Log.e(TAG, "Google Play Billing 服务连接失败: " + billingResult.getResponseCode() + " - " + billingResult.getDebugMessage());
+                    // 实现重试逻辑
+                    retryBillingServiceConnectionWithExponentialBackoff();
                 }
             }
             
             @Override
             public void onBillingServiceDisconnected() {
-                Log.d(TAG, "Google Play Billing 服务已断开连接");
-                // 可以在这里实现重连逻辑
-                billingClient.startConnection(this);
+                Log.d(TAG, "Google Play Billing 服务已断开连接，尝试重新连接");
+                // 实现重连逻辑
+                retryBillingServiceConnectionWithExponentialBackoff();
             }
         });
+    }
+    
+    // 添加指数退避重试机制
+    private int retryCount = 0;
+    private static final int MAX_RETRY_COUNT = 5;
+    private static final long RETRY_BASE_DELAY_MS = 1000;
+    
+    private void retryBillingServiceConnectionWithExponentialBackoff() {
+        if (retryCount >= MAX_RETRY_COUNT) {
+            Log.e(TAG, "已达到最大重试次数，放弃连接 Google Play Billing 服务");
+            retryCount = 0;
+            return;
+        }
+        
+        long delayMs = RETRY_BASE_DELAY_MS * (long) Math.pow(2, retryCount);
+        retryCount++;
+        
+        Log.d(TAG, "尝试重新连接 Google Play Billing 服务，延迟 " + delayMs + "ms，重试次数: " + retryCount);
+        
+        new android.os.Handler().postDelayed(this::connectToPlayBillingService, delayMs);
     }
     
     // 查询订阅状态
@@ -88,7 +112,7 @@ public class BillingManager implements PurchasesUpdatedListener {
                     }
                     
                     // 检查是否有有效的月度订阅
-                    if (purchase.getProducts().contains(SUBSCRIPTION_MONTHLY) 
+                    if (purchase.getProducts().contains(SUBSCRIPTION_MONTHLY)
                             && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
                         isSubscribed = true;
                     }
@@ -101,43 +125,6 @@ public class BillingManager implements PurchasesUpdatedListener {
                 Log.e(TAG, "查询订阅状态失败: " + billingResult.getDebugMessage());
                 if (billingCallback != null) {
                     billingCallback.onSubscriptionStatusChecked(false);
-                }
-            }
-        });
-    }
-    
-    // 订阅包月服务
-    public void subscribeMonthly() {
-        List<String> skuList = new ArrayList<>();
-        skuList.add(SUBSCRIPTION_MONTHLY);
-        
-        SkuDetailsParams params = SkuDetailsParams.newBuilder()
-                .setSkusList(skuList)
-                .setType(BillingClient.SkuType.SUBS)
-                .build();
-
-        billingClient.querySkuDetailsAsync(params, (billingResult, skuDetailsList) -> {
-            Log.d(TAG, "billingResult code:" + billingResult.getResponseCode());
-            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
-                if (!skuDetailsList.isEmpty()) {
-                    BillingFlowParams flowParams = BillingFlowParams.newBuilder()
-                            .setSkuDetails(skuDetailsList.get(0))
-                            .build();
-                    billingClient.launchBillingFlow(activity, flowParams);
-                } else {
-                    if (billingCallback != null) {
-                        billingCallback.onPurchaseFailure(
-                                billingResult.getResponseCode(),
-                                "未找到订阅商品"
-                        );
-                    }
-                }
-            } else {
-                if (billingCallback != null) {
-                    billingCallback.onPurchaseFailure(
-                            billingResult.getResponseCode(),
-                            "获取订阅信息失败: " + billingResult.getDebugMessage()
-                    );
                 }
             }
         });
@@ -159,6 +146,113 @@ public class BillingManager implements PurchasesUpdatedListener {
         }
     }
 
+    public void purchaseSubscription(PurchaseCallback callback) {
+        Log.d(TAG, "purchaseSubscription called");
+        // 保存回调引用
+        this.currentPurchaseCallback = callback;
+        
+        // 检查连接状态
+        if (!billingClient.isReady()) {
+            Log.e(TAG, "BillingClient 未准备好，正在尝试重新连接...");
+            
+            // 重新连接并在连接成功后执行查询
+            billingClient.startConnection(new BillingClientStateListener() {
+                @Override
+                public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                        // 连接成功后执行查询
+                        performSubscriptionPurchase(callback);
+                    } else {
+                        // 连接失败
+                        Log.e(TAG, "Google Play Billing 服务连接失败: " + billingResult.getDebugMessage());
+                        if (callback != null) {
+                            callback.onPurchaseComplete(false);
+                        }
+                        if (billingCallback != null) {
+                            billingCallback.onPurchaseFailure(
+                                    billingResult.getResponseCode(),
+                                    "Google Play Billing 服务连接失败: " + billingResult.getDebugMessage()
+                            );
+                        }
+                    }
+                }
+                
+                @Override
+                public void onBillingServiceDisconnected() {
+                    Log.d(TAG, "Google Play Billing 服务已断开连接");
+                    if (callback != null) {
+                        callback.onPurchaseComplete(false);
+                    }
+                }
+            });
+        } else {
+            Log.d(TAG, "BillingClient 已连接");
+            // 已连接，直接执行查询
+            performSubscriptionPurchase(callback);
+        }
+    }
+    
+    private void performSubscriptionPurchase(PurchaseCallback callback) {
+        Log.d(TAG, "performSubscriptionPurchase called");
+
+        List<String> skuList = new ArrayList<>();
+        skuList.add(SUBSCRIPTION_MONTHLY);
+        
+        SkuDetailsParams params = SkuDetailsParams.newBuilder()
+                .setSkusList(skuList)
+                .setType(BillingClient.SkuType.SUBS)
+                .build();
+
+        billingClient.querySkuDetailsAsync(params, (billingResult, skuDetailsList) -> {
+            Log.d(TAG, "billingResult code:" + billingResult.getResponseCode() + ", billingMsg: " + billingResult.getDebugMessage());
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
+                if (!skuDetailsList.isEmpty()) {
+                    BillingFlowParams flowParams = BillingFlowParams.newBuilder()
+                            .setSkuDetails(skuDetailsList.get(0))
+                            .build();
+                    int responseCode = billingClient.launchBillingFlow(activity, flowParams).getResponseCode();
+                    if (responseCode == BillingClient.BillingResponseCode.OK) {
+                        // 购买流程已启动，结果将通过onPurchasesUpdated回调
+                        // 这里不直接回调成功，因为用户可能会取消购买
+                    } else {
+                        if (callback != null) {
+                            callback.onPurchaseComplete(false);
+                        }
+                        if (billingCallback != null) {
+                            billingCallback.onPurchaseFailure(
+                                    responseCode,
+                                    "启动订阅流程失败"
+                            );
+                        }
+                    }
+                } else {
+                    if (callback != null) {
+                        callback.onPurchaseComplete(false);
+                    }
+                    if (billingCallback != null) {
+                        billingCallback.onPurchaseFailure(
+                                billingResult.getResponseCode(),
+                                "未找到订阅商品"
+                        );
+                    }
+                }
+            } else {
+                Log.d(TAG, "billingQuery failed");
+                if (callback != null) {
+                    callback.onPurchaseComplete(false);
+                }
+                if (billingCallback != null) {
+                    billingCallback.onPurchaseFailure(
+                            billingResult.getResponseCode(),
+                            "获取订阅信息失败: " + billingResult.getDebugMessage()
+                    );
+                }
+            }
+        });
+    }
+
+    private PurchaseCallback currentPurchaseCallback;
+
     private void handlePurchase(Purchase purchase) {
         if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
             // 确认购买
@@ -168,6 +262,11 @@ public class BillingManager implements PurchasesUpdatedListener {
             
             if (billingCallback != null) {
                 billingCallback.onPurchaseSuccess();
+            }
+            
+            if (currentPurchaseCallback != null) {
+                currentPurchaseCallback.onPurchaseComplete(true);
+                currentPurchaseCallback = null;
             }
         }
     }
@@ -249,5 +348,9 @@ public class BillingManager implements PurchasesUpdatedListener {
 
     public interface SubscriptionDetailsCallback {
         void onSubscriptionDetailsReceived(SubscriptionInfo subscriptionInfo);
+    }
+
+    public interface PurchaseCallback {
+        void onPurchaseComplete(boolean success);
     }
 }

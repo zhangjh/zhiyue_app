@@ -69,9 +69,6 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     private boolean isLoading = false;
     private boolean hasMoreData = true;
     private int currentPage = 1;
-    
-    private BillingManager billingManager;
-    private boolean isUserSubscribed = false;
 
     private static final String TAG = ProfileFragment.class.getName();
 
@@ -91,25 +88,23 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         setupRecyclerView();
         loadUserInfo();
         loadReadingHistory(1);
-        
-        // 初始化订阅管理
-        initBillingManager();
-
+    
         // 修改订阅按钮点击事件
         subscribeButton.setOnClickListener(v -> {
+            Log.d(TAG, "subscribe button clicked");
             // 显示加载进度
             ProgressBar progressBar = new ProgressBar(requireContext());
             android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(requireContext());
             builder.setView(progressBar);
             android.app.AlertDialog loadingDialog = builder.create();
             loadingDialog.show();
-
-            // 在测试阶段使用模拟订阅
-            SubscriptionManager.getInstance(requireActivity()).mockSubscribe(info -> {
+    
+            // 使用实际订阅方法
+            SubscriptionManager.getInstance(requireActivity()).subscribe(info -> {
                 loadingDialog.dismiss();
                 if (info != null) {
                     // 更新订阅状态UI
-                    updateSubscriptionUI(true);
+                    updateSubscriptionUI();
                     // 更新订阅详情
                     updateSubscriptionDetails(info);
                 }
@@ -126,27 +121,6 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
                 Toast.makeText(requireContext(), "无法打开订阅管理页面", Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    private void mockSubscription() {
-        // 模拟订阅成功
-        isUserSubscribed = true;
-        updateSubscriptionUI(true);
-
-        // 模拟订阅详情
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Date expireDate = new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000);
-
-        SubscriptionInfo mockInfo = new SubscriptionInfo(
-                true,
-                "包月服务（测试）",
-                expireDate,
-                "smart_reader_monthly_subscription"
-        );
-
-        updateSubscriptionDetails(mockInfo);
-
-        Toast.makeText(requireContext(), "测试模式：订阅成功", Toast.LENGTH_SHORT).show();
     }
 
     private void initViews(View view) {
@@ -167,82 +141,23 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         // 默认隐藏订阅详情
         subscriptionInfoLayout.setVisibility(View.GONE);
     }
-    
-    private void initBillingManager() {
-        billingManager = new BillingManager(requireActivity(), new BillingManager.BillingCallback() {
-            @Override
-            public void onBillingSetupFinished() {
-                // 查询订阅状态
-                billingManager.querySubscriptionStatus();
-            }
 
-            @Override
-            public void onSubscriptionStatusChecked(boolean isSubscribed) {
-                isUserSubscribed = isSubscribed;
-                
-                // 在UI线程更新订阅状态
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> updateSubscriptionUI(isSubscribed));
-                }
-                
-                // 如果已订阅，获取详细信息
-                if (isSubscribed && billingManager != null) {
-                    billingManager.getSubscriptionDetails(subscriptionInfo -> {
-                        if (getActivity() != null && subscriptionInfo != null) {
-                            getActivity().runOnUiThread(() -> updateSubscriptionDetails(subscriptionInfo));
-                        }
-                    });
-                }
-            }
+    private void updateSubscriptionUI() {
+        // 已订阅状态
+        subscriptionStatus.setText("已订阅");
+        subscriptionStatus.setTextColor(getResources().getColor(R.color.primary, null));
 
-            @Override
-            public void onPurchaseSuccess() {
-                // 购买成功后重新查询订阅状态
-                if (billingManager != null) {
-                    billingManager.querySubscriptionStatus();
-                }
-                Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
-            }
+        // 显示订阅类型和到期时间
+        subscriptionInfoLayout.setVisibility(View.VISIBLE);
 
-            @Override
-            public void onPurchaseFailure(int responseCode, String message) {
-                Toast.makeText(requireContext(), "订阅失败: " + message, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-    
-    private void updateSubscriptionUI(boolean isSubscribed) {
-        if (isSubscribed) {
-            // 已订阅状态
-            subscriptionStatus.setText("已订阅");
-            subscriptionStatus.setTextColor(getResources().getColor(R.color.primary, null));
-            
-            // 显示订阅类型和到期时间
-            subscriptionInfoLayout.setVisibility(View.VISIBLE);
-            
-            // 显示管理订阅按钮，隐藏订阅按钮
-            subscribeButton.setVisibility(View.GONE);
-            manageSubscriptionButton.setVisibility(View.VISIBLE);
-            
-            // 保存订阅状态到SharedPreferences
-            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
-            prefs.edit().putBoolean("isSubscribed", true).apply();
-        } else {
-            // 未订阅状态
-            subscriptionStatus.setText("未订阅");
-            subscriptionStatus.setTextColor(getResources().getColor(R.color.text_secondary, null));
-            
-            // 隐藏订阅类型和到期时间
-            subscriptionInfoLayout.setVisibility(View.GONE);
-            
-            // 显示订阅按钮，隐藏管理订阅按钮
-            subscribeButton.setVisibility(View.VISIBLE);
-            manageSubscriptionButton.setVisibility(View.GONE);
-            
-            // 保存订阅状态到SharedPreferences
-            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
-            prefs.edit().putBoolean("isSubscribed", false).apply();
-        }
+        // 显示管理订阅按钮，隐藏订阅按钮
+        subscribeButton.setVisibility(View.GONE);
+        manageSubscriptionButton.setVisibility(View.VISIBLE);
+
+        // 保存订阅状态到SharedPreferences
+        SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
+        prefs.edit().putBoolean("isSubscribed", true).apply();
+
     }
     
     private void updateSubscriptionDetails(SubscriptionInfo info) {

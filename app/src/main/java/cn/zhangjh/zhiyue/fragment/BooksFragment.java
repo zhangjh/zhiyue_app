@@ -619,7 +619,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         subscribeButton.setOnClickListener(v -> {
             dialog.dismiss();
             // 在当前页面进行订阅
-            mockSubscription(book);
+            subscription(book);
         });
         
         cancelButton.setOnClickListener(v -> {
@@ -627,7 +627,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         });
     }
 
-    private void mockSubscription(Book book) {
+    private void subscription(Book book) {
         // 显示加载进度
         ProgressBar progressBar = new ProgressBar(requireContext());
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
@@ -635,8 +635,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         AlertDialog loadingDialog = builder.create();
         loadingDialog.show();
         
-        // 使用统一的订阅管理器
-        SubscriptionManager.getInstance(requireActivity()).mockSubscribe(info -> {
+        // 使用实际的订阅方法
+        SubscriptionManager.getInstance(requireActivity()).subscribe(info -> {
             loadingDialog.dismiss();
             Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
             navigateToReader(book);

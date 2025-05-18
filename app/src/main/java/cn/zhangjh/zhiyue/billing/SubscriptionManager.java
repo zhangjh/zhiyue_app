@@ -3,11 +3,8 @@ package cn.zhangjh.zhiyue.billing;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
-
-import java.util.Date;
 
 public class SubscriptionManager {
     private static SubscriptionManager instance;
@@ -29,8 +26,8 @@ public class SubscriptionManager {
 
             @Override
             public void onPurchaseSuccess() {
-	            billingManager.querySubscriptionStatus();
-	            Toast.makeText(context, "订阅成功", Toast.LENGTH_SHORT).show();
+                billingManager.querySubscriptionStatus();
+                Toast.makeText(context, "订阅成功", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -47,27 +44,25 @@ public class SubscriptionManager {
         return instance;
     }
     
-    public void mockSubscribe(SubscriptionCallback callback) {
-        // 模拟订阅过程
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            // 保存订阅状态
-            updateSubscriptionStatus(true);
-            
-            // 模拟订阅详情
-            Date expireDate = new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000);
-            
-            SubscriptionInfo mockInfo = new SubscriptionInfo(
-                    true,
-                    "包月服务（测试）",
-                    expireDate,
-                    "smart_reader_monthly_subscription"
-            );
-            
-            // 回调通知
-            if (callback != null) {
-                callback.onSubscriptionSuccess(mockInfo);
+    public void subscribe(SubscriptionCallback callback) {
+        // 检查是否已经订阅
+        Log.d("subscription", "isSubscription: " + isSubscribed());
+        if (isSubscribed()) {
+            Toast.makeText(context, "您已经订阅了此服务", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // 启动实际订阅流程
+        billingManager.purchaseSubscription(success -> {
+            if (success) {
+                // 订阅成功，获取订阅详情
+                billingManager.getSubscriptionDetails(subscriptionInfo -> {
+                    if (callback != null && subscriptionInfo != null) {
+                        callback.onSubscriptionSuccess(subscriptionInfo);
+                    }
+                });
             }
-        }, 1500);
+        });
     }
     
     public boolean isSubscribed() {
