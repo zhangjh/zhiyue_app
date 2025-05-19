@@ -640,8 +640,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         // 使用实际的订阅方法
         subscriptionManager.subscribe(info -> {
             loadingDialog.dismiss();
-            Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
-            navigateToReader(book);
+            if(info != null) {
+                Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
+                navigateToReader(book);
+            }
         });
     }
     

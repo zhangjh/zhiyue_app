@@ -65,6 +65,7 @@ public class BillingManager implements PurchasesUpdatedListener {
     private void launch(PurchaseCallback callback) {
         if(!billingClient.isReady()) {
             Log.d(TAG, "billingClient isn't ready");
+            callback.onPurchaseComplete(false);
             return;
         }
         billingClient.queryProductDetailsAsync(this.queryItems(),

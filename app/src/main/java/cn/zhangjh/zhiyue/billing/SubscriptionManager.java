@@ -61,6 +61,8 @@ public class SubscriptionManager {
                         callback.onSubscriptionSuccess(subscriptionInfo);
                     }
                 });
+            } else {
+                callback.onSubscriptionSuccess(null);
             }
         });
     }
