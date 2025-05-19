@@ -2,6 +2,7 @@ package cn.zhangjh.zhiyue.fragment;
 
 import static android.content.Context.MODE_PRIVATE;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -94,9 +95,9 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
             Log.d(TAG, "subscribe button clicked");
             // 显示加载进度
             ProgressBar progressBar = new ProgressBar(requireContext());
-            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(requireContext());
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
             builder.setView(progressBar);
-            android.app.AlertDialog loadingDialog = builder.create();
+            AlertDialog loadingDialog = builder.create();
             loadingDialog.show();
     
             // 使用实际订阅方法
