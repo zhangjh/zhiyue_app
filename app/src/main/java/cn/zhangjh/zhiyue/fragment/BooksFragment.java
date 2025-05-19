@@ -55,7 +55,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     private static final int DEFAULT_PAGE_SIZE = 5;
 
     private String currentUserId;
-
+    private SubscriptionManager subscriptionManager;
     private TextInputEditText centerSearchEditText;
     private TextInputEditText topSearchEditText;
     private RecyclerView recyclerView;
@@ -97,6 +97,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         setupRecyclerView();
         setupSearchViews();
         setupRecommendBooks();
+
+        subscriptionManager = SubscriptionManager.getInstance(requireActivity());
         
         // 添加返回键处理
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
@@ -546,7 +548,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         progressBar.setVisibility(View.VISIBLE);
         
         // 1. 首先检查用户是否已订阅
-        if (SubscriptionManager.getInstance(requireActivity()).isSubscribed()) {
+        if (subscriptionManager.isSubscribed()) {
             // 已订阅用户直接阅读
             navigateToReader(book);
             progressBar.setVisibility(View.GONE);
@@ -636,7 +638,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         loadingDialog.show();
         
         // 使用实际的订阅方法
-        SubscriptionManager.getInstance(requireActivity()).subscribe(info -> {
+        subscriptionManager.subscribe(info -> {
             loadingDialog.dismiss();
             Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
             navigateToReader(book);
@@ -651,6 +653,12 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
             cachedBookIds.clear();
             ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash(), "", "");
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        subscriptionManager.destroy();
     }
 
     // 简单的TextWatcher实现，只需要afterTextChanged方法

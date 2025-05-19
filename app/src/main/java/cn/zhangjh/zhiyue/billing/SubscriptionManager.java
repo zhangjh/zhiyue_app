@@ -53,7 +53,7 @@ public class SubscriptionManager {
         }
         
         // 启动实际订阅流程
-        billingManager.purchaseSubscription(success -> {
+        billingManager.performSubscriptionPurchase(success -> {
             if (success) {
                 // 订阅成功，获取订阅详情
                 billingManager.getSubscriptionDetails(subscriptionInfo -> {

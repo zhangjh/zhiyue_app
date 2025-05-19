@@ -29,7 +29,6 @@ import com.google.android.material.imageview.ShapeableImageView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -37,7 +36,6 @@ import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.adapter.ReadingHistoryAdapter;
 import cn.zhangjh.zhiyue.api.ApiClient;
-import cn.zhangjh.zhiyue.billing.BillingManager;
 import cn.zhangjh.zhiyue.billing.SubscriptionInfo;
 import cn.zhangjh.zhiyue.billing.SubscriptionManager;
 import cn.zhangjh.zhiyue.model.BizResponse;
@@ -57,7 +55,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     private ReadingHistoryAdapter adapter;
     private ProgressBar loadingProgressBar;
     private View emptyView;
-    
+    private SubscriptionManager subscriptionManager;
     // 订阅相关视图
     private TextView subscriptionStatus;
     private TextView subscriptionType;
@@ -88,6 +86,8 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         setupRecyclerView();
         loadUserInfo();
         loadReadingHistory(1);
+
+        subscriptionManager = SubscriptionManager.getInstance(requireActivity());
     
         // 修改订阅按钮点击事件
         subscribeButton.setOnClickListener(v -> {
@@ -100,7 +100,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
             loadingDialog.show();
     
             // 使用实际订阅方法
-            SubscriptionManager.getInstance(requireActivity()).subscribe(info -> {
+            subscriptionManager.subscribe(info -> {
                 loadingDialog.dismiss();
                 if (info != null) {
                     // 更新订阅状态UI
@@ -331,6 +331,6 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     @Override
     public void onDestroy() {
         super.onDestroy();
-        SubscriptionManager.getInstance(requireActivity()).destroy();
+        subscriptionManager.destroy();
     }
 }
