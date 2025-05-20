@@ -84,6 +84,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         currentUserId = prefs.getString("userId", "");
 
         initViews(view);
+        checkSubscriptionStatus();
         setupRecyclerView();
         loadUserInfo();
         loadReadingHistory(1);
@@ -143,6 +144,13 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         subscriptionInfoLayout.setVisibility(View.GONE);
     }
 
+    private void checkSubscriptionStatus() {
+        // 检查是否已订阅
+        if (subscriptionManager.isSubscribed()) {
+            updateSubscriptionUI();
+        }
+    }
+
     private void updateSubscriptionUI() {
         // 已订阅状态
         subscriptionStatus.setText("已订阅");
@@ -154,11 +162,6 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         // 显示管理订阅按钮，隐藏订阅按钮
         subscribeButton.setVisibility(View.GONE);
         manageSubscriptionButton.setVisibility(View.VISIBLE);
-
-        // 保存订阅状态到SharedPreferences
-        SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
-        prefs.edit().putBoolean("isSubscribed", true).apply();
-
     }
     
     private void updateSubscriptionDetails(SubscriptionInfo info) {

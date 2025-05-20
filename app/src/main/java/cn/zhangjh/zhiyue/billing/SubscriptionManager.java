@@ -7,6 +7,10 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
 public class SubscriptionManager {
     private static SubscriptionManager instance;
     private final Context context;
@@ -54,27 +58,52 @@ public class SubscriptionManager {
         }
         
         // 启动实际订阅流程
-        billingManager.performSubscriptionPurchase(success -> {
-            if (success) {
-                // 订阅成功，获取订阅详情
-                billingManager.getSubscriptionDetails(subscriptionInfo -> {
-                    if (callback != null && subscriptionInfo != null) {
-                        callback.onSubscriptionSuccess(subscriptionInfo);
-                    }
-                });
-            } else {
-                callback.onSubscriptionSuccess(null);
+        // 开个白名单: njhxzhangjh@gmail.com
+        SharedPreferences auth = context.getSharedPreferences("auth", Context.MODE_PRIVATE);
+        String userId = auth.getString("userId", "");
+        if (TextUtils.equals(userId, "102177552544712900000")) {
+            SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("isSubscribed", true).apply();
+
+            updateSubscriptionStatus(true);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+            SubscriptionInfo info;
+            try {
+                info = new SubscriptionInfo(true,
+                        "SmartReader-智阅月度订阅",
+                        sdf.parse("2099-09-14"),
+                        "smart_reader_monthly_subscription");
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
             }
-        });
+            callback.onSubscriptionSuccess(info);
+        } else {
+            billingManager.performSubscriptionPurchase(success -> {
+                if (success) {
+                    // 订阅成功，获取订阅详情
+                    billingManager.getSubscriptionDetails(subscriptionInfo -> {
+                        if (callback != null && subscriptionInfo != null) {
+                            SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
+                            prefs.edit().putBoolean("isSubscribed", true).apply();
+                            callback.onSubscriptionSuccess(subscriptionInfo);
+                        }
+                    });
+                } else {
+                    callback.onSubscriptionSuccess(null);
+                }
+            });
+        }
     }
-    
+
+    // 有一个小bug，如果订阅后再手动清理本地数据，会造成第一次查询订阅状态不同步，暂不解决
     public boolean isSubscribed() {
-        SharedPreferences prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE);
-        String userId = prefs.getString("userId", "");
-        prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
+        SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
         boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
-        // 开个白名单
-        return TextUtils.equals(userId, "102177552544712900000") || isSubscribed;
+        if(!isSubscribed) {
+            billingManager.querySubscriptionStatus();
+        }
+        return isSubscribed;
     }
     
     private void updateSubscriptionStatus(boolean isSubscribed) {
