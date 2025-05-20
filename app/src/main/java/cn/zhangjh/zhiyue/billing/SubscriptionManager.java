@@ -3,6 +3,7 @@ package cn.zhangjh.zhiyue.billing;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -68,8 +69,12 @@ public class SubscriptionManager {
     }
     
     public boolean isSubscribed() {
-        SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
-        return prefs.getBoolean("isSubscribed", false);
+        SharedPreferences prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE);
+        String userId = prefs.getString("userId", "");
+        prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
+        boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
+        // 开个白名单
+        return TextUtils.equals(userId, "102177552544712900000") || isSubscribed;
     }
     
     private void updateSubscriptionStatus(boolean isSubscribed) {
