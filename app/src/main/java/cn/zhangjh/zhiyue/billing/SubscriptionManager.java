@@ -7,6 +7,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -60,11 +62,11 @@ public class SubscriptionManager {
         // 开个白名单: njhxzhangjh@gmail.com
         SharedPreferences auth = context.getSharedPreferences("auth", Context.MODE_PRIVATE);
         String userId = auth.getString("userId", "");
+        SubscriptionInfo info;
+        SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
         if (TextUtils.equals(userId, "102177552544712897139")) {
             updateSubscriptionStatus(true);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-
-            SubscriptionInfo info;
             try {
                 info = new SubscriptionInfo(true,
                         "SmartReader-智阅月度订阅",
@@ -74,6 +76,7 @@ public class SubscriptionManager {
                 throw new RuntimeException(e);
             }
             callback.onSubscriptionSuccess(info);
+            prefs.edit().putString("subscriptionInfo", new Gson().toJson(info)).apply();
         } else {
             // 启动实际订阅流程
             billingManager.performSubscriptionPurchase(success -> {
@@ -81,8 +84,8 @@ public class SubscriptionManager {
                     // 订阅成功，获取订阅详情
                     billingManager.getSubscriptionDetails(subscriptionInfo -> {
                         if (callback != null && subscriptionInfo != null) {
-                            SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
                             prefs.edit().putBoolean("isSubscribed", true).apply();
+                            prefs.edit().putString("subscriptionInfo", new Gson().toJson(subscriptionInfo)).apply();
                             callback.onSubscriptionSuccess(subscriptionInfo);
                         }
                     });

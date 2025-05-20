@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.gson.Gson;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -148,6 +149,12 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         // 检查是否已订阅
         if (subscriptionManager.isSubscribed()) {
             updateSubscriptionUI();
+            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", MODE_PRIVATE);
+            String subscriptionInfo = prefs.getString("subscriptionInfo", "");
+            if(!TextUtils.isEmpty(subscriptionInfo)) {
+                SubscriptionInfo info = new Gson().fromJson(subscriptionInfo, SubscriptionInfo.class);
+                updateSubscriptionDetails(info);
+            }
         }
     }
 
