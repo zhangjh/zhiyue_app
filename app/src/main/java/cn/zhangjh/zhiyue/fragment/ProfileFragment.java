@@ -84,13 +84,13 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         currentUserId = prefs.getString("userId", "");
 
         initViews(view);
-        checkSubscriptionStatus();
         setupRecyclerView();
         loadUserInfo();
         loadReadingHistory(1);
 
         subscriptionManager = SubscriptionManager.getInstance(requireActivity());
-    
+        checkSubscriptionStatus();
+
         // 修改订阅按钮点击事件
         subscribeButton.setOnClickListener(v -> {
             Log.d(TAG, "subscribe button clicked");

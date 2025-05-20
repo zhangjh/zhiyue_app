@@ -57,14 +57,10 @@ public class SubscriptionManager {
             return;
         }
         
-        // 启动实际订阅流程
         // 开个白名单: njhxzhangjh@gmail.com
         SharedPreferences auth = context.getSharedPreferences("auth", Context.MODE_PRIVATE);
         String userId = auth.getString("userId", "");
-        if (TextUtils.equals(userId, "102177552544712900000")) {
-            SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
-            prefs.edit().putBoolean("isSubscribed", true).apply();
-
+        if (TextUtils.equals(userId, "102177552544712897139")) {
             updateSubscriptionStatus(true);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
@@ -79,6 +75,7 @@ public class SubscriptionManager {
             }
             callback.onSubscriptionSuccess(info);
         } else {
+            // 启动实际订阅流程
             billingManager.performSubscriptionPurchase(success -> {
                 if (success) {
                     // 订阅成功，获取订阅详情
