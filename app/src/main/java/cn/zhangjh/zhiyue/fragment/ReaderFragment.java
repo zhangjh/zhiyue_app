@@ -560,6 +560,13 @@ public class ReaderFragment extends Fragment {
             Log.d(TAG, "Update reading record failed: userId is empty");
             return;
         }
+        // 如果没有实质要更新的内容就不更新
+        if(TextUtils.isEmpty(readingRecord.getTitle()) && TextUtils.isEmpty(readingRecord.getAuthor())
+            && TextUtils.isEmpty(readingRecord.getSummary()) && TextUtils.isEmpty(readingRecord.getPartsSummary())
+            && readingRecord.getProgress() == null && TextUtils.isEmpty(readingRecord.getCfi())
+            && TextUtils.isEmpty(readingRecord.getHashId())) {
+            return;
+        }
         ApiClient.getBookService().updateRecord(readingRecord)
             .enqueue(new Callback<>() {
                 @Override

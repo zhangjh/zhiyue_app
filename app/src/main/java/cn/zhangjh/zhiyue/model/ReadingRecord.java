@@ -9,7 +9,7 @@ public class ReadingRecord {
     private String hashId;
     private String title;
     private String author;
-    private int progress;
+    private Integer progress;
     private String cfi;
     private String summary;
     @SerializedName("contentSummary")
@@ -55,11 +55,11 @@ public class ReadingRecord {
         this.author = author;
     }
 
-    public int getProgress() {
+    public Integer getProgress() {
         return progress;
     }
 
-    public void setProgress(int progress) {
+    public void setProgress(Integer progress) {
         this.progress = progress;
     }
 
