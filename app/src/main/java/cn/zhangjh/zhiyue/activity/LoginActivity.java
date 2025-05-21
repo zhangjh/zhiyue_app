@@ -21,6 +21,7 @@ import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.GoogleUser;
 import cn.zhangjh.zhiyue.model.LoginUser;
 import cn.zhangjh.zhiyue.request.LoginUserRequest;
+import cn.zhangjh.zhiyue.utils.SystemUIUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -34,6 +35,12 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        
+        // 设置状态栏和导航栏
+        SystemUIUtils.setStatusBarColor(this, getResources().getColor(R.color.background, null));
+        SystemUIUtils.setNavigationBarColor(this, getResources().getColor(R.color.background, null));
+        SystemUIUtils.setStatusBarTextColor(this, true); // 深色状态栏文字
+        SystemUIUtils.setNavigationBarButtonColor(this, true); // 深色导航栏按钮
         
         // 初始化Google登录
         String webClientId = getString(R.string.web_client_id);

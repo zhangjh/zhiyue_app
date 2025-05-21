@@ -12,7 +12,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
@@ -27,6 +26,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
@@ -41,6 +41,7 @@ import cn.zhangjh.zhiyue.model.Annotation;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.ReadingRecord;
+import cn.zhangjh.zhiyue.utils.SystemUIUtils;
 import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -340,10 +341,9 @@ public class ReaderFragment extends Fragment {
 
         // 设置全屏模式
         if (getActivity() != null) {
-            getActivity().getWindow().setFlags(
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN
-            );
+            FragmentActivity activity = getActivity();
+            SystemUIUtils.setImmersiveMode(activity, true);
+            SystemUIUtils.handleDisplayCutout(activity);
             // 确保底部导航栏隐藏
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).hideBottomNavigation();
