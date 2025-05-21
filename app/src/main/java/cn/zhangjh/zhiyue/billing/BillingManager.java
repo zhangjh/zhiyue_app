@@ -36,7 +36,6 @@ public class BillingManager implements PurchasesUpdatedListener {
 
         billingClient = BillingClient.newBuilder(activity)
                 .setListener(this)
-                .enablePendingPurchases()
                 .build();
 
         connectToPlayBillingService();
@@ -245,15 +244,12 @@ public class BillingManager implements PurchasesUpdatedListener {
                 }
                 
                 // 没有找到有效订阅
-                if (callback != null) {
-                    callback.onSubscriptionDetailsReceived(null);
-                }
             } else {
                 Log.e(TAG, "查询订阅详情失败: " + billingResult.getDebugMessage());
-                if (callback != null) {
-                    callback.onSubscriptionDetailsReceived(null);
-                }
             }
+	        if (callback != null) {
+	            callback.onSubscriptionDetailsReceived(null);
+	        }
         });
     }
 

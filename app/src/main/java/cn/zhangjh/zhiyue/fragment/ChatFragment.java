@@ -232,9 +232,7 @@ public class ChatFragment extends Fragment {
                 // 如果内容增加了，确保滚动到底部
                 if (content.length() > oldContentLength) {
                     // 使用smoothScrollToPosition而不是scrollToPosition，使滚动更平滑
-                    chatRecyclerView.postDelayed(() -> {
-                        chatRecyclerView.smoothScrollToPosition(chatMessages.size() - 1);
-                    }, 100); // 短暂延迟确保布局已更新
+                    chatRecyclerView.postDelayed(() -> chatRecyclerView.smoothScrollToPosition(chatMessages.size() - 1), 100); // 短暂延迟确保布局已更新
                 }
                 
                 // 当AI回复完成时，将回复添加到上下文

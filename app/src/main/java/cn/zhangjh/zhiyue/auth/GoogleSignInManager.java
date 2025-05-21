@@ -76,7 +76,7 @@ public class GoogleSignInManager {
             }
         } catch (ApiException e) {
             // 添加更详细的错误日志
-            Log.e(TAG, "signInResult:failed code=" + e.getStatusCode() + " message=" + e.getStatusMessage());
+            Log.e(TAG, "signInResult:failed code=" + e.getStatusCode() + " message=" + e.getMessage());
             String errorMessage;
             switch (e.getStatusCode()) {
                 case GoogleSignInStatusCodes.SIGN_IN_CANCELLED:
@@ -92,7 +92,7 @@ public class GoogleSignInManager {
                     errorMessage = "需要重新登录";
                     break;
                 default:
-                    errorMessage = "登录失败: " + e.getStatusMessage();
+                    errorMessage = "登录失败: " + e.getMessage();
                     break;
             }
             if (callback != null) {

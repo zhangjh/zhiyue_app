@@ -18,9 +18,8 @@ public class ApiClient {
         if (retrofit == null) {
             try {
                 // 创建详细的日志拦截器
-                HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> {
-                    Log.d(TAG, "Network Log: " + message);
-                });
+                HttpLoggingInterceptor loggingInterceptor =
+                        new HttpLoggingInterceptor(message -> Log.d(TAG, "Network Log: " + message));
                 loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
                 // 创建 OkHttpClient 并添加详细配置

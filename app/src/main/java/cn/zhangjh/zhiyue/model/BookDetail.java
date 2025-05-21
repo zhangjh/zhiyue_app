@@ -88,7 +88,7 @@ public class BookDetail {
 		return hash;
 	}
 
-	public void setHash(String url) {
+	public void setHash(String hash) {
 		this.hash = hash;
 	}
 }

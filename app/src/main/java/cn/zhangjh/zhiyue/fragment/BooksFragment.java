@@ -111,7 +111,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                     } else {
                         // 如果在默认搜索页，移除回调并允许正常的返回行为
                         setEnabled(false);
-                        requireActivity().onBackPressed();
+                        requireActivity().getOnBackPressedDispatcher().onBackPressed();
                     }
                 }
             });
@@ -624,9 +624,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
             subscription(book);
         });
         
-        cancelButton.setOnClickListener(v -> {
-            dialog.dismiss();
-        });
+        cancelButton.setOnClickListener(v -> dialog.dismiss());
     }
 
     private void subscription(Book book) {
