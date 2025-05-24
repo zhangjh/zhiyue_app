@@ -11,7 +11,6 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
-import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
@@ -31,51 +30,77 @@ public class BillingManager implements PurchasesUpdatedListener {
     private final Activity activity;
     private final BillingCallback billingCallback;
     
+    private boolean isConnecting = false;
+    
     public BillingManager(Activity activity, BillingCallback callback) {
         this.activity = activity;
         this.billingCallback = callback;
 
         billingClient = BillingClient.newBuilder(activity)
                 .setListener(this)
-                .enablePendingPurchases(
-                        PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
-                )
+                .enablePendingPurchases()
                 .build();
 
         connectToPlayBillingService();
     }
     
     private void connectToPlayBillingService() {
+        if (billingClient.isReady() || isConnecting) {
+            Log.d(TAG, "BillingClient 已连接或正在连接，无需重复连接");
+            return;
+        }
+        isConnecting = true;
         Log.d(TAG, "开始连接 Google Play Billing 服务");
-        
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
+                isConnecting = false;
+                Log.d(TAG, "连接结果: " + billingResult.getResponseCode() + ", 消息: " + billingResult.getDebugMessage());
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    Log.d(TAG, "Google Play Billing 服务已连接成功, " + new Gson().toJson(billingResult));
+                    Log.d(TAG, "Google Play Billing 服务已连接成功");
+                    if (billingCallback != null) {
+                        billingCallback.onBillingSetupFinished();
+                    }
+                } else {
+                    Log.e(TAG, "Google Play Billing 连接失败: " + billingResult.getDebugMessage());
                 }
             }
             
             @Override
             public void onBillingServiceDisconnected() {
+                isConnecting = false;
                 Log.d(TAG, "Google Play Billing 服务已断开连接，尝试重新连接");
-                // 实现重连逻辑
-                billingClient.startConnection(this);
+                connectToPlayBillingService();
             }
         });
     }
 
     private void launch(PurchaseCallback callback) {
         if(!billingClient.isReady()) {
-            Log.d(TAG, "billingClient isn't ready");
-            callback.onPurchaseComplete(false);
+            Log.e(TAG, "billingClient isn't ready");
+            if(callback != null) {
+                callback.onPurchaseComplete(false);
+            }
             return;
         }
+        
         billingClient.queryProductDetailsAsync(this.queryItems(),
                 (billingResult, skuDetailsList) -> {
-            Log.d(TAG, "queryProduct: " + new Gson().toJson(billingResult));
+            Log.d(TAG, "queryProduct result: " + new Gson().toJson(billingResult));
+            
+            if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+                Log.e(TAG, "查询商品失败: " + billingResult.getDebugMessage());
+                activity.runOnUiThread(() -> Toast.makeText(activity, 
+                    "查询商品失败: " + billingResult.getDebugMessage(), Toast.LENGTH_SHORT).show());
+                if(callback != null) {
+                    callback.onPurchaseComplete(false);
+                }
+                return;
+            }
+            
             if(CollectionUtils.isEmpty(skuDetailsList)) {
-                activity.runOnUiThread(() -> Toast.makeText(activity, "没有找到商品", Toast.LENGTH_SHORT).show());
+                Log.e(TAG, "商品列表为空，商品ID可能不正确或未发布");
+                activity.runOnUiThread(() -> Toast.makeText(activity, "没有找到商品，请检查商品配置", Toast.LENGTH_SHORT).show());
                 if(callback != null) {
                     callback.onPurchaseComplete(false);
                 }
@@ -177,6 +202,16 @@ public class BillingManager implements PurchasesUpdatedListener {
     
     public void performSubscriptionPurchase(PurchaseCallback callback) {
         Log.d(TAG, "performSubscriptionPurchase called");
+        Log.d(TAG, "BillingClient ready state: " + billingClient.isReady());
+        Log.d(TAG, "Connection state: " + billingClient.getConnectionState());
+        
+        if (!billingClient.isReady()) {
+            Log.e(TAG, "BillingClient 未准备好，当前状态: " + billingClient.getConnectionState());
+            if (callback != null) {
+                callback.onPurchaseComplete(false);
+            }
+            return;
+        }
         launch(callback);
     }
 
