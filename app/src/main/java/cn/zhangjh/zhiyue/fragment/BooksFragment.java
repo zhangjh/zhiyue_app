@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.adapter.BookAdapter;
 import cn.zhangjh.zhiyue.adapter.RecommendBookAdapter;
 import cn.zhangjh.zhiyue.api.ApiClient;
-import cn.zhangjh.zhiyue.billing.SubscriptionManager;
+import cn.zhangjh.zhiyue.billing.BillingManager;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.Book;
@@ -55,7 +56,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     private static final int DEFAULT_PAGE_SIZE = 5;
 
     private String currentUserId;
-    private SubscriptionManager subscriptionManager;
+    private BillingManager billingManager;
     private TextInputEditText centerSearchEditText;
     private TextInputEditText topSearchEditText;
     private RecyclerView recyclerView;
@@ -98,7 +99,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         setupSearchViews();
         setupRecommendBooks();
 
-        subscriptionManager = SubscriptionManager.getInstance(requireActivity());
+        billingManager = new BillingManager(requireActivity(), (purchase) -> {
+            Log.d(TAG, "purchase: " + new Gson().toJson(purchase));
+            return null;
+        });
         
         // 添加返回键处理
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
@@ -548,7 +552,9 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         progressBar.setVisibility(View.VISIBLE);
         
         // 1. 首先检查用户是否已订阅
-        if (subscriptionManager.isSubscribed()) {
+        SharedPreferences prefs = requireContext().getSharedPreferences("subscription", Context.MODE_PRIVATE);
+        boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
+        if (isSubscribed) {
             // 已订阅用户直接阅读
             navigateToReader(book);
             progressBar.setVisibility(View.GONE);
@@ -636,9 +642,9 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         loadingDialog.show();
         
         // 使用实际的订阅方法
-        subscriptionManager.subscribe(info -> {
+        billingManager.performSubscriptionPurchase(purchase -> {
             loadingDialog.dismiss();
-            if(info != null) {
+            if(purchase) {
                 Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
                 navigateToReader(book);
             }
@@ -658,7 +664,6 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     @Override
     public void onDestroy() {
         super.onDestroy();
-        subscriptionManager.destroy();
     }
 
     // 简单的TextWatcher实现，只需要afterTextChanged方法

@@ -21,26 +21,52 @@ import com.google.gson.Gson;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 public class BillingManager implements PurchasesUpdatedListener {
     private static final String TAG = "BillingManager";
     private static final String SUBSCRIPTION_MONTHLY = "smart_reader_monthly_subscription";
     
-    private final BillingClient billingClient;
+    private BillingClient billingClient;
     private final Activity activity;
-    private final BillingCallback billingCallback;
-    
+
+    // 回调函数
+    private final Function<Purchase, Object> handlePurchase;
     private boolean isConnecting = false;
     
-    public BillingManager(Activity activity, BillingCallback callback) {
+    public BillingManager(Activity activity, Function<Purchase, Object> function) {
         this.activity = activity;
-        this.billingCallback = callback;
+        this.handlePurchase = function;
 
         billingClient = BillingClient.newBuilder(activity)
                 .setListener(this)
                 .enablePendingPurchases()
                 .build();
 
+        connectToPlayBillingService();
+    }
+
+    public void getInstance() {
+        if(billingClient == null) {
+            PurchasesUpdatedListener purchasesUpdatedListener = (billingResult, list) -> {
+                if(billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    if(list != null) {
+                        for(Purchase purchase : list) {
+                            handlePurchase(purchase);
+                        }
+                    }
+                } else if(billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
+
+                } else {
+
+                }
+            };
+            billingClient = BillingClient.newBuilder(activity)
+                    .setListener(purchasesUpdatedListener)
+                    .enablePendingPurchases()
+                    .build();
+        }
         connectToPlayBillingService();
     }
     
@@ -58,9 +84,7 @@ public class BillingManager implements PurchasesUpdatedListener {
                 Log.d(TAG, "连接结果: " + billingResult.getResponseCode() + ", 消息: " + billingResult.getDebugMessage());
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     Log.d(TAG, "Google Play Billing 服务已连接成功");
-                    if (billingCallback != null) {
-                        billingCallback.onBillingSetupFinished();
-                    }
+
                 } else {
                     Log.e(TAG, "Google Play Billing 连接失败: " + billingResult.getDebugMessage());
                 }
@@ -141,22 +165,18 @@ public class BillingManager implements PurchasesUpdatedListener {
     }
     
     // 查询订阅状态
-    public void querySubscriptionStatus() {
+    public boolean querySubscriptionStatus() {
         if (!billingClient.isReady()) {
             Log.e(TAG, "BillingClient 未准备好");
-            if (billingCallback != null) {
-                billingCallback.onSubscriptionStatusChecked(false);
-            }
-            return;
+            return false;
         }
 
         QueryPurchasesParams params = QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.SUBS)
                 .build();
 
+        AtomicBoolean isSubscribed = new AtomicBoolean(false);
         billingClient.queryPurchasesAsync(params, (billingResult, purchases) -> {
-            boolean isSubscribed = false;
-            
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                 for (Purchase purchase : purchases) {
                     // 确认未确认的购买
@@ -164,24 +184,17 @@ public class BillingManager implements PurchasesUpdatedListener {
                             && !purchase.isAcknowledged()) {
                         acknowledgePurchase(purchase);
                     }
-                    
                     // 检查是否有有效的月度订阅
                     if (purchase.getProducts().contains(SUBSCRIPTION_MONTHLY)
                             && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
-                        isSubscribed = true;
+                        isSubscribed.set(true);
                     }
-                }
-                
-                if (billingCallback != null) {
-                    billingCallback.onSubscriptionStatusChecked(isSubscribed);
                 }
             } else {
                 Log.e(TAG, "查询订阅状态失败: " + billingResult.getDebugMessage());
-                if (billingCallback != null) {
-                    billingCallback.onSubscriptionStatusChecked(false);
-                }
             }
         });
+        return isSubscribed.get();
     }
 
     @Override
@@ -191,12 +204,7 @@ public class BillingManager implements PurchasesUpdatedListener {
                 handlePurchase(purchase);
             }
         } else {
-            if (billingCallback != null) {
-                billingCallback.onPurchaseFailure(
-                        billingResult.getResponseCode(),
-                        "购买失败: " + billingResult.getDebugMessage()
-                );
-            }
+
         }
     }
     
@@ -222,10 +230,6 @@ public class BillingManager implements PurchasesUpdatedListener {
             // 确认购买
             if (!purchase.isAcknowledged()) {
                 acknowledgePurchase(purchase);
-            }
-            
-            if (billingCallback != null) {
-                billingCallback.onPurchaseSuccess();
             }
             
             if (currentPurchaseCallback != null) {

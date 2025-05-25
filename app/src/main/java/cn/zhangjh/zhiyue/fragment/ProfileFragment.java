@@ -3,6 +3,7 @@ package cn.zhangjh.zhiyue.fragment;
 import static android.content.Context.MODE_PRIVATE;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -37,8 +38,8 @@ import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.adapter.ReadingHistoryAdapter;
 import cn.zhangjh.zhiyue.api.ApiClient;
+import cn.zhangjh.zhiyue.billing.BillingManager;
 import cn.zhangjh.zhiyue.billing.SubscriptionInfo;
-import cn.zhangjh.zhiyue.billing.SubscriptionManager;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.HistoryResponse;
 import cn.zhangjh.zhiyue.model.ReadingHistory;
@@ -56,7 +57,6 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     private ReadingHistoryAdapter adapter;
     private ProgressBar loadingProgressBar;
     private View emptyView;
-    private SubscriptionManager subscriptionManager;
     // 订阅相关视图
     private TextView subscriptionStatus;
     private TextView subscriptionType;
@@ -64,6 +64,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     private LinearLayout subscriptionInfoLayout;
     private Button subscribeButton;
     private Button manageSubscriptionButton;
+    private BillingManager billingManager;
     
     private boolean isLoading = false;
     private boolean hasMoreData = true;
@@ -88,7 +89,10 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         loadUserInfo();
         loadReadingHistory(1);
 
-        subscriptionManager = SubscriptionManager.getInstance(requireActivity());
+        billingManager = new BillingManager(requireActivity(), (purchase) -> {
+            Log.d(TAG, "purchase: " + new Gson().toJson(purchase));
+            return null;
+        });
         checkSubscriptionStatus();
 
         // 修改订阅按钮点击事件
@@ -102,13 +106,13 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
             loadingDialog.show();
     
             // 使用实际订阅方法
-            subscriptionManager.subscribe(info -> {
+            billingManager.performSubscriptionPurchase(purchase -> {
                 loadingDialog.dismiss();
-                if (info != null) {
+                if (purchase) {
                     // 更新订阅状态UI
                     updateSubscriptionUI();
                     // 更新订阅详情
-                    updateSubscriptionDetails(info);
+//                    updateSubscriptionDetails(info);
                 }
             });
         });
@@ -145,10 +149,14 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     }
 
     private void checkSubscriptionStatus() {
-        // 检查是否已订阅
-        if (subscriptionManager.isSubscribed()) {
+        SharedPreferences prefs = requireContext().getSharedPreferences("subscription", Context.MODE_PRIVATE);
+        boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
+        if(!isSubscribed) {
+            isSubscribed = billingManager.querySubscriptionStatus();
+        }
+        if(isSubscribed) {
             updateSubscriptionUI();
-            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", MODE_PRIVATE);
+            prefs = requireActivity().getSharedPreferences("subscription", MODE_PRIVATE);
             String subscriptionInfo = prefs.getString("subscriptionInfo", "");
             if(!TextUtils.isEmpty(subscriptionInfo)) {
                 SubscriptionInfo info = new Gson().fromJson(subscriptionInfo, SubscriptionInfo.class);
@@ -341,6 +349,5 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     @Override
     public void onDestroy() {
         super.onDestroy();
-        subscriptionManager.destroy();
     }
 }
