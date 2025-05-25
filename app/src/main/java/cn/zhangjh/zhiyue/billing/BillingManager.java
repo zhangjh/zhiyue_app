@@ -107,8 +107,14 @@ public class BillingManager implements PurchasesUpdatedListener {
                 return;
             }
             for (ProductDetails details : skuDetailsList) {
-                List<BillingFlowParams.ProductDetailsParams> detailsParams = List.of(BillingFlowParams.ProductDetailsParams.newBuilder()
-                        .setProductDetails(details).build());
+                ProductDetails.SubscriptionOfferDetails offerDetails = details.getSubscriptionOfferDetails().get(0);
+                String offerToken = offerDetails.getOfferToken();
+
+                BillingFlowParams.ProductDetailsParams params = BillingFlowParams.ProductDetailsParams.newBuilder()
+                    .setProductDetails(details)
+                    .setOfferToken(offerToken)
+                    .build();
+                List<BillingFlowParams.ProductDetailsParams> detailsParams = List.of(params);
                 BillingFlowParams flowParams = BillingFlowParams.newBuilder()
                         .setProductDetailsParamsList(detailsParams)
                         .build();
