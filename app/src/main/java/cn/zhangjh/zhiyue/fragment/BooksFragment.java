@@ -282,12 +282,14 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                     public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Response<BizResponse<HistoryResponse>> response) {
                         if (!isAdded()) return;
 
-                        if (!response.isSuccessful() || response.body() == null || !response.body().isSuccess()) {
+                        if (!response.isSuccessful()
+                                || response.body() == null
+                                || !Objects.requireNonNull(response.body()).isSuccess()) {
                             showNoHistoryView();
                             return;
                         }
 
-                        HistoryResponse historyResponse = response.body().getData();
+                        HistoryResponse historyResponse = Objects.requireNonNull(response.body()).getData();
                         List<ReadingHistory> histories = historyResponse != null ? historyResponse.getResults() : new ArrayList<>();
 
                         if (histories.isEmpty()) {
@@ -298,6 +300,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         // 缓存书籍ID用于分页
                         cachedBookIds = histories.stream()
                                 .map(ReadingHistory::getHashId)
+                                .filter(item -> !TextUtils.isEmpty(item))
                                 .collect(Collectors.toList());
                         // 保存缓存
                         BizUtils.saveCache(requireActivity(), "reader", "cachedBookIds", new Gson().toJson(cachedBookIds));
@@ -331,8 +334,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                             return;
                         }
                         
-                        if (response.body() != null && response.body().isSuccess()) {
-                            List<Book> books = convertToBooks(response.body().getData());
+                        if (response.body() != null && Objects.requireNonNull(response.body()).isSuccess()) {
+                            List<Book> books = convertToBooks(Objects.requireNonNull(response.body()).getData());
                             Log.d(TAG, "Recommend successful. Found " + books.size() + " books");
                             // 只缓存第一页
                             if(cacheRecommendBooks.isEmpty()) {
