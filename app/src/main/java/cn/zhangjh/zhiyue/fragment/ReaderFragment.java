@@ -52,6 +52,7 @@ public class ReaderFragment extends Fragment {
     private static final String TAG = ReaderFragment.class.getName();
     private String userId;
     private String fileId;
+    private String hashId;
 	private String cfi;
     private String bookUrl;
 	private WebView webViewReader;
@@ -84,7 +85,7 @@ public class ReaderFragment extends Fragment {
         });
         if (getArguments() != null) {
             String bookId = getArguments().getString("book_id");
-            String hashId = getArguments().getString("hash_id");
+            hashId = getArguments().getString("hash_id");
             fileId = getArguments().getString("file_id");
             cfi = getArguments().getString("cfi");
             
@@ -372,6 +373,7 @@ public class ReaderFragment extends Fragment {
             // 更新记录，先与onBookLoaded执行
             readingRecord.setFileId(fileId);
             readingRecord.setUserId(userId);
+            readingRecord.setHashId(hashId);
             readingRecord.setTitle(title);
             readingRecord.setAuthor(author);
         }

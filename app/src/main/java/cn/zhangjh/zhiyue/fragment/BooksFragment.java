@@ -28,7 +28,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -46,6 +49,7 @@ import cn.zhangjh.zhiyue.model.Book;
 import cn.zhangjh.zhiyue.model.BookDetail;
 import cn.zhangjh.zhiyue.model.HistoryResponse;
 import cn.zhangjh.zhiyue.model.ReadingHistory;
+import cn.zhangjh.zhiyue.utils.BizUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -92,6 +96,13 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         // 获取用户ID
         SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
         currentUserId = prefs.getString("userId", "");
+
+        // 获取阅读记录缓存
+        String cachedBookIdsString = BizUtils.getCache(requireContext(), "reader", "cachedBookIds");
+        if(!TextUtils.isEmpty(cachedBookIdsString)) {
+            Type listType = new TypeToken<ArrayList<String>>() {}.getType();
+            cachedBookIds = new Gson().fromJson(cachedBookIdsString, listType);
+        }
 
         initViews(view);
         setupRecyclerView();
@@ -288,6 +299,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         cachedBookIds = histories.stream()
                                 .map(ReadingHistory::getHashId)
                                 .collect(Collectors.toList());
+                        // 保存缓存
+                        BizUtils.saveCache(requireActivity(), "reader", "cachedBookIds", new Gson().toJson(cachedBookIds));
 
                         // 获取第一页推荐
                         fetchRecommendBooks();
@@ -649,8 +662,13 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         if (getActivity() instanceof MainActivity) {
             // 只显示加载进度条，保持其他视图状态不变
             progressBar.setVisibility(View.VISIBLE);
-            // 跳转到阅读器后失效当前阅读记录bookIds缓存
-            cachedBookIds.clear();
+            // 跳转到阅读器后将当前书籍ID保存到缓存中，超过10个淘汰最旧的
+            cachedBookIds.add(book.getId());
+            if(cachedBookIds.size() > 10) {
+                cachedBookIds.remove(0);
+            }
+            // 持久化到本地
+            BizUtils.saveCache(requireActivity(), "reader", "cachedBookIds", new Gson().toJson(cachedBookIds));
             ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash(), "", "");
         }
     }
