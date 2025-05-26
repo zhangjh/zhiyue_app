@@ -315,6 +315,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         showNoHistoryView();
                     }
                 });
+            } else {
+                fetchRecommendBooks();
             }
         } else {
             // 直接获取下一页推荐
