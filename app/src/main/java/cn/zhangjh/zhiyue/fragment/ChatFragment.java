@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +37,7 @@ import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.adapter.ChatAdapter;
 import cn.zhangjh.zhiyue.model.ChatContext;
 import cn.zhangjh.zhiyue.model.ChatMsg;
+import cn.zhangjh.zhiyue.utils.LogUtil;
 import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -100,14 +100,14 @@ public class ChatFragment extends Fragment {
         chatSocket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
-                Log.d(TAG, "ChatWebSocket connection opened");
+                LogUtil.d(TAG, "ChatWebSocket connection opened");
                 // 每隔10s发送一个ping消息保活
                 handler.postDelayed(() -> webSocket.send("{\"type\":\"ping\"}"), 10000);
             }
 
             @Override
             public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
-                Log.d(TAG, "ChatWs Received: " + text);
+                LogUtil.d(TAG, "ChatWs Received: " + text);
                 try {
                     JSONObject message = new JSONObject(text);
                     String type = message.optString("type");
@@ -127,13 +127,13 @@ public class ChatFragment extends Fragment {
                         }
                     });
                 } catch (JSONException e) {
-                    Log.e(TAG, "JSON parsing error", e);
+                    LogUtil.e(TAG, "JSON parsing error", e);
                 }
             }
 
             @Override
             public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, @Nullable Response response) {
-                Log.e(TAG, "ChatWs failure", t);
+                LogUtil.e(TAG, "ChatWs failure", t);
                 handler.post(() -> Toast.makeText(getContext(), "Connection failed: " + t.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });
@@ -193,10 +193,10 @@ public class ChatFragment extends Fragment {
             JSONObject contextObj = getContextObj();
             message.put("context", contextObj);
 
-            Log.d(TAG, "Sending message: " + message);
+            LogUtil.d(TAG, "Sending message: " + message);
             chatSocket.send(message.toString());
         } catch (JSONException e) {
-            Log.e(TAG, "Error creating message", e);
+            LogUtil.e(TAG, "Error creating message", e);
         }
     }
 

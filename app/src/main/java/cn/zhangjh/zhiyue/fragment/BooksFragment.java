@@ -50,6 +50,7 @@ import cn.zhangjh.zhiyue.model.BookDetail;
 import cn.zhangjh.zhiyue.model.HistoryResponse;
 import cn.zhangjh.zhiyue.model.ReadingHistory;
 import cn.zhangjh.zhiyue.utils.BizUtils;
+import cn.zhangjh.zhiyue.utils.LogUtil;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -338,14 +339,14 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         
                         if (response.body() != null && Objects.requireNonNull(response.body()).isSuccess()) {
                             List<Book> books = convertToBooks(Objects.requireNonNull(response.body()).getData());
-                            Log.d(TAG, "Recommend successful. Found " + books.size() + " books");
+                            LogUtil.d(TAG, "Recommend successful. Found " + books.size() + " books");
                             // 只缓存第一页
                             if(cacheRecommendBooks.isEmpty()) {
                                 cacheRecommendBooks = books;
                             }
                             showRecommendView(books);
                         } else {
-                            Log.e(TAG, "Response body was null or not successful");
+                            LogUtil.e(TAG, "Response body was null or not successful");
                             showError(getString(R.string.recommend_failed));
                         }
                     }
@@ -356,7 +357,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         recommendProgressBar.setVisibility(View.GONE);
                         recommendRecyclerView.setVisibility(View.VISIBLE);
 
-                        Log.e(TAG, "Recommend failed", t);
+                        LogUtil.e(TAG, "Recommend failed", t);
                         String errorMessage = getString(R.string.error_network) + ":" + t.getClass().getSimpleName();
                         if (t.getMessage() != null) {
                             errorMessage += " - " + t.getMessage();
@@ -369,10 +370,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
     private void handleRecommendError(Response<BizListResponse<BookDetail>> response) {
         try {
             String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-            Log.e(TAG, "Error response: " + errorBody);
+            LogUtil.e(TAG, "Error response: " + errorBody);
             showError(getString(R.string.recommend_failed) + " (" + response.code() + "): " + errorBody);
         } catch (Exception e) {
-            Log.e(TAG, "Error reading error response", e);
+            LogUtil.e(TAG, "Error reading error response", e);
             showError(getString(R.string.recommend_failed) + " (" + response.code() + ")");
         }
     }
@@ -437,7 +438,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     private void performSearch(String keyword, int page) {
         isLoading = true;
-        Log.d(TAG, "Performing search: keyword=" + keyword + ", page=" + page + ", limit=" + BooksFragment.DEFAULT_PAGE_SIZE);
+        LogUtil.d(TAG, "Performing search: keyword=" + keyword + ", page=" + page + ", limit=" + BooksFragment.DEFAULT_PAGE_SIZE);
 
         ApiClient.getBookService().searchBooks(keyword, "epub", page, BooksFragment.DEFAULT_PAGE_SIZE).enqueue(new Callback<>() {
 	        @Override
@@ -445,14 +446,14 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 		        if (!isAdded()) return;
 		        isLoading = false;
 
-		        Log.d(TAG, "Search response received. Code: " + response.code());
+		        LogUtil.d(TAG, "Search response received. Code: " + response.code());
 		        if (!response.isSuccessful()) {
 			        try {
 				        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-				        Log.e(TAG, "Error response: " + errorBody);
+				        LogUtil.e(TAG, "Error response: " + errorBody);
 				        showError(getString(R.string.search_failed) + " (" + response.code() + "): " + errorBody);
 			        } catch (Exception e) {
-				        Log.e(TAG, "Error reading error response", e);
+				        LogUtil.e(TAG, "Error reading error response", e);
 				        showError(getString(R.string.search_failed) + " (" + response.code() + ")");
 			        }
 			        if (currentPage == 1) {
@@ -463,7 +464,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
 		        if (response.body() != null && response.body().isSuccess()) {
 			        List<Book> books = convertToBooks(response.body().getData());
-			        Log.d(TAG, "Search successful. Found " + books.size() + " books");
+			        LogUtil.d(TAG, "Search successful. Found " + books.size() + " books");
 
 			        // 如果返回的数据少于请求的数量，说明没有更多数据了
 			        hasMoreData = books.size() >= BooksFragment.DEFAULT_PAGE_SIZE;
@@ -474,7 +475,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 				        bookAdapter.addBooks(books);
 			        }
 		        } else {
-			        Log.e(TAG, "Response body was null or not successful");
+			        LogUtil.e(TAG, "Response body was null or not successful");
 			        showError(getString(R.string.search_failed));
 			        if (currentPage == 1) {
 				        showResults(new ArrayList<>());
@@ -487,7 +488,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 		        if (!isAdded()) return;
 		        isLoading = false;
 
-		        Log.e(TAG, "Search failed", t);
+		        LogUtil.e(TAG, "Search failed", t);
 		        String errorMessage = getString(R.string.error_network) + ": " + t.getClass().getSimpleName();
 		        if (t.getMessage() != null) {
 			        errorMessage += " - " + t.getMessage();
@@ -610,7 +611,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                 public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(requireContext(), getString(R.string.error_network), Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Get reading history failed", t);
+                    LogUtil.e(TAG, "Get reading history failed", t);
                 }
             });
     }

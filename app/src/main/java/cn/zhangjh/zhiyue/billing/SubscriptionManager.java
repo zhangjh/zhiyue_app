@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 import cn.zhangjh.zhiyue.R;
+import cn.zhangjh.zhiyue.utils.LogUtil;
 
 public class SubscriptionManager {
     private static SubscriptionManager instance;
@@ -55,7 +56,7 @@ public class SubscriptionManager {
     
     public void subscribe(SubscriptionCallback callback) {
         // 检查是否已经订阅
-        Log.d("subscription", "isSubscription: " + isSubscribed());
+        LogUtil.d("subscription", "isSubscription: " + isSubscribed());
         if (isSubscribed()) {
             Toast.makeText(context, context.getString(R.string.subscription_already), Toast.LENGTH_SHORT).show();
             return;

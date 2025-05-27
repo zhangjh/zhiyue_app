@@ -4,6 +4,7 @@ import android.util.Log;
 
 import java.util.concurrent.TimeUnit;
 
+import cn.zhangjh.zhiyue.utils.LogUtil;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -19,7 +20,7 @@ public class ApiClient {
             try {
                 // 创建详细的日志拦截器
                 HttpLoggingInterceptor loggingInterceptor =
-                        new HttpLoggingInterceptor(message -> Log.d(TAG, "Network Log: " + message));
+                        new HttpLoggingInterceptor(message -> LogUtil.d(TAG, "Network Log: " + message));
                 loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
                 // 创建 OkHttpClient 并添加详细配置
@@ -39,9 +40,9 @@ public class ApiClient {
                         .addConverterFactory(GsonConverterFactory.create())
                         .build();
                 
-                Log.d(TAG, "Created new Retrofit instance with base URL: " + BASE_URL);
+                LogUtil.d(TAG, "Created new Retrofit instance with base URL: " + BASE_URL);
             } catch (Exception e) {
-                Log.e(TAG, "Error creating Retrofit instance", e);
+                LogUtil.e(TAG, "Error creating Retrofit instance", e);
             }
         }
         return retrofit;
@@ -49,13 +50,13 @@ public class ApiClient {
 
     public static BookService getBookService() {
         BookService service = getClient().create(BookService.class);
-        Log.d(TAG, "Created BookService instance");
+        LogUtil.d(TAG, "Created BookService instance");
         return service;
     }
 
     public static UserService getUserService() {
         UserService service = getClient().create(UserService.class);
-        Log.d(TAG, "Created UserService instance");
+        LogUtil.d(TAG, "Created UserService instance");
         return service;
     }
 }

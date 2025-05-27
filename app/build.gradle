@@ -6,6 +6,10 @@ android {
     namespace 'cn.zhangjh.zhiyue'
     compileSdk 35
 
+    buildFeatures {
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId "cn.zhangjh.zhiyue"
         minSdk 30

@@ -21,6 +21,7 @@ import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.GoogleUser;
 import cn.zhangjh.zhiyue.model.LoginUser;
 import cn.zhangjh.zhiyue.request.LoginUserRequest;
+import cn.zhangjh.zhiyue.utils.LogUtil;
 import cn.zhangjh.zhiyue.utils.SystemUIUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -106,15 +107,15 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void onResponse(@NonNull Call<BizResponse<LoginUser>> call, @NonNull Response<BizResponse<LoginUser>> response) {
                                 if (!response.isSuccessful()) {
-                                    Log.e(TAG, "Register user failed: " + response.code());
+                                    LogUtil.e(TAG, "Register user failed: " + response.code());
                                     return;
                                 }
                                 BizResponse<LoginUser> bizResponse = response.body();
                                 if (bizResponse != null && bizResponse.isSuccess()) {
-                                    Log.d(TAG, "Register user success ");
+                                    LogUtil.d(TAG, "Register user success ");
                                 } else {
                                     String errorMsg = (bizResponse != null ? bizResponse.getErrorMsg() : getString(R.string.unknown_error));
-                                    Log.e(TAG, "Register user failed: " + errorMsg);
+                                    LogUtil.e(TAG, "Register user failed: " + errorMsg);
                                     Toast.makeText(LoginActivity.this,
                                             errorMsg, Toast.LENGTH_SHORT).show();
                                 }
@@ -122,17 +123,17 @@ public class LoginActivity extends AppCompatActivity {
 
                             @Override
                             public void onFailure(@NonNull Call<BizResponse<LoginUser>> call, @NonNull Throwable t) {
-                                Log.e(TAG, "Register user failed", t);
+                                LogUtil.e(TAG, "Register user failed", t);
                             }
                         });
                 
-                Log.d(TAG, "Google sign in success, loginUser: " + new Gson().toJson(googleUser));
+                LogUtil.d(TAG, "Google sign in success, loginUser: " + new Gson().toJson(googleUser));
                 loginSuccess();
             }
 
             @Override
             public void onFailure(String error) {
-                Log.e(TAG, "Google sign in failed: " + error);
+                LogUtil.e(TAG, "Google sign in failed: " + error);
                 // 根据错误类型显示不同的错误提示
                 if (error.contains(getString(R.string.error_network))) {
                     Toast.makeText(LoginActivity.this,

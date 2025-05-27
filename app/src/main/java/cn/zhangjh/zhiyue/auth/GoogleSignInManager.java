@@ -16,6 +16,7 @@ import com.google.android.gms.tasks.Task;
 
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.model.GoogleUser;
+import cn.zhangjh.zhiyue.utils.LogUtil;
 
 public class GoogleSignInManager {
     private static final String TAG = "GoogleSignInManager";
@@ -42,7 +43,7 @@ public class GoogleSignInManager {
     
     public void handleSignInResult(Intent data) {
         if (data == null) {
-            Log.e(TAG, "handleSignInResult: data is null");
+            LogUtil.e(TAG, "handleSignInResult: data is null");
             if (callback != null) {
                 callback.onFailure(activity.getString(R.string.google_sign_in_failed));
             }
@@ -58,7 +59,7 @@ public class GoogleSignInManager {
             Uri photoUrl = account.getPhotoUrl();
             String name = account.getDisplayName();
             if (idToken == null || email == null) {
-                Log.e(TAG, "handleSignInResult: idToken or email is null");
+                LogUtil.e(TAG, "handleSignInResult: idToken or email is null");
                 if (callback != null) {
                     callback.onFailure(activity.getString(R.string.google_sign_in_failed));
                 }
@@ -77,7 +78,7 @@ public class GoogleSignInManager {
             }
         } catch (ApiException e) {
             // 添加更详细的错误日志
-            Log.e(TAG, "signInResult:failed code=" + e.getStatusCode() + " message=" + e.getMessage());
+            LogUtil.e(TAG, "signInResult:failed code=" + e.getStatusCode() + " message=" + e.getMessage());
             String errorMessage;
             switch (e.getStatusCode()) {
                 case GoogleSignInStatusCodes.SIGN_IN_CANCELLED:

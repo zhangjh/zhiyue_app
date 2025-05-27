@@ -42,6 +42,7 @@ import cn.zhangjh.zhiyue.billing.SubscriptionManager;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.HistoryResponse;
 import cn.zhangjh.zhiyue.model.ReadingHistory;
+import cn.zhangjh.zhiyue.utils.LogUtil;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -93,7 +94,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
 
         // 修改订阅按钮点击事件
         subscribeButton.setOnClickListener(v -> {
-            Log.d(TAG, "subscribe button clicked");
+            LogUtil.d(TAG, "subscribe button clicked");
             // 显示加载进度
             ProgressBar progressBar = new ProgressBar(requireContext());
             AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
@@ -284,7 +285,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
                 public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
                     loadingProgressBar.setVisibility(View.GONE);
                     Toast.makeText(requireContext(), getString(R.string.error_network), Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Get reading history failed", t);
+                    LogUtil.e(TAG, "Get reading history failed", t);
                     isLoading = false;
                 }
             });
@@ -329,7 +330,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
                 @Override
                 public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
                     Toast.makeText(requireContext(), getString(R.string.error_network), Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "Delete history failed", t);
+                    LogUtil.e(TAG, "Delete history failed", t);
                 }
             });
     }

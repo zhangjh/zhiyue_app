@@ -5,7 +5,6 @@ import static android.content.Context.MODE_PRIVATE;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,17 +20,18 @@ import androidx.lifecycle.ViewModelProvider;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import cn.zhangjh.zhiyue.R;
+import cn.zhangjh.zhiyue.api.ApiClient;
+import cn.zhangjh.zhiyue.model.BizResponse;
+import cn.zhangjh.zhiyue.model.ReadingRecord;
+import cn.zhangjh.zhiyue.utils.LogUtil;
+import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
 import io.noties.markwon.Markwon;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
-import cn.zhangjh.zhiyue.R;
-import cn.zhangjh.zhiyue.api.ApiClient;
-import cn.zhangjh.zhiyue.model.BizResponse;
-import cn.zhangjh.zhiyue.model.ReadingRecord;
-import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
 import retrofit2.Call;
 import retrofit2.Callback;
 
@@ -92,7 +92,7 @@ public class AISummaryFragment extends Fragment {
 	            public void onResponse(@NonNull Call<BizResponse<ReadingRecord>> call,
 	                                   @NonNull retrofit2.Response<BizResponse<ReadingRecord>> response) {
 		            if (!response.isSuccessful()) {
-			            Log.e(TAG, "获取记录详情失败: " + response.code());
+			            LogUtil.e(TAG, "获取记录详情失败: " + response.code());
 			            initWebSocketIfNeeded();
 			            return;
 		            }
@@ -100,7 +100,7 @@ public class AISummaryFragment extends Fragment {
 		            BizResponse<ReadingRecord> bizResponse = response.body();
 		            if (bizResponse == null || !bizResponse.isSuccess()) {
 			            String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : getString(R.string.unknown_error);
-			            Log.e(TAG, "获取记录详情失败: " + errorMsg);
+			            LogUtil.e(TAG, "获取记录详情失败: " + errorMsg);
 			            initWebSocketIfNeeded();
 			            return;
 		            }
@@ -126,7 +126,7 @@ public class AISummaryFragment extends Fragment {
 
 	            @Override
 	            public void onFailure(@NonNull Call<BizResponse<ReadingRecord>> call, @NonNull Throwable t) {
-		            Log.e(TAG, "获取记录详情失败", t);
+		            LogUtil.e(TAG, "获取记录详情失败", t);
 		            initWebSocketIfNeeded();
 	            }
             });
@@ -153,7 +153,7 @@ public class AISummaryFragment extends Fragment {
         }
         String wsUrl = String.format("wss://tx.zhangjh.cn/socket/summary?userId=%s", userId);
         
-        Log.d(TAG, "Connecting to WebSocket: " + wsUrl);
+        LogUtil.d(TAG, "Connecting to WebSocket: " + wsUrl);
     
         Request request = new Request.Builder()
                 .url(wsUrl)
@@ -163,7 +163,7 @@ public class AISummaryFragment extends Fragment {
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
-                Log.d(TAG, "SummaryWebSocket connection opened");
+                LogUtil.d(TAG, "SummaryWebSocket connection opened");
                 try {
                     SharedPreferences prefs = requireActivity().getSharedPreferences("language", MODE_PRIVATE);
                     String language = prefs.getString("language", "en");
@@ -172,15 +172,15 @@ public class AISummaryFragment extends Fragment {
                     message.put("userId", userId);
                     message.put("language", language);
                     webSocket.send(message.toString());
-                    Log.d(TAG, "Sent message: " + message);
+                    LogUtil.d(TAG, "Sent message: " + message);
                 } catch (JSONException e) {
-                    Log.e(TAG, "Error creating message", e);
+                    LogUtil.e(TAG, "Error creating message", e);
                 }
             }
 
             @Override
             public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
-                Log.d(TAG, "SummaryWs received message: " + text);
+                LogUtil.d(TAG, "SummaryWs received message: " + text);
                 FragmentActivity activity = getActivity();
 
                 if (activity == null) {
@@ -220,7 +220,7 @@ public class AISummaryFragment extends Fragment {
                                 break;
                         }
                     } catch (JSONException e) {
-                        Log.e(TAG, "JSON解析错误: " + e.getMessage());
+                        LogUtil.e(TAG, "JSON解析错误: " + e.getMessage());
                     }
                 });
             }
@@ -228,7 +228,7 @@ public class AISummaryFragment extends Fragment {
             @Override
             public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, 
                     @Nullable Response response) {
-                Log.e(TAG, "SummaryWs connection failed", t);
+                LogUtil.e(TAG, "SummaryWs connection failed", t);
                 if(getActivity() == null) return;
                 
                 getActivity().runOnUiThread(() -> {

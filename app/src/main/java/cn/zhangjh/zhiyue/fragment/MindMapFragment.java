@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +30,7 @@ import org.json.JSONObject;
 
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.mindmap.MindMapManager;
+import cn.zhangjh.zhiyue.utils.LogUtil;
 import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -87,7 +87,7 @@ public class MindMapFragment extends Fragment {
         }
         String wsUrl = "wss://tx.zhangjh.cn/socket/mindmap?userId=" + this.userId;
 
-        Log.d(TAG, "Connecting to MindMapSocket: " + wsUrl);
+        LogUtil.d(TAG, "Connecting to MindMapSocket: " + wsUrl);
 
         OkHttpClient client = new OkHttpClient();
 
@@ -98,12 +98,12 @@ public class MindMapFragment extends Fragment {
         webSocket = client.newWebSocket(request, new WebSocketListener() {
             @Override
             public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
-                Log.d(TAG, "MindMapWebSocket connection opened");
+                LogUtil.d(TAG, "MindMapWebSocket connection opened");
             }
 
             @Override
             public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
-                Log.d(TAG, "MindMapWs received message: " + text);
+                LogUtil.d(TAG, "MindMapWs received message: " + text);
                 try {
                     JSONObject message = new JSONObject(text);
                     String type = message.getString("type");
@@ -113,20 +113,20 @@ public class MindMapFragment extends Fragment {
                         markdownData.append(data);
                     } else if ("finish".equals(type)) {
                         if (getActivity() != null) {
-                            Log.d(TAG, "markdownData: " + markdownData.toString());
+                            LogUtil.d(TAG, "markdownData: " + markdownData.toString());
                             getActivity().runOnUiThread(() -> mindMapManager.renderMarkdown(markdownData.toString()));
                         }
                         closeWebSocket();
                     }
                 } catch (JSONException e) {
-                    Log.e(TAG, "MindMapWs message parse error", e);
+                    LogUtil.e(TAG, "MindMapWs message parse error", e);
                     showMindMapError();
                 }
             }
 
             @Override
             public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, Response response) {
-                Log.e(TAG, "MindMapWs connection failed", t);
+                LogUtil.e(TAG, "MindMapWs connection failed", t);
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> showMindMapError());
                 }
@@ -172,7 +172,7 @@ public class MindMapFragment extends Fragment {
         mindMapWebView.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                Log.d(TAG, "MindMap Console: " + consoleMessage.message());
+                LogUtil.d(TAG, "MindMap Console: " + consoleMessage.message());
                 return true;
             }
         });
@@ -195,7 +195,7 @@ public class MindMapFragment extends Fragment {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                Log.d(TAG, "开始加载map data");
+                LogUtil.d(TAG, "开始加载map data");
                 if(TextUtils.isEmpty(title) || TextUtils.isEmpty(author) || TextUtils.isEmpty(partsSummary)) {
                     Toast.makeText(getActivity(), getString(R.string.please_wait_ai_summary), Toast.LENGTH_SHORT).show();
                     hideMindMapLoading();
@@ -226,7 +226,7 @@ public class MindMapFragment extends Fragment {
             request.put("language", language);
             webSocket.send(request.toString());
         } catch (Exception e) {
-            Log.e(TAG, "Error loading mind map data", e);
+            LogUtil.e(TAG, "Error loading mind map data", e);
             showMindMapError();
         }
     }

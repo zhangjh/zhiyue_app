@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,6 +41,7 @@ import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.ReadingRecord;
 import cn.zhangjh.zhiyue.utils.BizUtils;
+import cn.zhangjh.zhiyue.utils.LogUtil;
 import cn.zhangjh.zhiyue.utils.SystemUIUtils;
 import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
 import retrofit2.Call;
@@ -136,19 +136,19 @@ public class ReaderFragment extends Fragment {
                 if (!response.isSuccessful()) {
                     try {
                         String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
-                        Log.e(TAG, "Error response: " + errorBody);
+                        LogUtil.e(TAG, "Error response: " + errorBody);
                         showError(getString(R.string.get_ebook_url_failed) + " (" + response.code() + "): " + errorBody);
                     } catch (Exception e) {
-                        Log.e(TAG, "Error reading error response", e);
+                        LogUtil.e(TAG, "Error reading error response", e);
                         showError(getString(R.string.get_ebook_url_failed) + " (" + response.code() + ")");
                     }
                     return;
                 }
                 if (response.body() != null && response.body().isSuccess()) {
                     bookUrl = response.body().getData();
-                    Log.d(TAG, "Ebook url: " + bookUrl);
+                    LogUtil.d(TAG, "Ebook url: " + bookUrl);
                     fileId = bookUrl.substring(bookUrl.lastIndexOf('/') + 1);
-                    Log.d(TAG, "fileId: " + fileId);
+                    LogUtil.d(TAG, "fileId: " + fileId);
                     // 需要在这里触发加载
                     if (webViewReader != null) {
                         String setLangScript = String.format("setLanguageResource('%s')", languageRes);
@@ -163,7 +163,7 @@ public class ReaderFragment extends Fragment {
     
             @Override
             public void onFailure(@NonNull Call<BizResponse<String>> call, @NonNull Throwable t) {
-                Log.e(TAG, "Search failed", t);
+                LogUtil.e(TAG, "Search failed", t);
                 String errorMessage = "网络错误: " + t.getClass().getSimpleName();
                 if (t.getMessage() != null) {
                     errorMessage += " - " + t.getMessage();
@@ -273,7 +273,7 @@ public class ReaderFragment extends Fragment {
         webViewReader.setWebChromeClient(new WebChromeClient() {
             @Override
             public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                Log.d(TAG, "WebView Console: " + consoleMessage.message());
+                LogUtil.d(TAG, "WebView Console: " + consoleMessage.message());
                 return true;
             }
         });
@@ -385,7 +385,7 @@ public class ReaderFragment extends Fragment {
     private class WebAppInterface {
         @JavascriptInterface
         public void onBookMetadata(String title, String author) {
-            Log.d(TAG, "onBookMetaData update: " + title + ", author: " + author);
+            LogUtil.d(TAG, "onBookMetaData update: " + title + ", author: " + author);
             // 更新记录，先与onBookLoaded执行
             readingRecord.setFileId(fileId);
             readingRecord.setUserId(userId);
@@ -448,7 +448,7 @@ public class ReaderFragment extends Fragment {
             if (getActivity() != null) {
                 Annotation annotation = new Annotation(fileId, cfi, type, color, text);
                 annotation.setUserId(userId);
-                Log.d(TAG, "Saving annotation: " + new Gson().toJson(annotation));
+                LogUtil.d(TAG, "Saving annotation: " + new Gson().toJson(annotation));
                 // 调用API保存标注
                 ApiClient.getBookService().saveAnnotation(annotation).enqueue(new Callback<>() {
                     @Override
@@ -468,7 +468,7 @@ public class ReaderFragment extends Fragment {
 
         @JavascriptInterface
         public void loadAnnotations() {
-            Log.d(TAG, "loadAnnotations called, fileId: " + fileId);
+            LogUtil.d(TAG, "loadAnnotations called, fileId: " + fileId);
             if (getActivity() != null) {
                 // 从服务器获取标注
                 ApiClient.getBookService().getAnnotations(userId, fileId).enqueue(new Callback<>() {
@@ -477,7 +477,7 @@ public class ReaderFragment extends Fragment {
                         if (response.isSuccessful() && response.body() != null) {
                             // 将标注传递给前端
                             String annotations = new Gson().toJson(response.body().getData());
-                            Log.d(TAG, "Annotations: " + annotations);
+                            LogUtil.d(TAG, "Annotations: " + annotations);
                             if(TextUtils.isEmpty(annotations)) {
                                 return;
                             }
@@ -513,15 +513,15 @@ public class ReaderFragment extends Fragment {
 	            @Override
 	            public void onResponse(@NonNull Call<BizResponse<Void>> call, @NonNull Response<BizResponse<Void>> response) {
 		            if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-			            Log.d(TAG, "标注删除成功: " + cfi);
+			            LogUtil.d(TAG, "标注删除成功: " + cfi);
 		            } else {
-			            Log.e(TAG, "标注删除失败: " + cfi);
+			            LogUtil.e(TAG, "标注删除失败: " + cfi);
 		            }
 	            }
 
 	            @Override
 	            public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
-		            Log.e(TAG, "标注删除请求失败", t);
+		            LogUtil.e(TAG, "标注删除请求失败", t);
 	            }
             });
         }
@@ -543,21 +543,21 @@ public class ReaderFragment extends Fragment {
                 public void onResponse(@NonNull Call<BizResponse<Void>> call,
                                        @NonNull Response<BizResponse<Void>> response) {
                     if (!response.isSuccessful()) {
-                        Log.e(TAG, "Save reading record failed: " + response.code());
+                        LogUtil.e(TAG, "Save reading record failed: " + response.code());
                         return;
                     }
                     BizResponse<Void> bizResponse = response.body();
                     if (bizResponse != null && bizResponse.isSuccess()) {
-                        Log.d(TAG, "Save reading record success");
+                        LogUtil.d(TAG, "Save reading record success");
                     } else {
                         String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "unknown error";
-                        Log.e(TAG, "Save reading record failed: " + errorMsg);
+                        LogUtil.e(TAG, "Save reading record failed: " + errorMsg);
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
-                    Log.e(TAG, "Save reading record failed", t);
+                    LogUtil.e(TAG, "Save reading record failed", t);
                 }
             });
     }
@@ -566,7 +566,7 @@ public class ReaderFragment extends Fragment {
     private void updateReadingRecord(ReadingRecord readingRecord) {
         String userId = readingRecord.getUserId();
         if(TextUtils.isEmpty(userId)) {
-            Log.d(TAG, "Update reading record failed: userId is empty");
+            LogUtil.d(TAG, "Update reading record failed: userId is empty");
             return;
         }
         // 如果没有实质要更新的内容就不更新
@@ -582,21 +582,21 @@ public class ReaderFragment extends Fragment {
                 public void onResponse(@NonNull Call<BizResponse<Void>> call,
                                        @NonNull Response<BizResponse<Void>> response) {
                     if (!response.isSuccessful()) {
-                        Log.e(TAG, "Update reading record failed: " + response.code());
+                        LogUtil.e(TAG, "Update reading record failed: " + response.code());
                         return;
                     }
                     BizResponse<Void> bizResponse = response.body();
                     if (bizResponse != null && bizResponse.isSuccess()) {
-                        Log.d(TAG, "Update reading record success");
+                        LogUtil.d(TAG, "Update reading record success");
                     } else {
                         String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "unknown error";
-                        Log.e(TAG, "Update reading record failed: " + errorMsg);
+                        LogUtil.e(TAG, "Update reading record failed: " + errorMsg);
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
-                    Log.e(TAG, "Update reading record failed", t);
+                    LogUtil.e(TAG, "Update reading record failed", t);
                 }
             });
     }
