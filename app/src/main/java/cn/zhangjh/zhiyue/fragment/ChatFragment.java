@@ -1,5 +1,7 @@
 package cn.zhangjh.zhiyue.fragment;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -178,11 +180,14 @@ public class ChatFragment extends Fragment {
         chatRecyclerView.scrollToPosition(chatMessages.size() - 1);
 
         try {
+            SharedPreferences prefs = requireActivity().getSharedPreferences("language", MODE_PRIVATE);
+            String language = prefs.getString("language", "en");
             JSONObject message = new JSONObject();
             message.put("question", question);
             message.put("title", title);
             message.put("author", author);
             message.put("summary", summary);
+            message.put("language", language);
             
             // 构建上下文
             JSONObject contextObj = getContextObj();

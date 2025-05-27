@@ -164,9 +164,18 @@ public class AISummaryFragment extends Fragment {
             @Override
             public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
                 Log.d(TAG, "SummaryWebSocket connection opened");
-                String message = String.format("{\"fileId\": \"%s\", \"userId\": \"%s\"}", fileId, userId);
-                webSocket.send(message);
-                Log.d(TAG, "Sent message: " + message);
+                try {
+                    SharedPreferences prefs = requireActivity().getSharedPreferences("language", MODE_PRIVATE);
+                    String language = prefs.getString("language", "en");
+                    JSONObject message = new JSONObject();
+                    message.put("fileId", fileId);
+                    message.put("userId", userId);
+                    message.put("language", language);
+                    webSocket.send(message.toString());
+                    Log.d(TAG, "Sent message: " + message);
+                } catch (JSONException e) {
+                    Log.e(TAG, "Error creating message", e);
+                }
             }
 
             @Override

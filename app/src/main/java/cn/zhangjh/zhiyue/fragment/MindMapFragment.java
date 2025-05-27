@@ -1,5 +1,7 @@
 package cn.zhangjh.zhiyue.fragment;
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -215,10 +217,13 @@ public class MindMapFragment extends Fragment {
 
     private void loadMindMapData() {
         try {
+            SharedPreferences prefs = requireActivity().getSharedPreferences("language", MODE_PRIVATE);
+            String language = prefs.getString("language", "en");
             JSONObject request = new JSONObject();
             request.put("title", title);
             request.put("author", author);
             request.put("summary", partsSummary);
+            request.put("language", language);
             webSocket.send(request.toString());
         } catch (Exception e) {
             Log.e(TAG, "Error loading mind map data", e);

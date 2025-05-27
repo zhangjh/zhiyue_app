@@ -1,5 +1,6 @@
 package cn.zhangjh.zhiyue.activity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -12,6 +13,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.util.Locale;
 import java.util.Objects;
 
 import cn.zhangjh.zhiyue.R;
@@ -28,6 +30,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // 获取当前语种并持久化，先读取如果不存在则开始获取
+        SharedPreferences prefsLanguage = getSharedPreferences("language", MODE_PRIVATE);
+        String language = prefsLanguage.getString("language", "");
+        if (TextUtils.isEmpty(language)) {
+            language = Locale.getDefault().getLanguage();
+            prefsLanguage.edit().putString("language", language).apply();
+        }
 
         mode = "init";
 
