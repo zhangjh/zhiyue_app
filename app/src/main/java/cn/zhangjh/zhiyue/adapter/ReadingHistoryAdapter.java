@@ -102,9 +102,11 @@ public class ReadingHistoryAdapter extends RecyclerView.Adapter<ReadingHistoryAd
 			inputFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 			outputFormat.setTimeZone(TimeZone.getDefault());
 
-			startReadingTime.setText(String.format("开始阅读：%s",
+			startReadingTime.setText(String.format(
+					itemView.getContext().getString(R.string.start_reading_time) + "%s",
 					outputFormat.format(Objects.requireNonNull(inputFormat.parse(history.getStartTime())))));
-			lastReadingTime.setText(String.format("最近阅读：%s",
+			lastReadingTime.setText(String.format(
+					itemView.getContext().getString(R.string.last_reading_time) + "%s",
 					outputFormat.format(Objects.requireNonNull(inputFormat.parse(history.getLastReadTime())))));
 
 			deleteButton.setOnClickListener(v -> {

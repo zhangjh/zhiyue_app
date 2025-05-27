@@ -22,6 +22,8 @@ import com.google.gson.Gson;
 import java.util.Date;
 import java.util.List;
 
+import cn.zhangjh.zhiyue.R;
+
 public class BillingManager implements PurchasesUpdatedListener {
     private static final String TAG = "BillingManager";
     private static final String SUBSCRIPTION_MONTHLY = "smart_reader_monthly_subscription";
@@ -91,7 +93,7 @@ public class BillingManager implements PurchasesUpdatedListener {
             if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
                 Log.e(TAG, "查询商品失败: " + billingResult.getDebugMessage());
                 activity.runOnUiThread(() -> Toast.makeText(activity, 
-                    "查询商品失败: " + billingResult.getDebugMessage(), Toast.LENGTH_SHORT).show());
+                    activity.getString(R.string.query_product_failed) + billingResult.getDebugMessage(), Toast.LENGTH_SHORT).show());
                 if(callback != null) {
                     callback.onPurchaseComplete(false);
                 }
@@ -100,7 +102,7 @@ public class BillingManager implements PurchasesUpdatedListener {
             
             if(CollectionUtils.isEmpty(skuDetailsList)) {
                 Log.e(TAG, "商品列表为空，商品ID可能不正确或未发布");
-                activity.runOnUiThread(() -> Toast.makeText(activity, "没有找到商品，请检查商品配置", Toast.LENGTH_SHORT).show());
+                activity.runOnUiThread(() -> Toast.makeText(activity, activity.getString(R.string.query_product_empty), Toast.LENGTH_SHORT).show());
                 if(callback != null) {
                     callback.onPurchaseComplete(false);
                 }
@@ -121,7 +123,7 @@ public class BillingManager implements PurchasesUpdatedListener {
                 BillingResult launchResult = billingClient.launchBillingFlow(activity, flowParams);
                 Log.d(TAG, "launchBillingFlow: " + new Gson().toJson(launchResult));
                 if (launchResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
-                    activity.runOnUiThread(() -> Toast.makeText(activity, "启动购买流程失败", Toast.LENGTH_SHORT).show());
+                    activity.runOnUiThread(() -> Toast.makeText(activity, activity.getString(R.string.launch_billing_failed), Toast.LENGTH_SHORT).show());
                     if(callback != null) {
                         callback.onPurchaseComplete(false);
                     }
@@ -200,7 +202,7 @@ public class BillingManager implements PurchasesUpdatedListener {
             if (billingCallback != null) {
                 billingCallback.onPurchaseFailure(
                         billingResult.getResponseCode(),
-                        "购买失败: " + billingResult.getDebugMessage()
+                        activity.getString(R.string.billing_failed) + billingResult.getDebugMessage()
                 );
             }
         }
@@ -276,7 +278,7 @@ public class BillingManager implements PurchasesUpdatedListener {
                         
                         SubscriptionInfo info = new SubscriptionInfo(
                                 true,
-                                "包月服务",
+                                activity.getString(R.string.monthly_subscription),
                                 new Date(expireTime),
                                 SUBSCRIPTION_MONTHLY
                         );
@@ -291,6 +293,7 @@ public class BillingManager implements PurchasesUpdatedListener {
             } else {
                 Log.e(TAG, "查询订阅详情失败: " + billingResult.getDebugMessage());
             }
+
 	        if (callback != null) {
 	            callback.onSubscriptionDetailsReceived(null);
 	        }

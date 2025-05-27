@@ -41,6 +41,7 @@ import cn.zhangjh.zhiyue.model.Annotation;
 import cn.zhangjh.zhiyue.model.BizListResponse;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.ReadingRecord;
+import cn.zhangjh.zhiyue.utils.BizUtils;
 import cn.zhangjh.zhiyue.utils.SystemUIUtils;
 import cn.zhangjh.zhiyue.viewmodel.BookInfoViewModel;
 import retrofit2.Call;
@@ -50,6 +51,7 @@ import retrofit2.Response;
 public class ReaderFragment extends Fragment {
 
     private static final String TAG = ReaderFragment.class.getName();
+    private String languageRes;
     private String userId;
     private String fileId;
     private String hashId;
@@ -66,6 +68,15 @@ public class ReaderFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 //        WebView.setWebContentsDebuggingEnabled(true);
+
+        String language = getResources().getConfiguration().getLocales().get(0).getLanguage();
+        if(!TextUtils.equals(language, "en") || !TextUtils.equals(language, "zh")) {
+            language = "en";
+        }
+        // 读取本地i18n下资源文件，返回string内容
+        String fileName = "i18n/" + language + ".json";
+        languageRes = BizUtils.readAssetFile(requireContext(), fileName);
+        languageRes = BizUtils.escapeJson(languageRes);
 
         // 设置返回键监听
         requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -126,10 +137,10 @@ public class ReaderFragment extends Fragment {
                     try {
                         String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
                         Log.e(TAG, "Error response: " + errorBody);
-                        showError("获取ebook url失败 (" + response.code() + "): " + errorBody);
+                        showError(getString(R.string.get_ebook_url_failed) + " (" + response.code() + "): " + errorBody);
                     } catch (Exception e) {
                         Log.e(TAG, "Error reading error response", e);
-                        showError("获取ebook url失败 (" + response.code() + ")");
+                        showError(getString(R.string.get_ebook_url_failed) + " (" + response.code() + ")");
                     }
                     return;
                 }
@@ -140,10 +151,12 @@ public class ReaderFragment extends Fragment {
                     Log.d(TAG, "fileId: " + fileId);
                     // 需要在这里触发加载
                     if (webViewReader != null) {
-                        webViewReader.post(() -> {
+                        String setLangScript = String.format("setLanguageResource('%s')", languageRes);
+                        webViewReader.post(() -> webViewReader.evaluateJavascript(setLangScript, value -> {
+                            // 语言资源加载完毕后再加载书籍
                             String script = String.format("loadBook('%s', '%s')", bookUrl, cfi);
                             webViewReader.evaluateJavascript(script, null);
-                        });
+                        }));
                     }
                 }
             }
@@ -213,12 +226,11 @@ public class ReaderFragment extends Fragment {
         SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
         this.userId = prefs.getString("userId", "");
 
-        // 删除思维导图相关初始化
         webViewReader = view.findViewById(R.id.webview_reader);
         configureWebView(webViewReader);
         loadingView = view.findViewById(R.id.loading_view);
 
-        showLoading("正在加载阅读器...");
+        showLoading(getString(R.string.reader_loading));
 
         // 添加以下配置阻止系统菜单
         webViewReader.setLongClickable(false);  // 禁用系统长按菜单
@@ -241,16 +253,20 @@ public class ReaderFragment extends Fragment {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
-                showLoading("正在初始化...");
+                showLoading(getString(R.string.view_init));
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 if (!TextUtils.isEmpty(bookUrl)) {
-                    showLoading("正在加载电子书...");
-                    String script = String.format("loadBook('%s', '%s')", bookUrl, cfi);
-                    webViewReader.evaluateJavascript(script, null);
+                    showLoading(getString(R.string.ebook_loading));
+                    String setLangScript = String.format("setLanguageResource('%s')", languageRes);
+                    webViewReader.evaluateJavascript(setLangScript, value -> {
+                        // 语言资源加载完毕后再加载书籍
+                        String script = String.format("loadBook('%s', '%s')", bookUrl, cfi);
+                        webViewReader.evaluateJavascript(script, null);
+                    });
                 }
             }
         });
@@ -281,7 +297,7 @@ public class ReaderFragment extends Fragment {
                 if (isBookLoading) {
                     // 恢复到第一个Tab
                     tabLayout.selectTab(tabLayout.getTabAt(0));
-                    Toast.makeText(getContext(), "请等待书籍加载完成", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.please_wait_book_loading), Toast.LENGTH_SHORT).show();
                     return;
                 }
                 
@@ -399,7 +415,7 @@ public class ReaderFragment extends Fragment {
                     ClipboardManager clipboard = (ClipboardManager) getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
                     ClipData clip = ClipData.newPlainText("selected_text", text);
                     clipboard.setPrimaryClip(clip);
-                    Toast.makeText(getActivity(), "已复制到剪贴板", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), getString(R.string.copy_to_clipboard_success), Toast.LENGTH_SHORT).show();
                 });
             }
         }
@@ -438,13 +454,13 @@ public class ReaderFragment extends Fragment {
                     @Override
                     public void onResponse(@NonNull Call<BizResponse<Void>> call, @NonNull retrofit2.Response<BizResponse<Void>> response) {
                         if (!response.isSuccessful()) {
-                            showError("保存标注失败");
+                            showError(getString(R.string.save_annotation_failed));
                         }
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
-                        showError("保存标注失败: " + t.getMessage());
+                        showError(getString(R.string.save_annotation_failed) + ": " + t.getMessage());
                     }
                 });
             }
@@ -459,32 +475,23 @@ public class ReaderFragment extends Fragment {
                     @Override
                     public void onResponse(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Response<BizListResponse<Annotation>> response) {
                         if (response.isSuccessful() && response.body() != null) {
-                            try {
-                                // 将标注传递给前端
-                                String annotations = new Gson().toJson(response.body().getData());
-                                Log.d(TAG, "Annotations: " + annotations);
-                                if(TextUtils.isEmpty(annotations)) {
-                                    return;
-                                }
-                                // 确保JSON字符串正确转义
-                                annotations = annotations.replace("\n", "\\n")
-                                                       .replace("\r", "\\r")
-                                                       .replace("\t", "\\t")
-                                                       .replace("\\", "\\\\")
-                                                       .replace("\"", "\\\"");
-                                // 使用单引号包裹整个JSON字符串，避免双引号冲突
-                                String script = String.format("loadAnnotations('%s')", annotations);
-                                webViewReader.post(() -> webViewReader.evaluateJavascript(script, null));
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error processing annotations", e);
-                                showError("处理标注数据失败: " + e.getMessage());
+                            // 将标注传递给前端
+                            String annotations = new Gson().toJson(response.body().getData());
+                            Log.d(TAG, "Annotations: " + annotations);
+                            if(TextUtils.isEmpty(annotations)) {
+                                return;
                             }
+                            // 确保JSON字符串正确转义
+                            annotations = BizUtils.escapeJson(annotations);
+                            // 使用单引号包裹整个JSON字符串，避免双引号冲突
+                            String script = String.format("loadAnnotations('%s')", annotations);
+                            webViewReader.post(() -> webViewReader.evaluateJavascript(script, null));
                         }
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<BizListResponse<Annotation>> call, @NonNull Throwable t) {
-                        showError("加载标注失败: " + t.getMessage());
+                        showError(getString(R.string.load_annotation_failed) + ": " + t.getMessage());
                     }
                 });
             }

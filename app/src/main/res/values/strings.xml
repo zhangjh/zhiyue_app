@@ -3,19 +3,99 @@
 
     <string name="biz_domain">https://s3.zhangjh.cn/</string>
 
-    <string name="search_placeholder">搜索你想看的书籍</string>
+    <string name="search_placeholder">Search for books</string>
 
-    <string name="empty_search_result">没有找到相关书籍</string>
+    <string name="empty_search_result">No books found</string>
 
-<!--    <string name="web_client_id">588286356488-sa1dopj1bielldpg6f5shfvapv2tbd6k.apps.googleusercontent.com</string>-->
     <string name="web_client_id">588286356488-17updov8444i6l867jv75p1cppcfdm4n.apps.googleusercontent.com</string>
-    <string name="google_sign_in_success">Google登录成功</string>
-    <string name="google_sign_in_failed">Google登录失败</string>
-    <string name="google_sign_in_loading">正在登录...</string>
-    <string name="google_sign_in_error_network">网络连接失败，请检查网络设置</string>
-    <string name="google_sign_in_error_cancelled">登录已取消</string>
-    <string name="google_sign_in_error_unknown">登录失败，请稍后重试</string>
-    <string name="google_sign_in">使用Google账号登录</string>
-    <string name="welcome_text">欢迎使用智阅</string>
-    <string name="login_prompt">请使用Google账号登录以继续</string>
+    <string name="google_sign_in_success">Google sign-in successful</string>
+    <string name="google_sign_in_failed">Google sign-in failed</string>
+    <string name="google_sign_in_loading">Signing in...</string>
+    <string name="error_network">Network connection failed, please check your network settings</string>
+    <string name="google_sign_in_error_cancelled">Sign-in cancelled</string>
+    <string name="google_sign_in_error_unknown">Sign-in failed, please try again later</string>
+    <string name="google_sign_in">Sign in with Google</string>
+    <string name="google_sign_in_error_invalid_account">Sign in with invalid account</string>
+    <string name="google_sign_in_error_sign_in_required">Sign in required</string>
+    <string name="welcome_text">Welcome to SmartReader</string>
+    <string name="login_prompt">Please sign in with Google to continue</string>
+
+    <!-- activity -->
+    <string name="logo_title">Discover Great Books</string>
+    <string name="recommend_books">Recommended Books</string>
+    <string name="subscribe_now">Subscribe Now</string>
+    <string name="cancel">Cancel</string>
+    <string name="ai_summary_loading">AI Summary Generating…</string>
+    <string name="input_question">Input Question…</string>
+    <string name="send">Send</string>
+    <string name="loading_error_text">Loading failed, retry…</string>
+    <string name="not_login">Not logged in</string>
+    <string name="click_login">Click to login</string>
+    <string name="subscription_manage">Subscription Management</string>
+    <string name="subscription_status">Subscription Status: </string>
+    <string name="subscription_type">Subscription Type: </string>
+    <string name="subscription_expire_date">Expire Date: </string>
+    <string name="not_subscribe">No subscription</string>
+    <string name="reading_history">Reading History</string>
+    <string name="no_reading_history">No reading history</string>"
+    <string name="reader">Reader</string>
+    <string name="ai_assistant">Read Assistant</string>
+    <string name="book_name">Book Name</string>
+    <string name="book_author">Author</string>
+    <string name="book_desc">Description</string>
+    <string name="book_cover">Cover</string>
+    <string name="click_detail">View detail</string>
+    <string name="go_to_read">Go to Read</string>
+    <string name="delete">Delete</string>
+    <string name="contine_read">Continue Reading</string>
+
+    <!-- Bottom Navigation Menu -->
+    <string name="nav_books">Books</string>
+    <string name="nav_reader">Reader</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Tab -->
+    <string name="ai_summary">AI Summary</string>
+    <string name="ai_chat">AI Chat</string>
+    <string name="ai_mind_map">AI Mind</string>
+
+    <!-- Toast Messages -->
+    <string name="view_init">Viewer initialing…</string>
+    <string name="ebook_loading">Book loading…</string>
+    <string name="please_wait_book_loading">Please wait for the book to load</string>
+    <string name="please_wait_ai_summary">Please wait for AI summary to complete</string>
+    <string name="please_login_first">Please login first</string>
+    <string name="delete_record_failed">Failed to delete record</string>
+    <string name="delete_success">Deleted successfully</string>
+    <string name="get_reading_history_failed">Failed to get reading history</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="subscription_success">Subscription successful</string>
+    <string name="subscription_failed">Subscription failed: </string>
+    <string name="reader_direct_access_tip">Please search for a book or continue from reading history</string>
+    <string name="reading_first_recommend">Read at least one book to enable recommendations</string>
+    <string name="search_failed">Search failed</string>
+    <string name="first_trial">You have used your first trial</string>
+    <string name="recommend_failed">Recommend failed</string>
+    <string name="copy_to_clipboard_success">Copied to clipboard</string>
+    <string name="save_annotation_failed">Save annotation failed</string>
+    <string name="load_annotation_failed">Load annotation failed</string>
+    <string name="reader_loading">Loading reader…</string>
+    <string name="get_ebook_url_failed">Get ebook url failed</string>
+
+    <!-- reading history -->
+    <string name="start_reading_time">Start Reading：</string>
+    <string name="last_reading_time">Last Reading：</string>
+    <string name="reading_history_failed">Get reading history failed</string>
+    <string name="delete_history_failed">Delete history failed</string>
+
+    <!-- subscription -->
+    <string name="query_product_failed">Query product failed</string>
+    <string name="query_product_empty">Query product empty</string>
+    <string name="launch_billing_failed">Launch billing failed</string>
+    <string name="subscription_expired">Subscription expired</string>
+    <string name="need_subscription">Need subscription</string>
+    <string name="need_subscription_tips">One free trial, please subscribe to continue. You can read 10 free books per month after subscription.</string>
+    <string name="subscription_already">You have subscribed</string>
+    <string name="billing_failed">Purchase failed</string>
+    <string name="monthly_subscription">SmartReader-Monthly Subscription</string>
 </resources>

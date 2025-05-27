@@ -29,7 +29,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="输入问题..."
+            android:hint="@string/input_question"
             app:boxBackgroundColor="@color/background"
             app:boxCornerRadiusBottomEnd="8dp"
             app:boxCornerRadiusBottomStart="8dp"
@@ -59,7 +59,7 @@
             android:layout_gravity="bottom"
             android:layout_marginStart="8dp"
             android:minWidth="48dp"
-            android:text="发送"
+            android:text="@string/send"
             app:cornerRadius="8dp" />
     </LinearLayout>
 </RelativeLayout>

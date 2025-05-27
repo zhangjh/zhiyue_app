@@ -132,7 +132,7 @@ public class ChatFragment extends Fragment {
             @Override
             public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, @Nullable Response response) {
                 Log.e(TAG, "ChatWs failure", t);
-                handler.post(() -> Toast.makeText(getContext(), "连接失败: " + t.getMessage(), Toast.LENGTH_SHORT).show());
+                handler.post(() -> Toast.makeText(getContext(), "Connection failed: " + t.getMessage(), Toast.LENGTH_SHORT).show());
             }
         });
     }
@@ -157,7 +157,7 @@ public class ChatFragment extends Fragment {
 
     private void sendQuestion(String question) {
         if(TextUtils.isEmpty(title) || TextUtils.isEmpty(author) || TextUtils.isEmpty(summary)) {
-            Toast.makeText(getActivity(), "请等待AI总结完成", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), getString(R.string.please_wait_ai_summary), Toast.LENGTH_SHORT).show();
             return;
         }
         // 隐藏软键盘

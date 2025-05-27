@@ -1,0 +1,18 @@
+{
+  "reader": {
+    "title": "电子书阅读器",
+    "toc": "目录",
+    "close": "关闭",
+    "copy": "复制",
+    "highlight": "高亮",
+    "underline": "划线",
+    "delete": "删除",
+    "progress": "阅读进度：%s%",
+    "loading": "加载电子书失败：",
+    "render_failed": "渲染思维导图失败:"
+  },
+  "mindmap": {
+    "title": "思维导图",
+    "root": "思维导图"
+  }
+}

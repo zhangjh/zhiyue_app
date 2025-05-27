@@ -115,13 +115,9 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         
         manageSubscriptionButton.setOnClickListener(v -> {
             // 打开订阅管理页面
-            try {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("https://play.google.com/store/account/subscriptions"));
-                startActivity(intent);
-            } catch (Exception e) {
-                Toast.makeText(requireContext(), "无法打开订阅管理页面", Toast.LENGTH_SHORT).show();
-            }
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://play.google.com/store/account/subscriptions"));
+            startActivity(intent);
         });
     }
 
@@ -159,7 +155,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
 
     private void updateSubscriptionUI() {
         // 已订阅状态
-        subscriptionStatus.setText("已订阅");
+        subscriptionStatus.setText(getString(R.string.subscription_already));
         subscriptionStatus.setTextColor(getResources().getColor(R.color.primary, null));
 
         // 显示订阅类型和到期时间
@@ -212,7 +208,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     private void loadUserInfo() {
         SharedPreferences prefs = requireActivity().getSharedPreferences("auth", MODE_PRIVATE);
         // 获取用户信息
-        userName.setText(prefs.getString("name", "未登录"));
+        userName.setText(prefs.getString("name", ""));
 
         // 获取并加载用户头像
         String avatarUrl = prefs.getString("avatar", "");
@@ -253,7 +249,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
                                        @NonNull Response<BizResponse<HistoryResponse>> response) {
                     loadingProgressBar.setVisibility(View.GONE);
                     if (!response.isSuccessful()) {
-                        Toast.makeText(requireContext(), "获取历史记录失败", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), getString(R.string.reading_history_failed), Toast.LENGTH_SHORT).show();
                         isLoading = false;
                         return;
                     }
@@ -287,7 +283,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
                 @Override
                 public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
                     loadingProgressBar.setVisibility(View.GONE);
-                    Toast.makeText(requireContext(), "网络请求失败", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), getString(R.string.error_network), Toast.LENGTH_SHORT).show();
                     Log.e(TAG, "Get reading history failed", t);
                     isLoading = false;
                 }
@@ -304,7 +300,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
     @Override
     public void onDeleteHistory(ReadingHistory history) {
         if (TextUtils.isEmpty(currentUserId)) {
-            Toast.makeText(requireContext(), "请先登录", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), getString(R.string.please_login_first), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -315,24 +311,24 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
                 public void onResponse(@NonNull Call<BizResponse<Void>> call,
                                        @NonNull Response<BizResponse<Void>> response) {
                     if (!response.isSuccessful()) {
-                        Toast.makeText(requireContext(), "删除记录失败", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), getString(R.string.delete_record_failed), Toast.LENGTH_SHORT).show();
                         return;
                     }
 
                     BizResponse<Void> bizResponse = response.body();
                     if (bizResponse != null && bizResponse.isSuccess()) {
-                        Toast.makeText(requireContext(), "删除成功", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), getString(R.string.delete_success), Toast.LENGTH_SHORT).show();
                         // 重新加载第一页数据
                         loadReadingHistory(1);
                     } else {
-                        String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "未知错误";
-                        Toast.makeText(requireContext(), "删除失败: " + errorMsg, Toast.LENGTH_SHORT).show();
+                        String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : getString(R.string.unknown_error);
+                        Toast.makeText(requireContext(), getString(R.string.delete_history_failed) + ": " + errorMsg, Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<BizResponse<Void>> call, @NonNull Throwable t) {
-                    Toast.makeText(requireContext(), "网络请求失败", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), getString(R.string.error_network), Toast.LENGTH_SHORT).show();
                     Log.e(TAG, "Delete history failed", t);
                 }
             });

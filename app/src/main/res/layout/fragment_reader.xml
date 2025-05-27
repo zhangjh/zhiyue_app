@@ -22,12 +22,12 @@
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="阅读器" />
+                android:text="@string/reader" />
 
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="AI伴读" />
+                android:text="@string/ai_assistant" />
 
         </com.google.android.material.tabs.TabLayout>
 

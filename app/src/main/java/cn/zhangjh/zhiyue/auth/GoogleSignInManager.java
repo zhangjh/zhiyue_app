@@ -14,6 +14,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
+import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.model.GoogleUser;
 
 public class GoogleSignInManager {
@@ -43,7 +44,7 @@ public class GoogleSignInManager {
         if (data == null) {
             Log.e(TAG, "handleSignInResult: data is null");
             if (callback != null) {
-                callback.onFailure("登录失败: 未收到登录数据");
+                callback.onFailure(activity.getString(R.string.google_sign_in_failed));
             }
             return;
         }
@@ -59,7 +60,7 @@ public class GoogleSignInManager {
             if (idToken == null || email == null) {
                 Log.e(TAG, "handleSignInResult: idToken or email is null");
                 if (callback != null) {
-                    callback.onFailure("登录失败: 未能获取用户信息");
+                    callback.onFailure(activity.getString(R.string.google_sign_in_failed));
                 }
                 return;
             }
@@ -80,19 +81,19 @@ public class GoogleSignInManager {
             String errorMessage;
             switch (e.getStatusCode()) {
                 case GoogleSignInStatusCodes.SIGN_IN_CANCELLED:
-                    errorMessage = "登录已取消";
+                    errorMessage = activity.getString(R.string.google_sign_in_error_cancelled);
                     break;
                 case GoogleSignInStatusCodes.NETWORK_ERROR:
-                    errorMessage = "网络连接失败";
+                    errorMessage = activity.getString(R.string.error_network);
                     break;
                 case GoogleSignInStatusCodes.INVALID_ACCOUNT:
-                    errorMessage = "无效的账号";
+                    errorMessage = activity.getString(R.string.google_sign_in_error_invalid_account);
                     break;
                 case GoogleSignInStatusCodes.SIGN_IN_REQUIRED:
-                    errorMessage = "需要重新登录";
+                    errorMessage = activity.getString(R.string.google_sign_in_error_sign_in_required);;
                     break;
                 default:
-                    errorMessage = "登录失败: " + e.getMessage();
+                    errorMessage = activity.getString(R.string.google_sign_in_failed) + e.getMessage();
                     break;
             }
             if (callback != null) {

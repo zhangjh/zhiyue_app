@@ -346,7 +346,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                             showRecommendView(books);
                         } else {
                             Log.e(TAG, "Response body was null or not successful");
-                            showError("获取推荐书目失败：返回数据无效");
+                            showError(getString(R.string.recommend_failed));
                         }
                     }
                     
@@ -357,7 +357,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                         recommendRecyclerView.setVisibility(View.VISIBLE);
 
                         Log.e(TAG, "Recommend failed", t);
-                        String errorMessage = "网络错误: " + t.getClass().getSimpleName();
+                        String errorMessage = getString(R.string.error_network) + ":" + t.getClass().getSimpleName();
                         if (t.getMessage() != null) {
                             errorMessage += " - " + t.getMessage();
                         }
@@ -370,10 +370,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         try {
             String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
             Log.e(TAG, "Error response: " + errorBody);
-            showError("获取推荐书目失败 (" + response.code() + "): " + errorBody);
+            showError(getString(R.string.recommend_failed) + " (" + response.code() + "): " + errorBody);
         } catch (Exception e) {
             Log.e(TAG, "Error reading error response", e);
-            showError("获取推荐书目失败 (" + response.code() + ")");
+            showError(getString(R.string.recommend_failed) + " (" + response.code() + ")");
         }
     }
 
@@ -382,7 +382,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         recommendRecyclerView.setVisibility(View.VISIBLE);
         // 显示提示信息
         TextView noHistoryText = new TextView(requireContext());
-        noHistoryText.setText("至少阅读一本书开启推荐书目");
+        noHistoryText.setText(getString(R.string.reading_first_recommend));
         noHistoryText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         ((ViewGroup) recommendRecyclerView.getParent()).addView(noHistoryText);
         recommendRecyclerView.setVisibility(View.GONE);
@@ -450,10 +450,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 			        try {
 				        String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
 				        Log.e(TAG, "Error response: " + errorBody);
-				        showError("搜索失败 (" + response.code() + "): " + errorBody);
+				        showError(getString(R.string.search_failed) + " (" + response.code() + "): " + errorBody);
 			        } catch (Exception e) {
 				        Log.e(TAG, "Error reading error response", e);
-				        showError("搜索失败 (" + response.code() + ")");
+				        showError(getString(R.string.search_failed) + " (" + response.code() + ")");
 			        }
 			        if (currentPage == 1) {
 				        showResults(new ArrayList<>());
@@ -475,7 +475,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 			        }
 		        } else {
 			        Log.e(TAG, "Response body was null or not successful");
-			        showError("搜索失败：返回数据无效");
+			        showError(getString(R.string.search_failed));
 			        if (currentPage == 1) {
 				        showResults(new ArrayList<>());
 			        }
@@ -488,7 +488,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 		        isLoading = false;
 
 		        Log.e(TAG, "Search failed", t);
-		        String errorMessage = "网络错误: " + t.getClass().getSimpleName();
+		        String errorMessage = getString(R.string.error_network) + ": " + t.getClass().getSimpleName();
 		        if (t.getMessage() != null) {
 			        errorMessage += " - " + t.getMessage();
 		        }
@@ -559,7 +559,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     private void checkSubscriptionAndReadCount(Book book) {
         if (TextUtils.isEmpty(currentUserId)) {
-            Toast.makeText(requireContext(), "请先登录", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), getString(R.string.please_login_first), Toast.LENGTH_SHORT).show();
             return;
         }
         // 显示加载进度
@@ -582,13 +582,13 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                     progressBar.setVisibility(View.GONE);
                     
                     if (!response.isSuccessful()) {
-                        Toast.makeText(requireContext(), "获取阅读记录失败", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), getString(R.string.get_reading_history_failed), Toast.LENGTH_SHORT).show();
                         return;
                     }
                     
                     BizResponse<HistoryResponse> bizResponse = response.body();
                     if (bizResponse == null || !bizResponse.isSuccess()) {
-                        String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "未知错误";
+                        String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : getString(R.string.unknown_error);
                         Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -598,7 +598,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                     
                     if (histories.isEmpty()) {
                         // 没有阅读记录，可以试用一次
-                        Toast.makeText(requireContext(), "首次阅读免费试用", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), getString(R.string.first_trial), Toast.LENGTH_SHORT).show();
                         navigateToReader(book);
                     } else {
                         // 需要订阅
@@ -609,7 +609,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                 @Override
                 public void onFailure(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Throwable t) {
                     progressBar.setVisibility(View.GONE);
-                    Toast.makeText(requireContext(), "网络请求失败", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), getString(R.string.error_network), Toast.LENGTH_SHORT).show();
                     Log.e(TAG, "Get reading history failed", t);
                 }
             });
@@ -628,8 +628,8 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         Button cancelButton = dialogView.findViewById(R.id.cancelButton);
         
         // 设置对话框内容
-        titleTextView.setText("需要订阅");
-        messageTextView.setText("免费试用一次，请订阅后继续使用。订阅后每月可免费阅读10本书籍。");
+        titleTextView.setText(getString(R.string.need_subscription));
+        messageTextView.setText(getString(R.string.need_subscription_tips));
         
         // 创建对话框
         AlertDialog dialog = builder.create();
@@ -657,7 +657,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         subscriptionManager.subscribe(info -> {
             loadingDialog.dismiss();
             if(info != null) {
-                Toast.makeText(requireContext(), "订阅成功", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), getString(R.string.subscription_success), Toast.LENGTH_SHORT).show();
                 navigateToReader(book);
             }
         });

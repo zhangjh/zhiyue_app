@@ -110,7 +110,7 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="删除"
+                android:text="@string/delete"
                 android:textColor="@android:color/holo_red_light" />
 
             <com.google.android.material.button.MaterialButton
@@ -118,7 +118,7 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="继续阅读"
+                android:text="@string/go_to_read"
                 android:textColor="@color/primary" />
         </LinearLayout>
     </LinearLayout>

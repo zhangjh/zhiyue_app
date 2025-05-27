@@ -113,7 +113,7 @@ public class LoginActivity extends AppCompatActivity {
                                 if (bizResponse != null && bizResponse.isSuccess()) {
                                     Log.d(TAG, "Register user success ");
                                 } else {
-                                    String errorMsg = (bizResponse != null ? bizResponse.getErrorMsg() : "unknown error");
+                                    String errorMsg = (bizResponse != null ? bizResponse.getErrorMsg() : getString(R.string.unknown_error));
                                     Log.e(TAG, "Register user failed: " + errorMsg);
                                     Toast.makeText(LoginActivity.this,
                                             errorMsg, Toast.LENGTH_SHORT).show();
@@ -134,11 +134,11 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(String error) {
                 Log.e(TAG, "Google sign in failed: " + error);
                 // 根据错误类型显示不同的错误提示
-                if (error.contains("网络连接失败")) {
+                if (error.contains(getString(R.string.error_network))) {
                     Toast.makeText(LoginActivity.this,
-                        getString(R.string.google_sign_in_error_network), 
+                        getString(R.string.error_network),
                         Toast.LENGTH_SHORT).show();
-                } else if (error.contains("登录已取消")) {
+                } else if (error.contains(getString(R.string.google_sign_in_error_cancelled))) {
                     Toast.makeText(LoginActivity.this,
                         getString(R.string.google_sign_in_error_cancelled), 
                         Toast.LENGTH_SHORT).show();

@@ -1,0 +1,18 @@
+{
+  "reader": {
+    "title": "E-Book Reader",
+    "toc": "Contents",
+    "close": "Close",
+    "copy": "Copy",
+    "highlight": "Highlight",
+    "underline": "Underline",
+    "delete": "Delete",
+    "progress": "Reading Progress: %s%",
+    "loading": "Loading e-book...",
+    "render_failed": "Failed to render mind map:"
+  },
+  "mindmap": {
+    "title": "Mind Map",
+    "root": "Mind Map"
+  }
+}

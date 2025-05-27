@@ -41,16 +41,16 @@ public class MainActivity extends AppCompatActivity {
             NavigationUI.setupWithNavController(bottomNavigationView, navController);
             
             // 然后覆盖导航栏点击监听
-             bottomNavigationView.setOnItemSelectedListener(item -> {
-                 // 首页直接点击阅读器菜单项
-                 if (item.getItemId() == R.id.readerFragment && Objects.equals(mode, "init")) {
-                     // 如果直接点击阅读选项，显示提示
-                     Toast.makeText(this, "请先搜索或从阅读记录继续", Toast.LENGTH_SHORT).show();
-                     return false;
-                 }
-                 // 其他选项正常导航
-                 return NavigationUI.onNavDestinationSelected(item, navController);
-             });
+            bottomNavigationView.setOnItemSelectedListener(item -> {
+                // 首页直接点击阅读器菜单项
+                if (item.getItemId() == R.id.readerFragment && Objects.equals(mode, "init")) {
+                    // 如果直接点击阅读选项，显示提示
+                    Toast.makeText(this, getString(R.string.reader_direct_access_tip), Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+                // 其他选项正常导航
+                return NavigationUI.onNavDestinationSelected(item, navController);
+            });
         }
         // for test only
 //        navigateToReader("1", "2", "");

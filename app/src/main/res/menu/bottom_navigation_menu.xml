@@ -4,15 +4,15 @@
         android:id="@+id/booksFragment"
         android:enabled="true"
         android:icon="@drawable/search"
-        android:title="找书" />
+        android:title="@string/nav_books" />
     <item
         android:id="@+id/readerFragment"
         android:enabled="true"
         android:icon="@drawable/book"
-        android:title="阅读器" />
+        android:title="@string/nav_reader" />
     <item
         android:id="@+id/profileFragment"
         android:enabled="true"
         android:icon="@drawable/account"
-        android:title="我的" />
+        android:title="@string/nav_profile" />
 </menu>

@@ -13,6 +13,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
+import cn.zhangjh.zhiyue.R;
+
 public class SubscriptionManager {
     private static SubscriptionManager instance;
     private final Context context;
@@ -34,12 +36,12 @@ public class SubscriptionManager {
             @Override
             public void onPurchaseSuccess() {
                 billingManager.querySubscriptionStatus();
-                Toast.makeText(context, "订阅成功", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, context.getString(R.string.subscription_success), Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onPurchaseFailure(int responseCode, String message) {
-                Toast.makeText(context, "订阅失败: " + message, Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, context.getString(R.string.subscription_failed, message), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -55,7 +57,7 @@ public class SubscriptionManager {
         // 检查是否已经订阅
         Log.d("subscription", "isSubscription: " + isSubscribed());
         if (isSubscribed()) {
-            Toast.makeText(context, "您已经订阅了此服务", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, context.getString(R.string.subscription_already), Toast.LENGTH_SHORT).show();
             return;
         }
         
@@ -69,7 +71,7 @@ public class SubscriptionManager {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             try {
                 info = new SubscriptionInfo(true,
-                        "SmartReader-智阅月度订阅",
+                        context.getString(R.string.monthly_subscription),
                         sdf.parse("2099-09-14"),
                         "smart_reader_monthly_subscription");
             } catch (ParseException e) {

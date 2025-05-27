@@ -7,14 +7,14 @@
     <fragment
         android:id="@+id/booksFragment"
         android:name="cn.zhangjh.zhiyue.fragment.BooksFragment"
-        android:label="找书" />
+        android:label="@string/nav_books" />
     <fragment
         android:id="@+id/readerFragment"
         android:name="cn.zhangjh.zhiyue.fragment.ReaderFragment"
-        android:label="阅读器" />
+        android:label="@string/nav_reader" />
     <fragment
         android:id="@+id/profileFragment"
         android:name="cn.zhangjh.zhiyue.fragment.ProfileFragment"
-        android:label="我的" />
+        android:label="@string/nav_profile" />
 
 </navigation>

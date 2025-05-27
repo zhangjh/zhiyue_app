@@ -1,0 +1,102 @@
+<resources>
+    <string name="app_name">SmartReader</string>
+
+    <string name="biz_domain">https://s3.zhangjh.cn/</string>
+
+    <string name="search_placeholder">搜索你想看的书籍</string>
+
+    <string name="empty_search_result">没有找到相关书籍</string>
+
+    <string name="web_client_id">588286356488-17updov8444i6l867jv75p1cppcfdm4n.apps.googleusercontent.com</string>
+    <string name="google_sign_in_success">Google登录成功</string>
+    <string name="google_sign_in_failed">Google登录失败</string>
+    <string name="google_sign_in_loading">正在登录...</string>
+    <string name="error_network">网络连接失败，请检查网络设置</string>
+    <string name="google_sign_in_error_cancelled">登录已取消</string>
+    <string name="google_sign_in_error_unknown">登录失败，请稍后重试</string>
+    <string name="google_sign_in">使用Google账号登录</string>
+    <string name="google_sign_in_error_invalid_account">无效的账号</string>
+    <string name="google_sign_in_error_sign_in_required">需要重新登录</string>
+    <string name="welcome_text">欢迎使用智阅</string>
+    <string name="login_prompt">请使用Google账号登录以继续</string>
+
+    <!-- activity -->
+    <string name="logo_title">发现好书</string>
+    <string name="recommend_books">推荐书目</string>
+    <string name="subscribe_now">立即订阅</string>
+    <string name="cancel">取消</string>
+    <string name="ai_summary_loading">AI总结生成中...</string>
+    <string name="input_question">输入问题...</string>
+    <string name="send">发送</string>
+    <string name="loading_error_text">加载失败，请重试...</string>
+    <string name="not_login">未登录</string>
+    <string name="click_login">点击登录</string>
+    <string name="subscription_manage">管理订阅</string>
+    <string name="subscription_status">订阅状态: </string>
+    <string name="subscription_type">订阅类型: </string>
+    <string name="subscription_expire_date">到期时间: </string>
+    <string name="not_subscribe">暂无订阅</string>
+    <string name="reading_history">阅读记录</string>
+    <string name="no_reading_history">暂无阅读</string>"
+    <string name="reader">阅读器</string>
+    <string name="ai_assistant">AI伴读</string>
+    <string name="book_name">书名</string>
+    <string name="book_author">作者</string>
+    <string name="book_desc">书籍描述</string>
+    <string name="book_cover">书籍封面</string>
+    <string name="click_detail">点击查看详情</string>
+    <string name="go_to_read">去阅读</string>
+    <string name="delete">删除</string>
+    <string name="contine_read">继续阅读</string>
+
+    <!-- 底部导航菜单 -->
+    <string name="nav_books">找书</string>
+    <string name="nav_reader">阅读器</string>
+    <string name="nav_profile">我的</string>
+
+    <!-- Tab -->
+    <string name="ai_summary">AI总结</string>
+    <string name="ai_chat">AI问答</string>
+    <string name="ai_mind_map">思维导图</string>
+
+    <!-- Toast消息 -->
+    <string name="view_init">正在初始化...</string>
+    <string name="ebook_loading">正在加载电子书</string>
+    <string name="please_wait_book_loading">请等待书籍加载完成</string>
+    <string name="please_wait_ai_summary">请等待AI总结完成</string>
+    <string name="please_login_first">请先登录</string>
+    <string name="delete_record_failed">删除记录失败</string>
+    <string name="delete_success">删除成功</string>
+    <string name="get_reading_history_failed">获取阅读记录失败</string>
+    <string name="unknown_error">未知错误</string>
+    <string name="subscription_success">订阅成功</string>
+    <string name="subscription_failed">订阅失败: </string>
+    <string name="reader_direct_access_tip">请先搜索或从阅读记录继续</string>
+    <string name="reading_first_recommend">至少阅读一本书开启推荐书目</string>
+    <string name="search_failed">搜索失败</string>
+    <string name="first_trial">首次阅读免费试用</string>
+    <string name="recommend_failed">获取推荐失败失败</string>
+    <string name="copy_to_clipboard_success">已复制到剪贴板</string>
+    <string name="save_annotation_failed">保存标注失败</string>
+    <string name="load_annotation_failed">加载标注失败</string>
+    <string name="reader_loading">正在加载阅读器...</string>
+    <string name="get_ebook_url_failed">获取ebook url失败</string>
+
+    <!-- 阅读记录 -->
+    <string name="start_reading_time">开始阅读：</string>
+    <string name="last_reading_time">最近阅读：</string>
+    <string name="reading_history_failed">获取历史记录失败</string>
+    <string name="delete_history_failed">删除记录失败</string>
+
+    <!-- 订阅 -->
+    <string name="query_product_failed">查询商品失败</string>
+    <string name="query_product_empty">没有找到商品，请检查商品配置</string>
+    <string name="launch_billing_failed">启动购买流程失败</string>
+    <string name="need_subscription">需要订阅</string>
+    <string name="need_subscription_tips">免费试用一次，请订阅后继续使用。订阅后每月可免费阅读10本书籍。</string>
+    <string name="subscription_expired">订阅已过期</string>
+    <string name="subscription_already">您已订阅</string>
+    <string name="billing_failed">购买失败</string>
+    <string name="monthly_subscription">智阅-月度订阅</string>
+
+</resources>

@@ -195,7 +195,7 @@ public class MindMapFragment extends Fragment {
                 super.onPageFinished(view, url);
                 Log.d(TAG, "开始加载map data");
                 if(TextUtils.isEmpty(title) || TextUtils.isEmpty(author) || TextUtils.isEmpty(partsSummary)) {
-                    Toast.makeText(getActivity(), "请等待AI总结完成", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), getString(R.string.please_wait_ai_summary), Toast.LENGTH_SHORT).show();
                     hideMindMapLoading();
                     return;
                 }

@@ -242,6 +242,8 @@
 </div>
 
 <script>
+    let i18n = {};
+
     let book;
     let rendition;
     let isSelecting = false;
@@ -261,6 +263,47 @@
     let annotations = [];
     // 添加当前页面引用，用于切换时重新标注
     let currentLocation = null;
+
+    // 应用翻译到HTML元素
+    function applyTranslations() {
+        if (!i18n || !i18n.reader) return;
+
+        // 更新标题
+        document.title = i18n.reader.title;
+
+        // 更新目录按钮和标题
+        document.getElementById('toc-button').textContent = i18n.reader.toc;
+        document.querySelector('#toc-header h3').textContent = i18n.reader.toc;
+        document.querySelector('#toc-header .close').textContent = i18n.reader.close;
+
+        // 更新菜单按钮
+        document.getElementById('copy-btn').textContent = i18n.reader.copy;
+        document.getElementById('highlight-btn').textContent = i18n.reader.highlight;
+        document.getElementById('underline-btn').textContent = i18n.reader.underline;
+        document.getElementById('delete-annotation-btn').textContent = i18n.reader.delete;
+
+        // 更新进度文本格式
+        updateProgressText();
+    }
+
+    // 更新进度文本
+    function updateProgressText(percent = 0) {
+        if (i18n && i18n.reader) {
+            const progressText = i18n.reader.progress.replace('%s', percent);
+            document.getElementById('progress-container').textContent = progressText;
+        }
+    }
+
+    window.setLanguageResource = function(langRes) {
+        console.log("setLangRes: ");
+        console.log(langRes);
+        // 应用翻译
+        if(langRes) {
+            i18n = JSON.parse(langRes);
+            console.log(i18n);
+            applyTranslations();
+        }
+    }
 
     window.renderAnnotations = function(annotations) {
         if(!annotations || annotations.length <= 0) {
@@ -593,7 +636,8 @@
         book.on('openFailed', function(error) {
             console.error("Failed to open book:", error);
             if (window.Android) {
-                window.Android.onLoadError("加载电子书失败：" + error.message);
+                const errorMsg = i18n && i18n.reader ? i18n.reader.loading + error.message : "Loading e-book failed: " + error.message;
+                window.Android.onLoadError(errorMsg);
             }
         });
         book.loaded.metadata.then(metadata => {
@@ -672,7 +716,7 @@
                     let progress = book.locations.percentageFromCfi(location.start.cfi);
                     let progressPercent = Math.round(progress * 100);
                     console.log("progressPercent: " + progressPercent);
-                    document.getElementById('progress-container').textContent = `阅读进度：${progressPercent}%`;
+                    updateProgressText(progressPercent);
                     if (window.Android) {
                         window.Android.onProgressUpdate(progressPercent, location.start.cfi);
                     }

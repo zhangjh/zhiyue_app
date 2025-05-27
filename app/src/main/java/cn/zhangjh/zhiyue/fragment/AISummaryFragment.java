@@ -74,7 +74,7 @@ public class AISummaryFragment extends Fragment {
             loadSummaryFromHistory();
         } else {
             // 如果没有用户ID或文件ID，显示错误信息
-            summaryText.setText("无法加载总结，请确保您已登录并选择了有效的书籍");
+            summaryText.setText(getString(R.string.unknown_error));
             summaryText.setVisibility(View.VISIBLE);
         }
         
@@ -99,7 +99,7 @@ public class AISummaryFragment extends Fragment {
 
 		            BizResponse<ReadingRecord> bizResponse = response.body();
 		            if (bizResponse == null || !bizResponse.isSuccess()) {
-			            String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "未知错误";
+			            String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : getString(R.string.unknown_error);
 			            Log.e(TAG, "获取记录详情失败: " + errorMsg);
 			            initWebSocketIfNeeded();
 			            return;
@@ -148,7 +148,7 @@ public class AISummaryFragment extends Fragment {
         if(userId.isEmpty()) {
             progressLayout.setVisibility(View.GONE);
             summaryText.setVisibility(View.VISIBLE);
-            summaryText.setText("请先登录后再使用AI总结功能");
+            summaryText.setText(getString(R.string.please_login_first));
             return;
         }
         String wsUrl = String.format("wss://tx.zhangjh.cn/socket/summary?userId=%s", userId);
@@ -223,11 +223,11 @@ public class AISummaryFragment extends Fragment {
                 if(getActivity() == null) return;
                 
                 getActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), "连接失败: " + t.getMessage(), 
+                    Toast.makeText(getContext(), getString(R.string.error_network) + t.getMessage(),
                         Toast.LENGTH_SHORT).show();
                     progressLayout.setVisibility(View.GONE);
                     summaryText.setVisibility(View.VISIBLE);
-                    summaryText.setText("无法连接到服务器，请检查网络连接后重试");
+                    summaryText.setText(getString(R.string.error_network));
                 });
             }
         });
