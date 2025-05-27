@@ -34,7 +34,7 @@
     <string name="subscription_manage">Subscription Management</string>
     <string name="subscription_status">Subscription Status: </string>
     <string name="subscription_type">Subscription Type: </string>
-    <string name="subscription_expire_date">Expire Date: </string>
+    <string name="subscription_expire_date">Expiration Time: </string>
     <string name="not_subscribe">No subscription</string>
     <string name="reading_history">Reading History</string>
     <string name="no_reading_history">No reading history</string>"
@@ -97,5 +97,5 @@
     <string name="need_subscription_tips">One free trial, please subscribe to continue. You can read 10 free books per month after subscription.</string>
     <string name="subscription_already">You have subscribed</string>
     <string name="billing_failed">Purchase failed</string>
-    <string name="monthly_subscription">SmartReader-Monthly Subscription</string>
+    <string name="monthly_subscription">Monthly Subscription</string>
 </resources>
