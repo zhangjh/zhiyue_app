@@ -63,6 +63,9 @@ public class ReaderFragment extends Fragment {
     private View loadingView;
     private TabLayout tabLayout;
     private boolean isBookLoading = true;
+
+    // 防止同一个书籍重复下载
+    private static boolean downloading = false;
     
     private final ReadingRecord readingRecord = new ReadingRecord();
 
@@ -138,6 +141,10 @@ public class ReaderFragment extends Fragment {
     }
 
     private void getEbookUrl(String bookId, String hashId) {
+        if(downloading) {
+            return;
+        }
+        downloading = true;
         ApiClient.getBookService().downloadBook(bookId, hashId).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<BizResponse<String>> call, @NonNull retrofit2.Response<BizResponse<String>> response) {
@@ -150,6 +157,7 @@ public class ReaderFragment extends Fragment {
                         LogUtil.e(TAG, "Error reading error response", e);
                         showError(getString(R.string.get_ebook_url_failed) + " (" + response.code() + ")");
                     }
+                    downloading = false;
                     return;
                 }
                 if (response.body() != null && response.body().isSuccess()) {
@@ -167,6 +175,7 @@ public class ReaderFragment extends Fragment {
                         }));
                     }
                 }
+                downloading = false;
             }
     
             @Override
@@ -177,6 +186,7 @@ public class ReaderFragment extends Fragment {
                     errorMessage += " - " + t.getMessage();
                 }
                 showError(errorMessage);
+                downloading = false;
             }
         });
     }
