@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -145,6 +144,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         // 检查是否已订阅
         if (subscriptionManager.isSubscribed()) {
             updateSubscriptionUI();
+            // todo: 查询订阅(首次进入从play查询并更新缓存，后续进入页面查询缓存)
             SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", MODE_PRIVATE);
             String subscriptionInfo = prefs.getString("subscriptionInfo", "");
             if(!TextUtils.isEmpty(subscriptionInfo)) {

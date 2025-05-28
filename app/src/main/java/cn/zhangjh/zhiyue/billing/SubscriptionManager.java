@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.function.Function;
 
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.utils.LogUtil;
@@ -84,12 +85,11 @@ public class SubscriptionManager {
             billingManager.performSubscriptionPurchase(success -> {
                 if (success) {
                     // 订阅成功，获取订阅详情
-                    billingManager.getSubscriptionDetails(subscriptionInfo -> {
-                        if (callback != null && subscriptionInfo != null) {
-                            prefs.edit().putBoolean("isSubscribed", true).apply();
-                            prefs.edit().putString("subscriptionInfo", new Gson().toJson(subscriptionInfo)).apply();
-                            callback.onSubscriptionSuccess(subscriptionInfo);
-                        }
+                    queryAndSetSubscriptionInfo(subscriptionInfo -> {
+                        prefs.edit().putBoolean("isSubscribed", true).apply();
+                        prefs.edit().putString("subscriptionInfo", new Gson().toJson(subscriptionInfo)).apply();
+                        callback.onSubscriptionSuccess(subscriptionInfo);
+                        return null;
                     });
                 } else {
                     callback.onSubscriptionSuccess(null);
@@ -98,14 +98,30 @@ public class SubscriptionManager {
         }
     }
 
-    // 有一个小bug，如果订阅后再手动清理本地数据，会造成第一次查询订阅状态不同步，暂不解决
     public boolean isSubscribed() {
         SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
         boolean isSubscribed = prefs.getBoolean("isSubscribed", false);
         if(!isSubscribed) {
             billingManager.querySubscriptionStatus();
         }
-        return isSubscribed;
+        return prefs.getBoolean("isSubscribed", false);
+    }
+
+    // 先查缓存，如果没有则查询后保存（暂未考虑过期失效缓存场景）
+    public void queryAndSetSubscriptionInfo(Function<SubscriptionInfo, Void> cb) {
+        SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
+        String json = prefs.getString("subscriptionInfo", "");
+        if (TextUtils.isEmpty(json)) {
+            billingManager.getSubscriptionDetails(info -> {
+                if (info != null) {
+                    prefs.edit().putString("subscriptionInfo", new Gson().toJson(info)).apply();
+                    cb.apply(info);
+                }
+            });
+        } else {
+            SubscriptionInfo info = new Gson().fromJson(json, SubscriptionInfo.class);
+            cb.apply(info);
+        }
     }
     
     private void updateSubscriptionStatus(boolean isSubscribed) {

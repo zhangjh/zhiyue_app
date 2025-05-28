@@ -177,6 +177,7 @@ public class BillingManager implements PurchasesUpdatedListener {
                     if (purchase.getProducts().contains(SUBSCRIPTION_MONTHLY)
                             && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
                         isSubscribed = true;
+
                     }
                 }
                 
