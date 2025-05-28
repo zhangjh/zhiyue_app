@@ -5,7 +5,10 @@ import com.google.gson.annotations.SerializedName;
 public class ReadingRecord {
 
     private String userId;
+    // 对象存储的key
     private String fileId;
+    // bookId和hashId是zlib的属性
+    private String bookId;
     private String hashId;
     private String title;
     private String author;
@@ -29,6 +32,14 @@ public class ReadingRecord {
 
     public void setFileId(String fileId) {
         this.fileId = fileId;
+    }
+
+    public String getBookId() {
+        return bookId;
+    }
+
+    public void setBookId(String bookId) {
+        this.bookId = bookId;
     }
 
     public String getHashId() {

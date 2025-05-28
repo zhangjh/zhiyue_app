@@ -31,13 +31,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 获取当前语种并持久化，先读取如果不存在则开始获取
+        // 获取当前语种并持久化
+        String language = Locale.getDefault().getLanguage();
         SharedPreferences prefsLanguage = getSharedPreferences("language", MODE_PRIVATE);
-        String language = prefsLanguage.getString("language", "");
-        if (TextUtils.isEmpty(language)) {
-            language = Locale.getDefault().getLanguage();
-            prefsLanguage.edit().putString("language", language).apply();
-        }
+        prefsLanguage.edit().putString("language", language).apply();
 
         mode = "init";
 

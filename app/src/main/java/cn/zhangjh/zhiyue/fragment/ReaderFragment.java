@@ -55,6 +55,7 @@ public class ReaderFragment extends Fragment {
     private String languageRes;
     private String userId;
     private String fileId;
+    private String bookId;
     private String hashId;
 	private String cfi;
     private String bookUrl;
@@ -73,7 +74,7 @@ public class ReaderFragment extends Fragment {
         }
 
         String language = getResources().getConfiguration().getLocales().get(0).getLanguage();
-        if(!TextUtils.equals(language, "en") || !TextUtils.equals(language, "zh")) {
+        if(!TextUtils.equals(language, "en") && !TextUtils.equals(language, "zh")) {
             language = "en";
         }
         // 读取本地i18n下资源文件，返回string内容
@@ -98,7 +99,7 @@ public class ReaderFragment extends Fragment {
             }
         });
         if (getArguments() != null) {
-            String bookId = getArguments().getString("book_id");
+            bookId = getArguments().getString("book_id");
             hashId = getArguments().getString("hash_id");
             fileId = getArguments().getString("file_id");
             cfi = getArguments().getString("cfi");
@@ -118,17 +119,21 @@ public class ReaderFragment extends Fragment {
         // 观察数据变化
         viewModel.getSummary().observe(this, summary -> {
             // 更新总结到记录
-            readingRecord.setUserId(userId);
-            readingRecord.setFileId(fileId);
-            readingRecord.setSummary(summary);
-            updateReadingRecord(readingRecord);
+            if(!TextUtils.isEmpty(summary)) {
+                readingRecord.setUserId(userId);
+                readingRecord.setFileId(fileId);
+                readingRecord.setSummary(summary);
+                updateReadingRecord(readingRecord);
+            }
         });
         viewModel.getPartsSummary().observe(this, partsSummary -> {
             // 更新部分总结到记录
-            readingRecord.setUserId(userId);
-            readingRecord.setFileId(fileId);
-            readingRecord.setPartsSummary(partsSummary);
-            updateReadingRecord(readingRecord);
+            if(!TextUtils.isEmpty(partsSummary)) {
+                readingRecord.setUserId(userId);
+                readingRecord.setFileId(fileId);
+                readingRecord.setPartsSummary(partsSummary);
+                updateReadingRecord(readingRecord);
+            }
         });
     }
 
@@ -392,9 +397,12 @@ public class ReaderFragment extends Fragment {
             // 更新记录，先与onBookLoaded执行
             readingRecord.setFileId(fileId);
             readingRecord.setUserId(userId);
+            readingRecord.setBookId(bookId);
             readingRecord.setHashId(hashId);
             readingRecord.setTitle(title);
             readingRecord.setAuthor(author);
+            // 保存阅读记录
+            saveReadingRecord();
         }
 
         @JavascriptInterface
@@ -405,8 +413,6 @@ public class ReaderFragment extends Fragment {
                     // 书籍加载完成，更新状态并启用TabLayout
                     isBookLoading = false;
                     setTabLayoutEnabled(true);
-                    // 保存阅读记录
-                    saveReadingRecord();
                 });
             }
         }

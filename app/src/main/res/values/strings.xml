@@ -67,35 +67,35 @@
     <string name="please_login_first">Please login first</string>
     <string name="delete_record_failed">Failed to delete record</string>
     <string name="delete_success">Deleted successfully</string>
-    <string name="get_reading_history_failed">Failed to get reading history</string>
-    <string name="unknown_error">Unknown error</string>
-    <string name="subscription_success">Subscription successful</string>
-    <string name="subscription_failed">Subscription failed: </string>
+    <string name="get_reading_history_failed">Failed to get reading history. </string>
+    <string name="unknown_error">Unknown error. </string>
+    <string name="subscription_success">Subscribe successful</string>
+    <string name="subscription_failed">Subscribe failed: </string>
     <string name="reader_direct_access_tip">Please search for a book or continue from reading history</string>
-    <string name="reading_first_recommend">Read at least one book to enable recommendations</string>
-    <string name="search_failed">Search failed</string>
+    <string name="reading_first_recommend">Read at least three books to enable recommendations</string>
+    <string name="search_failed">Search failed. </string>
     <string name="first_trial">You have used your first trial</string>
-    <string name="recommend_failed">Recommend failed</string>
+    <string name="recommend_failed">Recommend failed. </string>
     <string name="copy_to_clipboard_success">Copied to clipboard</string>
-    <string name="save_annotation_failed">Save annotation failed</string>
-    <string name="load_annotation_failed">Load annotation failed</string>
+    <string name="save_annotation_failed">Save annotation failed. </string>
+    <string name="load_annotation_failed">Load annotation failed. </string>
     <string name="reader_loading">Loading reader…</string>
-    <string name="get_ebook_url_failed">Get ebook url failed</string>
+    <string name="get_ebook_url_failed">Get ebook url failed. </string>
 
     <!-- reading history -->
     <string name="start_reading_time">Start Reading：</string>
     <string name="last_reading_time">Last Reading：</string>
-    <string name="reading_history_failed">Get reading history failed</string>
-    <string name="delete_history_failed">Delete history failed</string>
+    <string name="reading_history_failed">Get reading history failed. </string>
+    <string name="delete_history_failed">Delete history failed. </string>
 
     <!-- subscription -->
-    <string name="query_product_failed">Query product failed</string>
-    <string name="query_product_empty">Query product empty</string>
-    <string name="launch_billing_failed">Launch billing failed</string>
-    <string name="subscription_expired">Subscription expired</string>
-    <string name="need_subscription">Need subscription</string>
+    <string name="query_product_failed">Query product failed. </string>
+    <string name="query_product_empty">Query product empty. </string>
+    <string name="launch_billing_failed">Launch billing failed. </string>
+    <string name="subscription_expired">Subscription expired. </string>
+    <string name="need_subscription">Need subscribe. </string>
     <string name="need_subscription_tips">One free trial, please subscribe to continue. You can read 10 free books per month after subscription.</string>
     <string name="subscription_already">You have subscribed</string>
-    <string name="billing_failed">Purchase failed</string>
+    <string name="billing_failed">Purchase failed. </string>
     <string name="monthly_subscription">Monthly Subscription</string>
 </resources>

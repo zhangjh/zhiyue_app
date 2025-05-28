@@ -5,6 +5,8 @@ import com.google.gson.annotations.SerializedName;
 public class ReadingHistory {
     private String id;
 
+    @SerializedName("book_id")
+    private String bookId;
     @SerializedName("hash_id")
     private String hashId;
 
@@ -38,6 +40,14 @@ public class ReadingHistory {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getBookId() {
+        return bookId;
+    }
+
+    public void setBookId(String bookId) {
+        this.bookId = bookId;
     }
 
     public String getHashId() {

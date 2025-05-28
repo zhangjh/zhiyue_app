@@ -1,6 +1,6 @@
 package cn.zhangjh.zhiyue.api;
 
-import java.util.List;
+import java.util.Set;
 
 import cn.zhangjh.zhiyue.model.Annotation;
 import cn.zhangjh.zhiyue.model.BizListResponse;
@@ -27,7 +27,7 @@ public interface BookService {
 
     @GET("/books/recommend")
     Call<BizListResponse<BookDetail>> getRecommendBooks(
-            @Query("bookIds") List<String> bookIds,
+            @Query("bookIds") Set<String> bookIds,
             @Query("pageIndex") Integer pageIndex
     );
 

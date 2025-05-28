@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,8 +32,10 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import cn.zhangjh.zhiyue.R;
@@ -81,7 +82,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
     private int recommendCurrentPage;
     // 阅读记录bookId缓存
-    private static List<String> cachedBookIds = new ArrayList<>();
+    private static Set<String> cachedBookIds = new HashSet<>();
     // 推荐书目缓存
     private static List<Book> cacheRecommendBooks = new ArrayList<>();
 
@@ -101,7 +102,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         // 获取阅读记录缓存
         String cachedBookIdsString = BizUtils.getCache(requireContext(), "reader", "cachedBookIds");
         if(!TextUtils.isEmpty(cachedBookIdsString)) {
-            Type listType = new TypeToken<ArrayList<String>>() {}.getType();
+            Type listType = new TypeToken<Set<String>>() {}.getType();
             cachedBookIds = new Gson().fromJson(cachedBookIdsString, listType);
         }
 
@@ -300,9 +301,9 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
 
                         // 缓存书籍ID用于分页
                         cachedBookIds = histories.stream()
-                                .map(ReadingHistory::getHashId)
+                                .map(ReadingHistory::getBookId)
                                 .filter(item -> !TextUtils.isEmpty(item))
-                                .collect(Collectors.toList());
+                                .collect(Collectors.toSet());
                         // 保存缓存
                         BizUtils.saveCache(requireActivity(), "reader", "cachedBookIds", new Gson().toJson(cachedBookIds));
 

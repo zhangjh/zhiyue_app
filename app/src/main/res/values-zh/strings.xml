@@ -95,7 +95,7 @@
     <string name="need_subscription">需要订阅</string>
     <string name="need_subscription_tips">免费试用一次，请订阅后继续使用。订阅后每月可免费阅读10本书籍。</string>
     <string name="subscription_expired">订阅已过期</string>
-    <string name="subscription_already">您已订阅</string>
+    <string name="subscription_already">已订阅</string>
     <string name="billing_failed">购买失败</string>
     <string name="monthly_subscription">智阅-月度订阅</string>
 
