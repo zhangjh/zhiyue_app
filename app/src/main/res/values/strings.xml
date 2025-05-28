@@ -23,7 +23,7 @@
     <!-- activity -->
     <string name="logo_title">Discover Great Books</string>
     <string name="recommend_books">Recommended Books</string>
-    <string name="subscribe_now">Subscribe Now</string>
+    <string name="subscribe_now">Subscribe</string>
     <string name="cancel">Cancel</string>
     <string name="ai_summary_loading">AI Summary Generating…</string>
     <string name="input_question">Input Question…</string>

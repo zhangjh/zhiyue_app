@@ -295,12 +295,12 @@
     }
 
     window.setLanguageResource = function(langRes) {
-        console.log("setLangRes: ");
-        console.log(langRes);
+        // console.log("setLangRes: ");
+        // console.log(langRes);
         // 应用翻译
         if(langRes) {
             i18n = JSON.parse(langRes);
-            console.log(i18n);
+            // console.log(i18n);
             applyTranslations();
         }
     }
@@ -309,11 +309,11 @@
         if(!annotations || annotations.length <= 0) {
             return;
         }
-        console.log("reRender annotations");
+        // console.log("reRender annotations");
         // 先删除再重新渲染
         annotations.forEach(annotation => {
             if (annotation.type === 'highlight') {
-                console.log("remove highlight");
+                // console.log("remove highlight");
                 rendition.annotations.highlight(
                     annotation.cfi,
                     {},
@@ -325,11 +325,11 @@
                         e.target.setAttribute('data-cfi', annotation.cfi);
                         e.target.setAttribute('data-text', annotation.text);
                         e.target.addEventListener('click', handleAnnotationClick);
-                        console.log("add highlight event：" + annotation.text);
+                        // console.log("add highlight event：" + annotation.text);
                     }
                 );
             } else if (annotation.type === 'underline') {
-                console.log("remove underline");
+                // console.log("remove underline");
                 rendition.annotations.underline(
                     annotation.cfi,
                     {},
@@ -340,7 +340,7 @@
                         e.target.setAttribute('data-cfi', annotation.cfi);
                         e.target.setAttribute('data-text', annotation.text);
                         e.target.addEventListener('click', handleAnnotationClick);
-                        console.log("add underline event：" + annotation.text);
+                        // console.log("add underline event：" + annotation.text);
                     },
                     "ul",
                     {
@@ -356,7 +356,7 @@
     // 添加加载已有标注时添加点击事件
     window.loadAnnotations = function(annotationsJson) {
         annotations = JSON.parse(annotationsJson);
-        console.log("annotations init:" + annotationsJson);
+        // console.log("annotations init:" + annotationsJson);
         window.renderAnnotations(annotations);
     };
 
@@ -448,7 +448,7 @@
             const type = currentAnnotationElement.getAttribute('data-type');
             const cfi = currentAnnotationElement.getAttribute('data-cfi');
             const text = currentAnnotationElement.getAttribute('data-text');
-            console.log("删除标注: cfi:" + cfi + "text:" + text);
+            // console.log("删除标注: cfi:" + cfi + "text:" + text);
             if (cfi && text) {
                 // 删除当前
                 rendition.annotations.remove(cfi, type);
@@ -630,7 +630,7 @@
 
     function loadBook(bookUrl, cfi) {
         let touchStartX;
-        console.log("bookUrl: " + bookUrl);
+        //console.log("bookUrl: " + bookUrl);
         book = ePub(bookUrl);
         // 添加错误处理
         book.on('openFailed', function(error) {
@@ -715,7 +715,7 @@
                 if (book.locations && book.locations.length() > 0) {
                     let progress = book.locations.percentageFromCfi(location.start.cfi);
                     let progressPercent = Math.round(progress * 100);
-                    console.log("progressPercent: " + progressPercent);
+                    // console.log("progressPercent: " + progressPercent);
                     updateProgressText(progressPercent);
                     if (window.Android) {
                         window.Android.onProgressUpdate(progressPercent, location.start.cfi);
@@ -724,10 +724,10 @@
                 // 重新应用标注(先删除再渲染)
                 annotations.forEach(annotation => {
                     if (annotation.type === 'highlight') {
-                        console.log("remove highlight");
+                        // console.log("remove highlight");
                         rendition.annotations.remove(annotation.cfi, annotation.type);
                     } else if (annotation.type === 'underline') {
-                        console.log("remove underline");
+                        // console.log("remove underline");
                         rendition.annotations.remove(annotation.cfi, annotation.type);
                     }
                 });

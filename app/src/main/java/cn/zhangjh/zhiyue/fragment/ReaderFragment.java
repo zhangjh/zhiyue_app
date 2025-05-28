@@ -33,6 +33,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
 
+import cn.zhangjh.zhiyue.BuildConfig;
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.activity.MainActivity;
 import cn.zhangjh.zhiyue.api.ApiClient;
@@ -67,7 +68,9 @@ public class ReaderFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        WebView.setWebContentsDebuggingEnabled(true);
+        if(BuildConfig.DEBUG) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
 
         String language = getResources().getConfiguration().getLocales().get(0).getLanguage();
         if(!TextUtils.equals(language, "en") || !TextUtils.equals(language, "zh")) {
