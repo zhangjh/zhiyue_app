@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.common.util.CollectionUtils;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -342,6 +343,10 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                             List<Book> books = convertToBooks(Objects.requireNonNull(response.body()).getData());
                             LogUtil.d(TAG, "Recommend successful. Found " + books.size() + " books");
                             // 只缓存第一页
+                            if(CollectionUtils.isEmpty(books)) {
+                                showNoHistoryView();
+                                return;
+                            }
                             if(cacheRecommendBooks.isEmpty()) {
                                 cacheRecommendBooks = books;
                             }

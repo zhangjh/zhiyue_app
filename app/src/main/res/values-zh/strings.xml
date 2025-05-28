@@ -72,7 +72,7 @@
     <string name="subscription_success">订阅成功</string>
     <string name="subscription_failed">订阅失败: </string>
     <string name="reader_direct_access_tip">请先搜索或从阅读记录继续</string>
-    <string name="reading_first_recommend">至少阅读一本书开启推荐书目</string>
+    <string name="reading_first_recommend">至少阅读三本书开启推荐书目</string>
     <string name="search_failed">搜索失败</string>
     <string name="first_trial">首次阅读免费试用</string>
     <string name="recommend_failed">获取推荐失败失败</string>
