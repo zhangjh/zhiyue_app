@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -42,7 +41,7 @@ public class SubscriptionManager {
 
             @Override
             public void onPurchaseFailure(int responseCode, String message) {
-                Toast.makeText(context, context.getString(R.string.subscription_failed, message), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, context.getString(R.string.subscription_failed) + message, Toast.LENGTH_SHORT).show();
             }
         });
     }
