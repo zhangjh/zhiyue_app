@@ -86,9 +86,11 @@ public class SubscriptionManager {
                 if (success) {
                     // 订阅成功，获取订阅详情
                     querySubscriptionInfo(subscriptionInfo -> {
-                        prefs.edit().putBoolean("isSubscribed", true).apply();
-                        prefs.edit().putString("subscriptionInfo", new Gson().toJson(subscriptionInfo)).apply();
-                        callback.onSubscriptionSuccess(subscriptionInfo);
+                        if(subscriptionInfo != null) {
+                            prefs.edit().putBoolean("isSubscribed", true).apply();
+                            prefs.edit().putString("subscriptionInfo", new Gson().toJson(subscriptionInfo)).apply();
+                            callback.onSubscriptionSuccess(subscriptionInfo);
+                        }
                         return null;
                     });
                 } else {
