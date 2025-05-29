@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import cn.zhangjh.zhiyue.R;
 import cn.zhangjh.zhiyue.activity.MainActivity;
@@ -42,6 +43,7 @@ import cn.zhangjh.zhiyue.billing.SubscriptionManager;
 import cn.zhangjh.zhiyue.model.BizResponse;
 import cn.zhangjh.zhiyue.model.HistoryResponse;
 import cn.zhangjh.zhiyue.model.ReadingHistory;
+import cn.zhangjh.zhiyue.utils.BizUtils;
 import cn.zhangjh.zhiyue.utils.LogUtil;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -291,6 +293,12 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
                             adapter.addHistories(histories);
                         }
                     }
+                    // 缓存
+                    List<String> cachedBookIds = histories.stream()
+                            .map(ReadingHistory::getBookId)
+                            .filter(item -> !TextUtils.isEmpty(item))
+                            .collect(Collectors.toList());
+                    BizUtils.saveCache(requireActivity(), "reader", "cachedBookIds", new Gson().toJson(cachedBookIds));
                     isLoading = false;
                     hasMoreData = histories.size() >= PAGE_SIZE;
                 }
