@@ -77,9 +77,11 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         super.onCreate(savedInstanceState);
         subscriptionManager = SubscriptionManager.getInstance(requireActivity());
         subscriptionManager.querySubscriptionInfo(info -> {
-            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
-            prefs.edit().putString("subscriptionInfo", new Gson().toJson(info)).apply();
-            prefs.edit().putBoolean("isSubscribed", true).apply();
+            if(info != null) {
+                SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
+                prefs.edit().putString("subscriptionInfo", new Gson().toJson(info)).apply();
+                prefs.edit().putBoolean("isSubscribed", true).apply();
+            }
             return null;
         });
     }
