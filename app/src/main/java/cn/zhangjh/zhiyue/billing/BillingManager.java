@@ -270,20 +270,20 @@ public class BillingManager implements PurchasesUpdatedListener {
         billingClient.queryPurchasesAsync(params, (billingResult, purchases) -> {
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                 for (Purchase purchase : purchases) {
-                    if (purchase.getProducts().contains(SUBSCRIPTION_MONTHLY) 
+                    if (purchase.getProducts().contains(SUBSCRIPTION_MONTHLY)
                             && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
                         // 从购买信息中提取订阅详情
                         long purchaseTime = purchase.getPurchaseTime();
                         // 假设订阅周期为30天
                         long expireTime = purchaseTime + 30L * 24 * 60 * 60 * 1000;
-                        
+
                         SubscriptionInfo info = new SubscriptionInfo(
                                 true,
                                 activity.getString(R.string.monthly_subscription),
                                 new Date(expireTime),
                                 SUBSCRIPTION_MONTHLY
                         );
-                        
+
                         if (callback != null) {
                             callback.onSubscriptionDetailsReceived(info);
                         }
@@ -295,9 +295,9 @@ public class BillingManager implements PurchasesUpdatedListener {
                 LogUtil.e(TAG, "查询订阅详情失败: " + billingResult.getDebugMessage());
             }
 
-	        if (callback != null) {
-	            callback.onSubscriptionDetailsReceived(null);
-	        }
+            if (callback != null) {
+                callback.onSubscriptionDetailsReceived(null);
+            }
         });
     }
 

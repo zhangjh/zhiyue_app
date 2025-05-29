@@ -85,7 +85,7 @@ public class SubscriptionManager {
             billingManager.performSubscriptionPurchase(success -> {
                 if (success) {
                     // 订阅成功，获取订阅详情
-                    queryAndSetSubscriptionInfo(subscriptionInfo -> {
+                    querySubscriptionInfo(subscriptionInfo -> {
                         prefs.edit().putBoolean("isSubscribed", true).apply();
                         prefs.edit().putString("subscriptionInfo", new Gson().toJson(subscriptionInfo)).apply();
                         callback.onSubscriptionSuccess(subscriptionInfo);
@@ -108,20 +108,8 @@ public class SubscriptionManager {
     }
 
     // 先查缓存，如果没有则查询后保存（暂未考虑过期失效缓存场景）
-    public void queryAndSetSubscriptionInfo(Function<SubscriptionInfo, Void> cb) {
-        SharedPreferences prefs = context.getSharedPreferences("subscription", Context.MODE_PRIVATE);
-        String json = prefs.getString("subscriptionInfo", "");
-        if (TextUtils.isEmpty(json)) {
-            billingManager.getSubscriptionDetails(info -> {
-                if (info != null) {
-                    prefs.edit().putString("subscriptionInfo", new Gson().toJson(info)).apply();
-                    cb.apply(info);
-                }
-            });
-        } else {
-            SubscriptionInfo info = new Gson().fromJson(json, SubscriptionInfo.class);
-            cb.apply(info);
-        }
+    public void querySubscriptionInfo(Function<SubscriptionInfo, Void> cb) {
+        billingManager.getSubscriptionDetails(cb::apply);
     }
     
     private void updateSubscriptionStatus(boolean isSubscribed) {

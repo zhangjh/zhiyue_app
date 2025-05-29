@@ -3,6 +3,7 @@ package cn.zhangjh.zhiyue.fragment;
 import static android.content.Context.MODE_PRIVATE;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -71,6 +72,18 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
 
     private static final String TAG = ProfileFragment.class.getName();
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        subscriptionManager = SubscriptionManager.getInstance(requireActivity());
+        subscriptionManager.querySubscriptionInfo(info -> {
+            SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", Context.MODE_PRIVATE);
+            prefs.edit().putString("subscriptionInfo", new Gson().toJson(info)).apply();
+            prefs.edit().putBoolean("isSubscribed", true).apply();
+            return null;
+        });
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -88,7 +101,6 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         loadUserInfo();
         loadReadingHistory(1);
 
-        subscriptionManager = SubscriptionManager.getInstance(requireActivity());
         checkSubscriptionStatus();
 
         // 修改订阅按钮点击事件
@@ -144,7 +156,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         // 检查是否已订阅
         if (subscriptionManager.isSubscribed()) {
             updateSubscriptionUI();
-            // todo: 查询订阅(首次进入从play查询并更新缓存，后续进入页面查询缓存)
+            // 查询订阅(首次进入从play查询并更新缓存，后续进入页面查询缓存)
             SharedPreferences prefs = requireActivity().getSharedPreferences("subscription", MODE_PRIVATE);
             String subscriptionInfo = prefs.getString("subscriptionInfo", "");
             if(!TextUtils.isEmpty(subscriptionInfo)) {
