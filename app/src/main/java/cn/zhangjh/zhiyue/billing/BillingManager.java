@@ -31,7 +31,8 @@ public class BillingManager implements PurchasesUpdatedListener {
     private final BillingClient billingClient;
     private final Activity activity;
     private final BillingCallback billingCallback;
-    
+    private PurchaseCallback currentPurchaseCallback;
+
     private boolean isConnecting = false;
     
     public BillingManager(Activity activity, BillingCallback callback) {
@@ -77,11 +78,11 @@ public class BillingManager implements PurchasesUpdatedListener {
         });
     }
 
-    private void launch(PurchaseCallback callback) {
+    private void launch() {
         if(!billingClient.isReady()) {
             LogUtil.e(TAG, "billingClient isn't ready");
-            if(callback != null) {
-                callback.onPurchaseComplete(false);
+            if(currentPurchaseCallback != null) {
+                currentPurchaseCallback.onPurchaseComplete(false);
             }
             return;
         }
@@ -94,8 +95,8 @@ public class BillingManager implements PurchasesUpdatedListener {
                 LogUtil.e(TAG, "查询商品失败: " + billingResult.getDebugMessage());
                 activity.runOnUiThread(() -> Toast.makeText(activity, 
                     activity.getString(R.string.query_product_failed) + billingResult.getDebugMessage(), Toast.LENGTH_SHORT).show());
-                if(callback != null) {
-                    callback.onPurchaseComplete(false);
+                if(currentPurchaseCallback != null) {
+                    currentPurchaseCallback.onPurchaseComplete(false);
                 }
                 return;
             }
@@ -103,8 +104,8 @@ public class BillingManager implements PurchasesUpdatedListener {
             if(CollectionUtils.isEmpty(skuDetailsList)) {
                 LogUtil.e(TAG, "商品列表为空，商品ID可能不正确或未发布");
                 activity.runOnUiThread(() -> Toast.makeText(activity, activity.getString(R.string.query_product_empty), Toast.LENGTH_SHORT).show());
-                if(callback != null) {
-                    callback.onPurchaseComplete(false);
+                if(currentPurchaseCallback != null) {
+                    currentPurchaseCallback.onPurchaseComplete(false);
                 }
                 return;
             }
@@ -124,13 +125,13 @@ public class BillingManager implements PurchasesUpdatedListener {
                 LogUtil.d(TAG, "launchBillingFlow: " + new Gson().toJson(launchResult));
                 if (launchResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
                     activity.runOnUiThread(() -> Toast.makeText(activity, activity.getString(R.string.launch_billing_failed), Toast.LENGTH_SHORT).show());
-                    if(callback != null) {
-                        callback.onPurchaseComplete(false);
+                    if(currentPurchaseCallback != null) {
+                        currentPurchaseCallback.onPurchaseComplete(false);
                     }
                     return;
                 }
-                if(callback != null) {
-                    callback.onPurchaseComplete(true);
+                if(currentPurchaseCallback != null) {
+                    currentPurchaseCallback.onPurchaseComplete(true);
                 }
                 LogUtil.d(TAG, "购买成功");
             }
@@ -213,6 +214,7 @@ public class BillingManager implements PurchasesUpdatedListener {
         LogUtil.d(TAG, "performSubscriptionPurchase called");
         LogUtil.d(TAG, "BillingClient ready state: " + billingClient.isReady());
         LogUtil.d(TAG, "Connection state: " + billingClient.getConnectionState());
+        this.currentPurchaseCallback = callback;
         
         if (!billingClient.isReady()) {
             LogUtil.e(TAG, "BillingClient 未准备好，当前状态: " + billingClient.getConnectionState());
@@ -221,12 +223,11 @@ public class BillingManager implements PurchasesUpdatedListener {
             }
             return;
         }
-        launch(callback);
+        launch();
     }
 
-    private PurchaseCallback currentPurchaseCallback;
-
     private void handlePurchase(Purchase purchase) {
+        // 在这里处理订阅成功后事件
         if (purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
             // 确认购买
             if (!purchase.isAcknowledged()) {
