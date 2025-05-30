@@ -278,6 +278,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
             // 直接展示缓存书目，大部分场景下不会翻页
             if(!cacheRecommendBooks.isEmpty()) {
                 showRecommendView(cacheRecommendBooks);
+                return;
             }
             if(cachedBookIds.isEmpty()) {
                 ApiClient.getBookService().getHistory(1, 10, currentUserId).enqueue(new Callback<>() {

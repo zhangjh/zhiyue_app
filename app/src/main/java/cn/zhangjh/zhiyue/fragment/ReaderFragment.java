@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -32,6 +31,14 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import cn.zhangjh.zhiyue.BuildConfig;
 import cn.zhangjh.zhiyue.R;
@@ -58,7 +65,6 @@ public class ReaderFragment extends Fragment {
     private String bookId;
     private String hashId;
 	private String cfi;
-    private String bookUrl;
 	private WebView webViewReader;
     private View loadingView;
     private TabLayout tabLayout;
@@ -101,22 +107,7 @@ public class ReaderFragment extends Fragment {
                 }
             }
         });
-        if (getArguments() != null) {
-            bookId = getArguments().getString("book_id");
-            hashId = getArguments().getString("hash_id");
-            fileId = getArguments().getString("file_id");
-            cfi = getArguments().getString("cfi");
-            
-            // 清除之前的数据
-            BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
-            viewModel.clearBookInfo();
-            
-            if(fileId == null || fileId.isEmpty()) {
-                getEbookUrl(bookId, hashId);
-            } else {
-                bookUrl = getString(R.string.biz_domain) + fileId;
-            }
-        }
+
         BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
 
         // 观察数据变化
@@ -140,12 +131,66 @@ public class ReaderFragment extends Fragment {
         });
     }
 
-    private void getEbookUrl(String bookId, String hashId) {
+    private void initWebView(View view) {
+        webViewReader = view.findViewById(R.id.webview_reader);
+        configureWebView(webViewReader);
+        loadingView = view.findViewById(R.id.loading_view);
+        showLoading(getString(R.string.reader_loading));
+
+        // 添加以下配置阻止系统菜单
+        webViewReader.setLongClickable(false);  // 禁用系统长按菜单
+        webViewReader.setHapticFeedbackEnabled(true);  // 启用触觉反馈
+        webViewReader.setOnLongClickListener(v -> {
+            // 返回true表示我们已经处理了长按事件，阻止系统菜单
+            return true;
+        });
+
+        // 添加JavaScript接口
+        webViewReader.addJavascriptInterface(new WebAppInterface(), "Android");
+
+        // 设置WebViewClient
+        webViewReader.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                showLoading(getString(R.string.view_init));
+            }
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // 页面加载完成后检查是否有缓存书籍需要加载
+                if (getArguments() != null) {
+                    bookId = getArguments().getString("book_id");
+                    hashId = getArguments().getString("hash_id");
+                    fileId = getArguments().getString("file_id");
+                    cfi = getArguments().getString("cfi");
+
+                    // 清除之前的数据
+                    BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
+                    viewModel.clearBookInfo();
+
+                    getBookFromCache();
+                }
+            }
+        });
+        webViewReader.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                LogUtil.d(TAG, "WebView Console: " + consoleMessage.message());
+                return true;
+            }
+        });
+
+        // 加载epub.js和电子书
+        String readerHtml = "file:///android_asset/reader.html";
+        webViewReader.loadUrl(readerHtml);
+    }
+
+    private void getEbookUrl(String bookId, String hashId, Consumer<String> callback) {
         if(downloading) {
             return;
         }
         downloading = true;
-        showLoading(getString(R.string.ebook_loading));
         ApiClient.getBookService().downloadBook(bookId, hashId).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<BizResponse<String>> call, @NonNull retrofit2.Response<BizResponse<String>> response) {
@@ -159,48 +204,101 @@ public class ReaderFragment extends Fragment {
                         LogUtil.e(TAG, "Error reading error response", e);
                         showError(getString(R.string.get_ebook_url_failed) + " (" + response.code() + ")");
                     }
-                    hideLoading();
+                    callback.accept(null);
                     return;
                 }
                 if (response.body() != null && response.body().isSuccess()) {
-                    bookUrl = response.body().getData();
+                    String bookUrl = response.body().getData();
                     LogUtil.d(TAG, "Ebook url: " + bookUrl);
                     if (bookUrl != null) {
                         fileId = bookUrl.substring(bookUrl.lastIndexOf('/') + 1);
                         LogUtil.d(TAG, "fileId: " + fileId);
                     }
-                    if (webViewReader != null) {
-                        showLoading(getString(R.string.ebook_loading));
-                        String setLangScript = String.format("setLanguageResource('%s')", languageRes);
-                        webViewReader.post(() -> webViewReader.evaluateJavascript(setLangScript, value -> {
-                            // 语言资源加载完毕后再加载书籍
-                            String script = String.format("loadBook('%s', '%s')", bookUrl, cfi);
-                            webViewReader.evaluateJavascript(script, null);
-                        }));
-                    }
+                    callback.accept(bookUrl);
                 } else {
                     showError(getString(R.string.get_ebook_url_failed) + ": " + (response.body() != null ? response.body().getErrorMsg() : "Response body is null"));
                     hideLoading();
+                    isBookLoading = false;
+                    callback.accept(null);
                 }
             }
     
             @Override
             public void onFailure(@NonNull Call<BizResponse<String>> call, @NonNull Throwable t) {
-                downloading = false; // 下载结束
+                downloading = false;
+                isBookLoading = false;
                 LogUtil.e(TAG, "Search failed", t);
                 String errorMessage = "网络错误: " + t.getClass().getSimpleName();
                 if (t.getMessage() != null) {
                     errorMessage += " - " + t.getMessage();
                 }
                 showError(errorMessage);
-                hideLoading(); // 失败也需要隐藏加载
+                hideLoading();
             }
         });
     }
 
+    private void loadFromCacheBook(File cacheBook) {
+        String bookPath = "file://" + cacheBook.getAbsolutePath();
+        String setLangScript = String.format("setLanguageResource('%s')", languageRes);
+
+        webViewReader.post(() -> webViewReader.evaluateJavascript(setLangScript, value -> {
+            // 语言资源加载完毕后再加载书籍
+            String script = String.format("loadBook('%s', '%s')", bookPath, cfi);
+            webViewReader.evaluateJavascript(script, null);
+        }));
+    }
+
+    // 优先从cache获取书籍，没有则先下载再缓存
+    private void getBookFromCache() {
+        showLoading(getString(R.string.ebook_loading));
+
+        File cacheDir = requireContext().getFilesDir();
+        AtomicReference<File> cacheBook = new AtomicReference<>(new File(cacheDir, bookId + "_" + hashId + ".epub"));
+        // 可以直接使用缓存的场景：缓存书籍存在且fileId不为空，否则需要重新下载
+        if(cacheBook.get().exists() && !TextUtils.isEmpty(fileId)) {
+            LogUtil.d(TAG, "Found book in cache: " + cacheBook.get().getAbsolutePath());
+            // 传递给epub加载
+            loadFromCacheBook(cacheBook.get());
+        } else {
+            // 下载并保存
+            getEbookUrl(bookId, hashId, fileUrl -> {
+                if(!TextUtils.isEmpty(fileUrl)) {
+                    // 写入本地缓存
+                    cacheBook.set(new File(cacheDir, bookId + "_" + hashId + ".epub"));
+                    // 从fileUrl下载并缓存到cacheBook
+                    new Thread(() -> {
+                        try {
+                            URL url = new URL(fileUrl);
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            try (InputStream inputStream = connection.getInputStream()) {
+                                try (FileOutputStream outputStream = new FileOutputStream(cacheBook.get())) {
+                                    byte[] buffer = new byte[1024];
+                                    int bytesRead;
+                                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                        outputStream.write(buffer, 0, bytesRead);
+                                    }
+                                }
+                                LogUtil.d(TAG, "Book saved to cache: " + cacheBook.get().getAbsolutePath());
+                                // 传递给epub加载
+                                loadFromCacheBook(cacheBook.get());
+                            }
+                        } catch (Exception e) {
+                            LogUtil.e(TAG, "Error downloading book", e);
+                            showError(getString(R.string.error_network) + ": " + e.getMessage());
+                        }
+                    }).start();
+                } else {
+                    showError(getString(R.string.get_ebook_url_failed));
+                }
+            });
+        }
+    }
+
     private void showError(String message) {
         if (getContext() != null) {
-            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+            requireActivity().runOnUiThread(() ->
+                    Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show());
         }
     }
 
@@ -254,66 +352,7 @@ public class ReaderFragment extends Fragment {
         SharedPreferences prefs = requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
         this.userId = prefs.getString("userId", "");
 
-        webViewReader = view.findViewById(R.id.webview_reader);
-        configureWebView(webViewReader);
-        loadingView = view.findViewById(R.id.loading_view);
-
-        showLoading(getString(R.string.reader_loading));
-
-        // 添加以下配置阻止系统菜单
-        webViewReader.setLongClickable(false);  // 禁用系统长按菜单
-        webViewReader.setHapticFeedbackEnabled(true);  // 启用触觉反馈
-        webViewReader.setOnLongClickListener(v -> {
-            // 返回true表示我们已经处理了长按事件，阻止系统菜单
-            return true;
-        });
-
-        // 添加JavaScript接口
-        webViewReader.addJavascriptInterface(new WebAppInterface(), "Android");
-
-        // 设置WebViewClient
-        webViewReader.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return false;
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                showLoading(getString(R.string.view_init));
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                // 确保 bookUrl 已经获取到再执行加载逻辑
-                if (!TextUtils.isEmpty(bookUrl)) {
-                    showLoading(getString(R.string.ebook_loading));
-                    String setLangScript = String.format("setLanguageResource('%s')", languageRes);
-                    // 先设置语言，再加载书籍
-                    webViewReader.evaluateJavascript(setLangScript, value -> {
-                        String script = String.format("loadBook('%s', '%s')", bookUrl, cfi);
-                        webViewReader.evaluateJavascript(script, null);
-                    });
-                } else {
-                    if (isBookLoading && (fileId == null || fileId.isEmpty())) {
-                        showLoading(getString(R.string.ebook_loading));
-                    }
-                }
-            }
-        });
-        webViewReader.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-                LogUtil.d(TAG, "WebView Console: " + consoleMessage.message());
-                return true;
-            }
-        });
-
-        // 加载epub.js和电子书
-        String readerHtml = "file:///android_asset/reader.html";
-        webViewReader.loadUrl(readerHtml);
+        initWebView(view);
 
         View aiReadingLayout = view.findViewById(R.id.ai_reading_layout);
 
@@ -358,11 +397,9 @@ public class ReaderFragment extends Fragment {
                         break;
                 }
             }
-
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
             }
-
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
             }
@@ -474,6 +511,7 @@ public class ReaderFragment extends Fragment {
                 Toast.makeText(getActivity(), error, Toast.LENGTH_LONG).show();
                 // 隐藏加载提示
                 hideLoading();
+                isBookLoading = false;
             });
         }
 
@@ -563,7 +601,7 @@ public class ReaderFragment extends Fragment {
 
     // 添加保存阅读记录的方法
     private void saveReadingRecord() {
-        if (getActivity() == null || fileId == null) {
+        if (getActivity() == null || TextUtils.isEmpty(fileId)) {
             return;
         }
         if (TextUtils.isEmpty(userId)) {
