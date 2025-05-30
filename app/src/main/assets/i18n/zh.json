@@ -2,6 +2,7 @@
   "reader": {
     "title": "电子书阅读器",
     "toc": "目录",
+    "loading_toc": "目录加载中...",
     "close": "关闭",
     "copy": "复制",
     "highlight": "高亮",

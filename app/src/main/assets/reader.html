@@ -5,8 +5,8 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>电子书阅读器</title>
-    <script src="file:///android_asset/jszip.min.js"></script>
-    <script src="file:///android_asset/epub.min.js"></script>
+    <script src="file:///android_asset/jszip.min.js" defer></script>
+    <script src="file:///android_asset/epub.min.js" defer></script>
     <style>
         body {
             margin: 0;
@@ -227,7 +227,7 @@
         <h3>目录</h3>
         <button class="close" onclick="closeToc()">关闭</button>
     </div>
-    <div id="toc-content"></div>
+    <div id="toc-content">目录加载中...</div>
 </div>
 <div id="viewer"></div>
 <div id="progress-container">阅读进度：0%</div>
@@ -247,6 +247,8 @@
     let book;
     let rendition;
     let isSelecting = false;
+    let tocGenerated = false;
+
     const annotationMenu = document.getElementById('annotation-menu');
     const selectionMenu = document.getElementById('selection-menu');
     let currentCfiRange = null;
@@ -275,6 +277,7 @@
         document.getElementById('toc-button').textContent = i18n.reader.toc;
         document.querySelector('#toc-header h3').textContent = i18n.reader.toc;
         document.querySelector('#toc-header .close').textContent = i18n.reader.close;
+        document.querySelector('#toc-content').textContent = i18n.reader.loading_toc;
 
         // 更新菜单按钮
         document.getElementById('copy-btn').textContent = i18n.reader.copy;
@@ -631,7 +634,10 @@
     function loadBook(bookUrl, cfi) {
         let touchStartX;
         //console.log("bookUrl: " + bookUrl);
-        book = ePub(bookUrl);
+        book = ePub(bookUrl, {
+            storage: "indexeddb",
+            openAs: "epub",
+        });
         // 添加错误处理
         book.on('openFailed', function(error) {
             console.error("Failed to open book:", error);
@@ -654,25 +660,6 @@
 
         // 添加位置信息生成代码
         book.ready.then(() => {
-            // 添加目录功能
-            book.loaded.navigation.then(nav => {
-                const toc = nav.toc;
-                const tocContent = document.getElementById('toc-content');
-                tocContent.innerHTML = '';
-
-                toc.forEach(chapter => {
-                    const div = document.createElement('div');
-                    div.className = 'toc-item';
-                    div.textContent = chapter.label;
-                    div.onclick = () => {
-                        rendition.display(chapter.href);
-                        closeToc();
-                    };
-                    tocContent.appendChild(div);
-                });
-            });
-            return book.locations.generate();
-        }).then(() => {
             rendition.display(cfi || 0);
             
             // 启用手势支持
@@ -743,10 +730,36 @@
         });
     }
 
+    // 生成目录
+    async function generateToc() {
+        // 添加目录功能
+        book.loaded.navigation.then(nav => {
+            const toc = nav.toc;
+            const tocContent = document.getElementById('toc-content');
+            tocContent.innerHTML = '';
+
+            toc.forEach(chapter => {
+                const div = document.createElement('div');
+                div.className = 'toc-item';
+                div.textContent = chapter.label;
+                div.onclick = () => {
+                    rendition.display(chapter.href);
+                    closeToc();
+                };
+                tocContent.appendChild(div);
+            });
+        });
+        return book.locations.generate();
+    }
+
     // 添加目录控制函数
-    function toggleToc() {
+    async function toggleToc() {
         const tocContainer = document.getElementById('toc-container');
         tocContainer.classList.toggle('active');
+        if(!tocGenerated) {
+            await generateToc();
+            tocGenerated = true;
+        }
     }
 
     function closeToc() {

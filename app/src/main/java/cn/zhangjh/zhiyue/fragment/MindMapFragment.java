@@ -167,7 +167,8 @@ public class MindMapFragment extends Fragment {
         webSettings.setAllowContentAccess(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
-        
+        webSettings.setMediaPlaybackRequiresUserGesture(false);
+
         // 添加调试支持
         mindMapWebView.setWebChromeClient(new WebChromeClient() {
             @Override

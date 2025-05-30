@@ -2,6 +2,7 @@
   "reader": {
     "title": "E-Book Reader",
     "toc": "Contents",
+    "loading_toc": "Contents Loading...",
     "close": "Close",
     "copy": "Copy",
     "highlight": "Highlight",

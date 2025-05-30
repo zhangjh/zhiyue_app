@@ -145,9 +145,11 @@ public class ReaderFragment extends Fragment {
             return;
         }
         downloading = true;
+        showLoading(getString(R.string.ebook_loading));
         ApiClient.getBookService().downloadBook(bookId, hashId).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<BizResponse<String>> call, @NonNull retrofit2.Response<BizResponse<String>> response) {
+                downloading = false;
                 if (!response.isSuccessful()) {
                     try {
                         String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
@@ -157,16 +159,18 @@ public class ReaderFragment extends Fragment {
                         LogUtil.e(TAG, "Error reading error response", e);
                         showError(getString(R.string.get_ebook_url_failed) + " (" + response.code() + ")");
                     }
-                    downloading = false;
+                    hideLoading();
                     return;
                 }
                 if (response.body() != null && response.body().isSuccess()) {
                     bookUrl = response.body().getData();
                     LogUtil.d(TAG, "Ebook url: " + bookUrl);
-                    fileId = bookUrl.substring(bookUrl.lastIndexOf('/') + 1);
-                    LogUtil.d(TAG, "fileId: " + fileId);
-                    // 需要在这里触发加载
+                    if (bookUrl != null) {
+                        fileId = bookUrl.substring(bookUrl.lastIndexOf('/') + 1);
+                        LogUtil.d(TAG, "fileId: " + fileId);
+                    }
                     if (webViewReader != null) {
+                        showLoading(getString(R.string.ebook_loading));
                         String setLangScript = String.format("setLanguageResource('%s')", languageRes);
                         webViewReader.post(() -> webViewReader.evaluateJavascript(setLangScript, value -> {
                             // 语言资源加载完毕后再加载书籍
@@ -174,19 +178,22 @@ public class ReaderFragment extends Fragment {
                             webViewReader.evaluateJavascript(script, null);
                         }));
                     }
+                } else {
+                    showError(getString(R.string.get_ebook_url_failed) + ": " + (response.body() != null ? response.body().getErrorMsg() : "Response body is null"));
+                    hideLoading();
                 }
-                downloading = false;
             }
     
             @Override
             public void onFailure(@NonNull Call<BizResponse<String>> call, @NonNull Throwable t) {
+                downloading = false; // 下载结束
                 LogUtil.e(TAG, "Search failed", t);
                 String errorMessage = "网络错误: " + t.getClass().getSimpleName();
                 if (t.getMessage() != null) {
                     errorMessage += " - " + t.getMessage();
                 }
                 showError(errorMessage);
-                downloading = false;
+                hideLoading(); // 失败也需要隐藏加载
             }
         });
     }
@@ -230,6 +237,9 @@ public class ReaderFragment extends Fragment {
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+
+        // 启用 WebView 缓存
+        settings.setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
 
         // 通用安全配置
         settings.setAllowContentAccess(true);
@@ -277,14 +287,19 @@ public class ReaderFragment extends Fragment {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                // 确保 bookUrl 已经获取到再执行加载逻辑
                 if (!TextUtils.isEmpty(bookUrl)) {
                     showLoading(getString(R.string.ebook_loading));
                     String setLangScript = String.format("setLanguageResource('%s')", languageRes);
+                    // 先设置语言，再加载书籍
                     webViewReader.evaluateJavascript(setLangScript, value -> {
-                        // 语言资源加载完毕后再加载书籍
                         String script = String.format("loadBook('%s', '%s')", bookUrl, cfi);
                         webViewReader.evaluateJavascript(script, null);
                     });
+                } else {
+                    if (isBookLoading && (fileId == null || fileId.isEmpty())) {
+                        showLoading(getString(R.string.ebook_loading));
+                    }
                 }
             }
         });
