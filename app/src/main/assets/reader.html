@@ -308,15 +308,21 @@
         }
     }
 
+    function clearAllAnnotations() {
+        annotations.forEach(annotation => {
+            rendition.annotations.remove(annotation.cfi, annotation.type);
+        });
+    }
+
     window.renderAnnotations = function(annotations) {
         if(!annotations || annotations.length <= 0) {
             return;
         }
+        clearAllAnnotations();
         // console.log("reRender annotations");
         // 先删除再重新渲染
         annotations.forEach(annotation => {
             if (annotation.type === 'highlight') {
-                // console.log("remove highlight");
                 rendition.annotations.highlight(
                     annotation.cfi,
                     {},
@@ -332,7 +338,6 @@
                     }
                 );
             } else if (annotation.type === 'underline') {
-                // console.log("remove underline");
                 rendition.annotations.underline(
                     annotation.cfi,
                     {},
@@ -708,15 +713,6 @@
                     }
                 }
                 // 重新应用标注(先删除再渲染)
-                annotations.forEach(annotation => {
-                    if (annotation.type === 'highlight') {
-                        // console.log("remove highlight");
-                        rendition.annotations.remove(annotation.cfi, annotation.type);
-                    } else if (annotation.type === 'underline') {
-                        // console.log("remove underline");
-                        rendition.annotations.remove(annotation.cfi, annotation.type);
-                    }
-                });
                 window.renderAnnotations(annotations);
             });
         }).then(() => {
