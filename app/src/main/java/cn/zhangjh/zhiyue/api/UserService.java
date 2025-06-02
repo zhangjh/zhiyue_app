@@ -9,6 +9,6 @@ import retrofit2.http.POST;
 
 public interface UserService {
 
-	@POST("/user/register")
-	Call<BizResponse<LoginUser>> register(@Body LoginUserRequest loginUserRequest);
+    @POST("/user/register")
+    Call<BizResponse<LoginUser>> register(@Body LoginUserRequest loginUserRequest);
 }

@@ -103,7 +103,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         // 获取阅读记录缓存
         String cachedBookIdsString = BizUtils.getCache(requireContext(), "reader", "cachedBookIds");
         if(!TextUtils.isEmpty(cachedBookIdsString)) {
-            Type listType = new TypeToken<Set<String>>() {}.getType();
+            Type listType = TypeToken.getParameterized(Set.class, String.class).getType();
             cachedBookIds = new Gson().fromJson(cachedBookIdsString, listType);
         }
 

@@ -10,19 +10,30 @@ android {
         buildConfig true
     }
 
+    signingConfigs {
+        release {
+            storeFile file("/Users/zhangjh/Desktop/zhiyue_app")
+            storePassword "zhangjh"
+            keyAlias "key0"
+            keyPassword "zhangjh"
+        }
+    }
+
     defaultConfig {
         applicationId "cn.zhangjh.zhiyue"
         minSdk 30
         targetSdk 35
-        versionCode 5
-        versionName "5.0"
+        versionCode 104
+        versionName "1.0.4"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            signingConfig signingConfigs.release
+            debuggable false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
