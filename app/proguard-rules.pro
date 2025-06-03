@@ -26,4 +26,6 @@
  
 # Retrofit with Gson or Moshi converter
 -keep class cn.zhangjh.zhiyue.model.** { *; }
+-keep class cn.zhangjh.zhiyue.request.** { *; }
+-keep class cn.zhangjh.zhiyue.viewmodel.** { *; }
 
