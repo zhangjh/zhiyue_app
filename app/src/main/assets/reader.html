@@ -703,7 +703,7 @@
                 }
 
                 // 确保位置信息已生成后再计算进度
-                if (book.locations && book.locations.length() > 0) {
+                if (book.locations) {
                     let progress = book.locations.percentageFromCfi(location.start.cfi);
                     let progressPercent = Math.round(progress * 100);
                     // console.log("progressPercent: " + progressPercent);
