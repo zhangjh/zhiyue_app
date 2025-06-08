@@ -91,10 +91,14 @@ public class ReaderFragment extends Fragment {
         languageRes = BizUtils.readAssetFile(requireContext(), fileName);
         languageRes = BizUtils.escapeJson(languageRes);
 
+        BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
+
         // 设置返回键监听
         requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
+                viewModel.clearBookInfo();
+
                 // 检查当前是否在AI伴读页面
                 if (tabLayout != null && tabLayout.getSelectedTabPosition() == 1) {
                     // 如果在AI伴读页面，返回到阅读器页面
@@ -108,7 +112,6 @@ public class ReaderFragment extends Fragment {
             }
         });
 
-        BookInfoViewModel viewModel = new ViewModelProvider(requireActivity()).get(BookInfoViewModel.class);
 
         // 观察数据变化
         viewModel.getSummary().observe(this, summary -> {

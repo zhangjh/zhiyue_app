@@ -248,6 +248,7 @@ public class AISummaryFragment extends Fragment {
         if (!isLoadingFromHistory) {
             summaryContent.setLength(0);
             partsSummary.setLength(0);
+            updateBookInfo(title, author, "", "");
         }
         isWebSocketInitialized = false;
     }
