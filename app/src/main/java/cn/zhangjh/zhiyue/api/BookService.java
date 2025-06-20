@@ -56,11 +56,6 @@ public interface BookService {
 			@Query("orderType") String orderType
 	);
 
-	// 查询阅读记录默认按更新时间排序
-	default Call<BizResponse<HistoryResponse>> getHistory(int pageIndex, int pageSize, String userId) {
-		return getHistory(pageIndex, pageSize, userId, "modify_time", "desc");
-	}
-
 	@GET("/books/getRecordDetail")
 	Call<BizResponse<ReadingRecord>> getRecordDetail(
 			@Query("userId") String userId,

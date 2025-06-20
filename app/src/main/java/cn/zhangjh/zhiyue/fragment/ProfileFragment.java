@@ -268,7 +268,7 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
             return;
         }
         // 调用API获取历史记录
-        ApiClient.getBookService().getHistory(page, PAGE_SIZE, currentUserId)
+        ApiClient.getBookService().getHistory(page, PAGE_SIZE, currentUserId, "modify_time", "desc")
             .enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call,

@@ -281,7 +281,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
                 return;
             }
             if(cachedBookIds.isEmpty()) {
-                ApiClient.getBookService().getHistory(1, 10, currentUserId).enqueue(new Callback<>() {
+                ApiClient.getBookService().getHistory(1, 10, currentUserId, "modify_time", "desc").enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call, @NonNull Response<BizResponse<HistoryResponse>> response) {
                         if (!isAdded()) return;
@@ -582,7 +582,7 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
         }
         
         // 2. 未订阅用户，检查阅读记录数量
-        ApiClient.getBookService().getHistory(1, 100, currentUserId)
+        ApiClient.getBookService().getHistory(1, 100, currentUserId, "modify_time", "desc")
             .enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<BizResponse<HistoryResponse>> call,

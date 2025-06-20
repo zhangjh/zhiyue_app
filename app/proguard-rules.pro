@@ -22,6 +22,9 @@
 -keepclassmembers,allowobfuscation class * {
   @com.google.gson.annotations.SerializedName <fields>;
 }
+-keepclassmembers class cn.zhangjh.zhiyue.api.BookService {
+    public static <methods>;
+}
 -keepattributes EnclosingMethod
  
 # Retrofit with Gson or Moshi converter
