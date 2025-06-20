@@ -230,7 +230,7 @@
     <div id="toc-content">目录加载中...</div>
 </div>
 <div id="viewer"></div>
-<div id="progress-container">阅读进度：0%</div>
+<div id="progress-container"></div>
 <div id="selection-menu">
     <button class="menu-button" id="copy-btn">复制</button>
     <button class="menu-button" id="highlight-btn">高亮</button>
@@ -285,12 +285,11 @@
         document.getElementById('underline-btn').textContent = i18n.reader.underline;
         document.getElementById('delete-annotation-btn').textContent = i18n.reader.delete;
 
-        // 更新进度文本格式
-        updateProgressText();
+        document.getElementById('progress-container').textContent = i18n.reader.progress_loading;
     }
 
     // 更新进度文本
-    function updateProgressText(percent = 0) {
+    function updateProgressText(percent) {
         if (i18n && i18n.reader) {
             const progressText = i18n.reader.progress.replace('%s', percent);
             document.getElementById('progress-container').textContent = progressText;
@@ -665,55 +664,61 @@
         // 添加位置信息生成代码
         book.ready.then(() => {
             rendition.display(cfi || 0);
-            
-            // 启用手势支持
-            rendition.on("touchstart", event => {
-                // 只有当不在选择模式时才记录起始位置用于翻页
-                if (!isSelecting) {
-                    const touches = event.changedTouches[0];
-                    touchStartX = touches.screenX;
-                }
-            });
 
-            rendition.on("touchend", event => {
-                // 只有当不在选择模式时才处理翻页
-                if (!isSelecting) {
-                    const touches = event.changedTouches[0];
-                    const swipeDistance = touchStartX - touches.screenX;
-                    if (Math.abs(swipeDistance) > 50) {
-                        if (swipeDistance > 0) {
-                            rendition.next();
-                        } else {
-                            rendition.prev();
+            // 立即生成位置信息
+            book.locations.generate().then(() => {
+                let progress = book.locations.percentageFromCfi(cfi);
+                let progressPercent = Math.round(progress * 100);
+                updateProgressText(progressPercent);
+
+                // 启用手势支持
+                rendition.on("touchstart", event => {
+                    // 只有当不在选择模式时才记录起始位置用于翻页
+                    if (!isSelecting) {
+                        const touches = event.changedTouches[0];
+                        touchStartX = touches.screenX;
+                    }
+                });
+
+                rendition.on("touchend", event => {
+                    // 只有当不在选择模式时才处理翻页
+                    if (!isSelecting) {
+                        const touches = event.changedTouches[0];
+                        const swipeDistance = touchStartX - touches.screenX;
+                        if (Math.abs(swipeDistance) > 50) {
+                            if (swipeDistance > 0) {
+                                rendition.next();
+                            } else {
+                                rendition.prev();
+                            }
                         }
                     }
-                }
-            });
+                });
 
-            // 添加章节变化监听
-            rendition.on('relocated', (location) => {
-                currentLocation = location;
-                // 获取当前章节信息
-                for(let item of book.navigation.toc) {
-                    if(item.href.indexOf(location.start.href) !== -1) {
-                        let chapterTitle = item.label.trim();
-                        document.getElementById('chapter-title').textContent = chapterTitle || '';
-                        break;
+                // 添加章节变化监听
+                rendition.on('relocated', (location) => {
+                    currentLocation = location;
+                    // 获取当前章节信息
+                    for(let item of book.navigation.toc) {
+                        if(item.href.indexOf(location.start.href) !== -1) {
+                            let chapterTitle = item.label.trim();
+                            document.getElementById('chapter-title').textContent = chapterTitle || '';
+                            break;
+                        }
                     }
-                }
 
-                // 确保位置信息已生成后再计算进度
-                if (book.locations) {
-                    let progress = book.locations.percentageFromCfi(location.start.cfi);
-                    let progressPercent = Math.round(progress * 100);
-                    // console.log("progressPercent: " + progressPercent);
-                    updateProgressText(progressPercent);
-                    if (window.Android) {
-                        window.Android.onProgressUpdate(progressPercent, location.start.cfi);
+                    // 确保位置信息已生成后再计算进度
+                    if (book.locations) {
+                        let progress = book.locations.percentageFromCfi(location.start.cfi);
+                        let progressPercent = Math.round(progress * 100);
+                        updateProgressText(progressPercent);
+                        if (window.Android) {
+                            window.Android.onProgressUpdate(progressPercent, location.start.cfi);
+                        }
                     }
-                }
-                // 重新应用标注(先删除再渲染)
-                window.renderAnnotations(annotations);
+                    // 重新应用标注(先删除再渲染)
+                    window.renderAnnotations(annotations);
+                });
             });
         }).then(() => {
             // 位置信息生成完成后，再加载标注
@@ -744,7 +749,6 @@
                 tocContent.appendChild(div);
             });
         });
-        return book.locations.generate();
     }
 
     // 添加目录控制函数

@@ -51,8 +51,15 @@ public interface BookService {
 	Call<BizResponse<HistoryResponse>> getHistory(
 			@Query("pageIndex") int pageIndex,
 			@Query("pageSize") int pageSize,
-			@Query("userId") String userId
+			@Query("userId") String userId,
+			@Query("orderField") String orderField,
+			@Query("orderType") String orderType
 	);
+
+	// 查询阅读记录默认按更新时间排序
+	default Call<BizResponse<HistoryResponse>> getHistory(int pageIndex, int pageSize, String userId) {
+		return getHistory(pageIndex, pageSize, userId, "modify_time", "desc");
+	}
 
 	@GET("/books/getRecordDetail")
 	Call<BizResponse<ReadingRecord>> getRecordDetail(

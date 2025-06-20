@@ -8,6 +8,7 @@
     "highlight": "Highlight",
     "underline": "Underline",
     "delete": "Delete",
+    "progress_loading": "Progress Loading...",
     "progress": "Reading Progress: %s%",
     "loading": "Loading e-book...",
     "render_failed": "Failed to render mind map:"

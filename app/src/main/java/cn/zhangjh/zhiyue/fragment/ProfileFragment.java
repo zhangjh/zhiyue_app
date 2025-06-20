@@ -151,9 +151,18 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
         subscriptionInfoLayout = view.findViewById(R.id.subscriptionInfoLayout);
         subscribeButton = view.findViewById(R.id.subscribeButton);
         manageSubscriptionButton = view.findViewById(R.id.manageSubscriptionButton);
-        
+        View subscriptionManageContent = view.findViewById(R.id.subscriptionManageContent);
+	    TextView subscriptionManageTitle = view.findViewById(R.id.subscriptionManageTitle);
         // 默认隐藏订阅详情
         subscriptionInfoLayout.setVisibility(View.GONE);
+        // 订阅管理内容默认折叠，点击标题展开/收起
+        subscriptionManageTitle.setOnClickListener(v -> {
+            if (subscriptionManageContent.getVisibility() == View.VISIBLE) {
+                subscriptionManageContent.setVisibility(View.GONE);
+            } else {
+                subscriptionManageContent.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     private void checkSubscriptionStatus() {

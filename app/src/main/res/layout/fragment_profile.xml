@@ -73,6 +73,7 @@
             android:padding="16dp">
 
             <TextView
+                android:id="@+id/subscriptionManageTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/subscription_manage"
@@ -80,108 +81,114 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <!-- 订阅状态始终显示 -->
             <LinearLayout
+                android:id="@+id/subscriptionManageContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:paddingHorizontal="16dp"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:visibility="gone">
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/subscription_status"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/subscriptionStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/not_subscribe"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <!-- 订阅类型和到期时间只在已订阅时显示 -->
-            <LinearLayout
-                android:id="@+id/subscriptionInfoLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:paddingHorizontal="16dp"
-                android:orientation="vertical">
-
+                <!-- 订阅状态始终显示 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:paddingHorizontal="16dp"
                     android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/subscription_type"
+                        android:text="@string/subscription_status"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp" />
 
                     <TextView
-                        android:id="@+id/subscriptionType"
+                        android:id="@+id/subscriptionStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/monthly_subscription"
+                        android:text="@string/not_subscribe"
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
                 </LinearLayout>
 
+                <!-- 订阅类型和到期时间只在已订阅时显示 -->
                 <LinearLayout
+                    android:id="@+id/subscriptionInfoLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
+                    android:paddingHorizontal="16dp"
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="0dp"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/subscription_expire_date"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp" />
+                        android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/subscriptionExpireDate"
-                        android:layout_width="wrap_content"
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/subscription_type"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/subscriptionType"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/monthly_subscription"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="--"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/subscription_expire_date"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/subscriptionExpireDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="--"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
                 </LinearLayout>
+
+                <Button
+                    android:id="@+id/subscribeButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@drawable/rounded_button"
+                    android:text="@string/subscribe_now"
+                    android:textColor="@android:color/white" />
+
+                <Button
+                    android:id="@+id/manageSubscriptionButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginHorizontal="16dp"
+                    android:background="@drawable/rounded_button_outline"
+                    android:text="@string/subscription_manage"
+                    android:textColor="@color/primary"
+                    android:visibility="gone" />
             </LinearLayout>
-
-            <!-- 订阅按钮 -->
-            <Button
-                android:id="@+id/subscribeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginHorizontal="16dp"
-                android:background="@drawable/rounded_button"
-                android:text="@string/subscribe_now"
-                android:textColor="@android:color/white" />
-
-            <!-- 管理订阅按钮 -->
-            <Button
-                android:id="@+id/manageSubscriptionButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginHorizontal="16dp"
-                android:background="@drawable/rounded_button_outline"
-                android:text="@string/subscription_manage"
-                android:textColor="@color/primary"
-                android:visibility="gone" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

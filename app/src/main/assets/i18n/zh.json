@@ -8,6 +8,7 @@
     "highlight": "高亮",
     "underline": "划线",
     "delete": "删除",
+    "progress_loading": "加载阅读进度...",
     "progress": "阅读进度：%s%",
     "loading": "加载电子书失败：",
     "render_failed": "渲染思维导图失败:"
