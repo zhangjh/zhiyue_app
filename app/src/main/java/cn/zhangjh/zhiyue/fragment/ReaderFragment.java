@@ -5,6 +5,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -246,9 +247,14 @@ public class ReaderFragment extends Fragment {
         String setLangScript = String.format("setLanguageResource('%s')", languageRes);
 
         webViewReader.post(() -> webViewReader.evaluateJavascript(setLangScript, value -> {
-            // 语言资源加载完毕后再加载书籍
-            String script = String.format("loadBook('%s', '%s')", bookPath, cfi);
-            webViewReader.evaluateJavascript(script, null);
+            // 设置主题模式
+            boolean isDarkMode = isDarkModeEnabled();
+            String themeScript = String.format("setThemeMode(%s)", isDarkMode);
+            webViewReader.evaluateJavascript(themeScript, themeValue -> {
+                // 语言资源和主题设置完毕后再加载书籍
+                String script = String.format("loadBook('%s', '%s')", bookPath, cfi);
+                webViewReader.evaluateJavascript(script, null);
+            });
         }));
     }
 
@@ -328,6 +334,12 @@ public class ReaderFragment extends Fragment {
                 }
             });
         }
+    }
+
+    // 检测是否为暗黑模式
+    private boolean isDarkModeEnabled() {
+        int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
     }
 
     // 新增配置方法
@@ -438,6 +450,17 @@ public class ReaderFragment extends Fragment {
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).hideBottomNavigation();
             }
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // 检测主题变化并更新WebView
+        if (webViewReader != null) {
+            boolean isDarkMode = isDarkModeEnabled();
+            String themeScript = String.format("setThemeMode(%s)", isDarkMode);
+            webViewReader.post(() -> webViewReader.evaluateJavascript(themeScript, null));
         }
     }
 
@@ -611,6 +634,11 @@ public class ReaderFragment extends Fragment {
 		            LogUtil.e(TAG, "标注删除请求失败", t);
 	            }
             });
+        }
+
+        @JavascriptInterface
+        public void onThemeChanged(String theme) {
+            LogUtil.d(TAG, "Theme changed to: " + theme);
         }
     }
 

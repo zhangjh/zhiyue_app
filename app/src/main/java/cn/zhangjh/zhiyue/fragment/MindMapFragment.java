@@ -5,6 +5,7 @@ import static android.content.Context.MODE_PRIVATE;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -158,6 +159,11 @@ public class MindMapFragment extends Fragment {
         }
     }
 
+    private boolean isDarkModeEnabled() {
+        int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return nightModeFlags == Configuration.UI_MODE_NIGHT_YES;
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     private void initMindMap() {
         WebSettings webSettings = mindMapWebView.getSettings();
@@ -196,6 +202,10 @@ public class MindMapFragment extends Fragment {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                // 设置主题模式
+                boolean isDarkMode = isDarkModeEnabled();
+                mindMapManager.setThemeMode(isDarkMode);
+                
                 LogUtil.d(TAG, "开始加载map data");
                 if(TextUtils.isEmpty(title) || TextUtils.isEmpty(author) || TextUtils.isEmpty(partsSummary)) {
                     Toast.makeText(getActivity(), getString(R.string.please_wait_ai_summary), Toast.LENGTH_SHORT).show();
@@ -229,6 +239,15 @@ public class MindMapFragment extends Fragment {
         } catch (Exception e) {
             LogUtil.e(TAG, "Error loading mind map data", e);
             showMindMapError();
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (mindMapManager != null) {
+            boolean isDarkMode = isDarkModeEnabled();
+            mindMapManager.setThemeMode(isDarkMode);
         }
     }
 

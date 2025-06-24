@@ -5,16 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="file:///android_asset/d3.min.js"></script>
     <script src="file:///android_asset/markmap.js"></script>
-    <style>
+    <style id="theme-style">
         html, body {
             height: 100%;
             margin: 0;
             padding: 0;
             overflow: hidden;
+            background-color: #ffffff;
+            transition: background-color 0.3s ease;
         }
         #mindmap {
             width: 100vw;
             height: 100vh;
+        }
+        
+        /* 暗黑模式样式 */
+        .dark-mode {
+            background-color: #121212 !important;
+        }
+        
+        .dark-mode .markmap-node {
+            color: #E6E6E6 !important;
+        }
+        
+        .dark-mode .markmap-link {
+            stroke: #666 !important;
         }
     </style>
 </head>
@@ -22,6 +37,7 @@
 <svg id="mindmap"></svg>
 <script>
     let mm;
+    let isDarkMode = false;
     const options = {
         autoFit: true,
         embedGlobalCSS: true,
@@ -36,6 +52,11 @@
                 mm.setOptions(options);
                 mm.setData(data);
                 mm.fit();
+                
+                // 应用主题样式
+                setTimeout(() => {
+                    updateMindMapTheme();
+                }, 100);
             }
             window.markmapInstance = mm;
             Android.onMindMapRendered();
@@ -55,6 +76,54 @@
     window.resetZoom = function() {
         if (mm) mm.fit();
     };
+
+    window.setThemeMode = function(darkMode) {
+        isDarkMode = darkMode;
+        const body = document.body;
+        const html = document.documentElement;
+        
+        if (isDarkMode) {
+            body.classList.add('dark-mode');
+            html.classList.add('dark-mode');
+        } else {
+            body.classList.remove('dark-mode');
+            html.classList.remove('dark-mode');
+        }
+        
+        // 更新思维导图样式
+        if (mm) {
+            updateMindMapTheme();
+        }
+    };
+
+    function updateMindMapTheme() {
+        const svg = document.getElementById('mindmap');
+        if (!svg) return;
+        
+        if (isDarkMode) {
+            // 暗黑模式样式
+            svg.style.backgroundColor = '#121212';
+            const nodes = svg.querySelectorAll('.markmap-node');
+            nodes.forEach(node => {
+                node.style.fill = '#E6E6E6';
+            });
+            const links = svg.querySelectorAll('.markmap-link');
+            links.forEach(link => {
+                link.style.stroke = '#666';
+            });
+        } else {
+            // 亮色模式样式
+            svg.style.backgroundColor = '#ffffff';
+            const nodes = svg.querySelectorAll('.markmap-node');
+            nodes.forEach(node => {
+                node.style.fill = '#333';
+            });
+            const links = svg.querySelectorAll('.markmap-link');
+            links.forEach(link => {
+                link.style.stroke = '#ccc';
+            });
+        }
+    }
 
     function transformMarkdown(markdown) {
         const lines = markdown.split('\n');

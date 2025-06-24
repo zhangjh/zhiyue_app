@@ -29,6 +29,10 @@ public class MindMapManager {
         webView.evaluateJavascript("resetZoom()", null);
     }
 
+    public void setThemeMode(boolean isDarkMode) {
+        webView.evaluateJavascript("setThemeMode(" + isDarkMode + ")", null);
+    }
+
     public class JsInterface {
         @JavascriptInterface
         public void onMindMapRendered() {
