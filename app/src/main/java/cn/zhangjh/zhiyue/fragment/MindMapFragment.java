@@ -242,13 +242,17 @@ public class MindMapFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
+    public void updateTheme() {
         if (mindMapManager != null) {
             boolean isDarkMode = isDarkModeEnabled();
             mindMapManager.setThemeMode(isDarkMode);
         }
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        updateTheme();
     }
 
     @Override

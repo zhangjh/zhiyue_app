@@ -1,12 +1,15 @@
 package cn.zhangjh.zhiyue.activity;
 
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
@@ -101,6 +104,22 @@ public class MainActivity extends AppCompatActivity {
     public void navigateToSearch() {
         // 切换到找书页面
         bottomNavigationView.setSelectedItemId(R.id.booksFragment);
+    }
+
+    public void updateTheme() {
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setItemIconTintList(ContextCompat.getColorStateList(this, R.color.bottom_nav_icon_color));
+            bottomNavigationView.setItemTextColor(ContextCompat.getColorStateList(this, R.color.bottom_nav_text_color));
+            bottomNavigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.background));
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        updateTheme();
+        // 重新创建Activity以确保Fragment也能应用新主题
+        recreate();
     }
 
     @Override

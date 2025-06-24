@@ -24,6 +24,7 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
@@ -246,16 +247,23 @@ public class ReaderFragment extends Fragment {
         String bookPath = "file://" + cacheBook.getAbsolutePath();
         String setLangScript = String.format("setLanguageResource('%s')", languageRes);
 
-        webViewReader.post(() -> webViewReader.evaluateJavascript(setLangScript, value -> {
-            // 设置主题模式
-            boolean isDarkMode = isDarkModeEnabled();
-            String themeScript = String.format("setThemeMode(%s)", isDarkMode);
-            webViewReader.evaluateJavascript(themeScript, themeValue -> {
-                // 语言资源和主题设置完毕后再加载书籍
-                String script = String.format("loadBook('%s', '%s')", bookPath, cfi);
-                webViewReader.evaluateJavascript(script, null);
+        if (webViewReader != null) {
+            webViewReader.post(() -> {
+                if (webViewReader == null) return;
+                webViewReader.evaluateJavascript(setLangScript, value -> {
+                    if (webViewReader == null) return;
+                    // 设置主题模式
+                    boolean isDarkMode = isDarkModeEnabled();
+                    String themeScript = String.format("setThemeMode(%s)", isDarkMode);
+                    webViewReader.evaluateJavascript(themeScript, themeValue -> {
+                        if (webViewReader == null) return;
+                        // 语言资源和主题设置完毕后再加载书籍
+                        String script = String.format("loadBook('%s', '%s')", bookPath, cfi);
+                        webViewReader.evaluateJavascript(script, null);
+                    });
+                });
             });
-        }));
+        }
     }
 
     // 优先从cache获取书籍，没有则先下载再缓存
@@ -377,6 +385,9 @@ public class ReaderFragment extends Fragment {
         // 初始时禁用TabLayout
         setTabLayoutEnabled(false);
         
+        // 应用主题
+        applyTabTheme();
+        
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -453,6 +464,18 @@ public class ReaderFragment extends Fragment {
         }
     }
 
+    private void applyTabTheme() {
+        if (tabLayout != null) {
+            int backgroundColor = ContextCompat.getColor(requireContext(), R.color.background);
+            int textColor = ContextCompat.getColor(requireContext(), R.color.text_primary);
+            int primaryColor = ContextCompat.getColor(requireContext(), R.color.primary);
+            
+            tabLayout.setBackgroundColor(backgroundColor);
+            tabLayout.setTabTextColors(textColor, primaryColor);
+            tabLayout.setSelectedTabIndicatorColor(primaryColor);
+        }
+    }
+
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -460,7 +483,24 @@ public class ReaderFragment extends Fragment {
         if (webViewReader != null) {
             boolean isDarkMode = isDarkModeEnabled();
             String themeScript = String.format("setThemeMode(%s)", isDarkMode);
-            webViewReader.post(() -> webViewReader.evaluateJavascript(themeScript, null));
+            webViewReader.post(() -> {
+                if (webViewReader != null) webViewReader.evaluateJavascript(themeScript, null);
+            });
+        }
+        
+        // 更新Tab主题
+        applyTabTheme();
+        
+        // 通知Activity更新主题
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).updateTheme();
+        }
+        
+        // 更新AI伴读Fragment的主题
+        FragmentManager fm = getChildFragmentManager();
+        Fragment aiFragment = fm.findFragmentByTag("AIReadingFragment");
+        if (aiFragment instanceof AIReadingFragment) {
+            ((AIReadingFragment) aiFragment).updateTheme();
         }
     }
 
@@ -595,7 +635,11 @@ public class ReaderFragment extends Fragment {
                             annotations = BizUtils.escapeJson(annotations);
                             // 使用单引号包裹整个JSON字符串，避免双引号冲突
                             String script = String.format("loadAnnotations('%s')", annotations);
-                            webViewReader.post(() -> webViewReader.evaluateJavascript(script, null));
+                            if (webViewReader != null) {
+                                webViewReader.post(() -> {
+                                    if (webViewReader != null) webViewReader.evaluateJavascript(script, null);
+                                });
+                            }
                         }
                     }
 

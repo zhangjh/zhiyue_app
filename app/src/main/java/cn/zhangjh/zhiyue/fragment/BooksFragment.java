@@ -3,6 +3,7 @@ package cn.zhangjh.zhiyue.fragment;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -684,6 +685,12 @@ public class BooksFragment extends Fragment implements BookAdapter.OnBookClickLi
             BizUtils.saveCache(requireActivity(), "reader", "cachedBookIds", new Gson().toJson(cachedBookIds));
             ((MainActivity) getActivity()).navigateToReader(book.getId(), book.getHash(), "", "");
         }
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Fragment会自动重新创建视图以应用新主题
     }
 
     @Override

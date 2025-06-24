@@ -9,7 +9,7 @@
     <script src="file:///android_asset/epub.min.js"></script>
     <link id="theme-css" rel="stylesheet" type="text/css" href="">
 </head>
-<body>
+<body style="visibility: hidden;">
 <div id="chapter-title"></div>
 <button id="toc-button">目录</button>
 <div id="toc-container">
@@ -107,6 +107,11 @@
         } else {
             themeCss.href = 'file:///android_asset/css/light.css';
         }
+        
+        // CSS加载完成后显示页面
+        themeCss.onload = function() {
+            document.body.style.visibility = 'visible';
+        };
         
         // 通知Android主题已变更
         if (window.Android) {

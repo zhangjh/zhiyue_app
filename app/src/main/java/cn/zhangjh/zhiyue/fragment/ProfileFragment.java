@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -368,6 +369,12 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
                     LogUtil.e(TAG, "Delete history failed", t);
                 }
             });
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Fragment会自动重新创建视图以应用新主题
     }
 
     @Override
