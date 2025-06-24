@@ -452,6 +452,20 @@ public class ReaderFragment extends Fragment {
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).showBottomNavigation();
         }
+        // 退出前更新进度
+        SharedPreferences prefs = requireActivity().getSharedPreferences("reading_progress", Context.MODE_PRIVATE);
+        String progress = prefs.getString(fileId, "");
+        String cfi = prefs.getString(fileId + "_cfi", "");
+        readingRecord.setUserId(userId);
+        readingRecord.setFileId(fileId);
+        if(!TextUtils.isEmpty(progress)) {
+            readingRecord.setProgress(Integer.parseInt(progress));
+        }
+        if(!TextUtils.isEmpty(cfi)) {
+            readingRecord.setCfi(cfi);
+        }
+        LogUtil.d(TAG, "updateReadingRecord: " + new Gson().toJson(readingRecord));
+        updateReadingRecord(readingRecord);
     }
 
     // JavaScript接口类
@@ -498,12 +512,10 @@ public class ReaderFragment extends Fragment {
         public void onProgressUpdate(int progress, String cfi) {
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    // 这里可以保存进度到本地存储
-                    readingRecord.setUserId(userId);
-                    readingRecord.setFileId(fileId);
-                    readingRecord.setProgress(progress);
-                    readingRecord.setCfi(cfi);
-                    updateReadingRecord(readingRecord);
+                    // 暂存进度到本地
+                    SharedPreferences prefs = getActivity().getSharedPreferences("reading_progress", Context.MODE_PRIVATE);
+                    prefs.edit().putString(fileId, String.valueOf(progress)).apply();
+                    prefs.edit().putString(fileId + "_cfi", cfi).apply();
                 });
             }
         }
