@@ -196,6 +196,7 @@ public class ReaderFragment extends Fragment {
             return;
         }
         downloading = true;
+        showLoading(getString(R.string.please_wait_book_loading));
         ApiClient.getBookService().downloadBook(bookId, hashId).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<BizResponse<String>> call, @NonNull retrofit2.Response<BizResponse<String>> response) {
