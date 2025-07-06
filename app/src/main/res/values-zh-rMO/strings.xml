@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SmartReader</string>
+    <string name="app_name">智阅</string>
 
     <string name="biz_domain">https://s3.zhangjh.cn/</string>
 
