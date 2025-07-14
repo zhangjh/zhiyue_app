@@ -736,6 +736,8 @@ public class ReaderFragment extends Fragment {
             && TextUtils.isEmpty(readingRecord.getHashId())) {
             return;
         }
+        SharedPreferences prefs = requireActivity().getSharedPreferences("reading_progress", Context.MODE_PRIVATE);
+
         ApiClient.getBookService().updateRecord(readingRecord)
             .enqueue(new Callback<>() {
                 @Override
@@ -751,6 +753,10 @@ public class ReaderFragment extends Fragment {
                     } else {
                         String errorMsg = bizResponse != null ? bizResponse.getErrorMsg() : "unknown error";
                         LogUtil.e(TAG, "Update reading record failed: " + errorMsg);
+                    }
+                    // 清空本地缓存
+                    if(!TextUtils.isEmpty(prefs.getString(fileId, ""))) {
+                        prefs.edit().remove(fileId).apply();
                     }
                 }
 

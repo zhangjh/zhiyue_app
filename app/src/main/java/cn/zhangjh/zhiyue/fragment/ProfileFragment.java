@@ -325,12 +325,18 @@ public class ProfileFragment extends Fragment implements ReadingHistoryAdapter.O
 
     @Override
     public void onContinueReading(ReadingHistory history) {
+        // 如果此时本地缓存有数据，表明之前退出前未正常保存，优先使用本地缓存
+        String fileId = history.getFileId();
+        SharedPreferences prefs = requireActivity().getSharedPreferences("reading_progress", Context.MODE_PRIVATE);
+        String cfi = prefs.getString(fileId + "_cfi", "");
+        if(TextUtils.isEmpty(cfi)) {
+            cfi = history.getCfi();
+        }
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).navigateToReader(
                     history.getBookId(),
                     history.getHashId(),
-                    history.getFileId(),
-                    history.getCfi());
+                    fileId, cfi);
         }
     }
 
