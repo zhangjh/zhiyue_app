@@ -1,7 +1,5 @@
 package cn.zhangjh.zhiyue.api;
 
-import android.util.Log;
-
 import java.util.concurrent.TimeUnit;
 
 import cn.zhangjh.zhiyue.utils.LogUtil;
@@ -27,7 +25,7 @@ public class ApiClient {
                 OkHttpClient client = new OkHttpClient.Builder()
                         .addInterceptor(loggingInterceptor)
                         .connectTimeout(30, TimeUnit.SECONDS)
-                        .readTimeout(30, TimeUnit.SECONDS)
+                        .readTimeout(300, TimeUnit.SECONDS)
                         .writeTimeout(30, TimeUnit.SECONDS)
                         .retryOnConnectionFailure(true)
                         .followRedirects(true)
