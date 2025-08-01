@@ -380,14 +380,18 @@ function initializeSelection() {
         // 应用主题样式
         applyThemeToContent(contents);
 
-        // 统一的触摸事件处理 - 替换原有的分离处理逻辑
+        // 统一的触摸事件处理 - 更加稳健的版本
         let touchStartX, touchStartY;
         let touchStartTime = 0;
         let longPressTimer = null;
         let hasMoved = false;
-        const MOVE_THRESHOLD = 10; // 移动阈值，用于区分点击和滑动
-        const SWIPE_THRESHOLD = 50; // 滑动阈值
+        let touchIntention = 'unknown'; // 'tap', 'swipe', 'longpress', 'selecting'
+        let swipeStarted = false;
+        
+        const MOVE_THRESHOLD = 15; // 增加移动阈值，减少误触
+        const SWIPE_THRESHOLD = 60; // 增加滑动阈值，确保是明确的滑动意图
         const LONG_PRESS_THRESHOLD = 500; // 长按阈值
+        const MIN_SWIPE_VELOCITY = 0.3; // 最小滑动速度 (像素/毫秒)
 
         doc.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
@@ -395,21 +399,31 @@ function initializeSelection() {
             touchStartY = touch.clientY;
             touchStartTime = Date.now();
             hasMoved = false;
-            isSelecting = false;
+            touchIntention = 'unknown';
+            swipeStarted = false;
+            
+            // 清除之前的选择状态（如果不是在扩展选择）
+            const selection = doc.getSelection();
+            const hasExistingSelection = selection && selection.toString().trim().length > 0;
+            if (!hasExistingSelection) {
+                isSelecting = false;
+            }
 
             // 设置长按定时器
             longPressTimer = setTimeout(() => {
-                // 长按时间到达，开始文本选择模式
-                isSelecting = true;
-                // 启用文本选择
-                const range = doc.caretRangeFromPoint(touchStartX, touchStartY);
-                if (range) {
-                    const selection = doc.getSelection();
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                    // 添加触觉反馈（如果支持）
-                    if (navigator.vibrate) {
-                        navigator.vibrate(50);
+                if (!hasMoved && touchIntention === 'unknown') {
+                    touchIntention = 'longpress';
+                    isSelecting = true;
+                    // 启用文本选择
+                    const range = doc.caretRangeFromPoint(touchStartX, touchStartY);
+                    if (range) {
+                        const selection = doc.getSelection();
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                        // 添加触觉反馈（如果支持）
+                        if (navigator.vibrate) {
+                            navigator.vibrate(50);
+                        }
                     }
                 }
             }, LONG_PRESS_THRESHOLD);
@@ -419,18 +433,34 @@ function initializeSelection() {
             const touch = e.touches[0];
             const moveX = Math.abs(touch.clientX - touchStartX);
             const moveY = Math.abs(touch.clientY - touchStartY);
+            const totalMove = Math.sqrt(moveX * moveX + moveY * moveY);
             
             // 检查是否有明显移动
-            if (moveX > MOVE_THRESHOLD || moveY > MOVE_THRESHOLD) {
+            if (totalMove > MOVE_THRESHOLD) {
                 hasMoved = true;
-                // 只有在还没开始选择时才清除长按定时器
-                if (!isSelecting) {
-                    clearTimeout(longPressTimer);
+                
+                // 根据移动方向和距离判断意图
+                if (touchIntention === 'unknown') {
+                    if (moveX > moveY && moveX > MOVE_THRESHOLD) {
+                        // 水平移动更明显，可能是滑动翻页
+                        touchIntention = 'swipe';
+                        clearTimeout(longPressTimer);
+                    } else if (moveY > moveX) {
+                        // 垂直移动，不是翻页
+                        touchIntention = 'scroll';
+                        clearTimeout(longPressTimer);
+                    }
+                }
+                
+                // 如果已经开始滑动且距离足够，标记为滑动开始
+                if (touchIntention === 'swipe' && moveX > SWIPE_THRESHOLD) {
+                    swipeStarted = true;
                 }
             }
 
             // 如果正在选择文本，允许扩展选择范围
-            if (isSelecting) {
+            if (isSelecting && (touchIntention === 'longpress' || touchIntention === 'selecting')) {
+                touchIntention = 'selecting';
                 const range = doc.caretRangeFromPoint(touch.clientX, touch.clientY);
                 const selection = doc.getSelection();
 
@@ -447,41 +477,71 @@ function initializeSelection() {
             const touchEndTime = Date.now();
             const touchDuration = touchEndTime - touchStartTime;
             const swipeDistance = touchStartX - touch.clientX;
+            const swipeVelocity = Math.abs(swipeDistance) / touchDuration;
             
-            // 只有在以下条件下才处理翻页：
-            // 1. 不在选择模式
-            // 2. 有明显的水平滑动距离
-            // 3. 触摸时间较短（不是长按）
-            // 4. 垂直移动距离不大（主要是水平滑动）
-            // 5. 没有选中任何文本
+            // 检查当前是否有选中的文本
             const selection = doc.getSelection();
             const hasSelectedText = selection && selection.toString().trim().length > 0;
             
-            if (!isSelecting && 
-                !hasSelectedText &&
-                Math.abs(swipeDistance) > SWIPE_THRESHOLD && 
-                touchDuration < LONG_PRESS_THRESHOLD &&
-                Math.abs(touch.clientY - touchStartY) < SWIPE_THRESHOLD) {
-                
+            // 更严格的翻页条件判断
+            const shouldTurnPage = (
+                touchIntention === 'swipe' && // 明确的滑动意图
+                swipeStarted && // 滑动已经开始
+                !isSelecting && // 不在选择模式
+                !hasSelectedText && // 没有选中文本
+                Math.abs(swipeDistance) > SWIPE_THRESHOLD && // 滑动距离足够
+                touchDuration < LONG_PRESS_THRESHOLD && // 不是长按
+                Math.abs(touch.clientY - touchStartY) < SWIPE_THRESHOLD && // 垂直移动不大
+                swipeVelocity > MIN_SWIPE_VELOCITY // 滑动速度足够
+            );
+            
+            if (shouldTurnPage) {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                if (swipeDistance > 0) {
-                    rendition.next();
-                } else {
-                    rendition.prev();
+                // 添加防抖，避免连续快速翻页
+                if (!window.pageturning) {
+                    window.pageturning = true;
+                    setTimeout(() => {
+                        window.pageturning = false;
+                    }, 300);
+                    
+                    // 调试信息（发布时可移除）
+                    console.log('Page turn triggered:', {
+                        swipeDistance: swipeDistance,
+                        touchDuration: touchDuration,
+                        swipeVelocity: swipeVelocity.toFixed(3),
+                        touchIntention: touchIntention
+                    });
+                    
+                    if (swipeDistance > 0) {
+                        rendition.next();
+                    } else {
+                        rendition.prev();
+                    }
                 }
+            } else if (Math.abs(swipeDistance) > MOVE_THRESHOLD) {
+                // 调试信息：记录未触发翻页的原因
+                console.log('Page turn blocked:', {
+                    touchIntention: touchIntention,
+                    swipeStarted: swipeStarted,
+                    isSelecting: isSelecting,
+                    hasSelectedText: hasSelectedText,
+                    swipeDistance: Math.abs(swipeDistance),
+                    touchDuration: touchDuration,
+                    swipeVelocity: swipeVelocity.toFixed(3),
+                    verticalMove: Math.abs(touch.clientY - touchStartY)
+                });
             }
             
-            // 延迟重置选择状态，确保selectionchange事件有时间处理
-            // 只有在没有选中文本时才重置选择状态
+            // 重置状态
             setTimeout(() => {
-                const selection = doc.getSelection();
-                const hasSelectedText = selection && selection.toString().trim().length > 0;
                 if (!hasSelectedText) {
                     isSelecting = false;
                 }
-            }, 200);
+                touchIntention = 'unknown';
+                swipeStarted = false;
+            }, 100);
         }, { passive: false }); // 注意这里改为非passive，以便可以preventDefault
 
         // 修改选择变化监听
@@ -522,8 +582,8 @@ function initializeSelection() {
         doc.addEventListener('click', (e) => {
             // 检查点击是否在菜单内
             const isClickInMenu = e.target.closest('#selection-menu') || e.target.closest('#annotation-menu');
-            // 如果点击不在菜单内，则隐藏所有菜单并清除选择
-            if (!isClickInMenu) {
+            // 如果点击不在菜单内，且不是在翻页过程中，则隐藏所有菜单并清除选择
+            if (!isClickInMenu && !window.pageturning) {
                 selectionMenu.style.display = 'none';
                 annotationMenu.style.display = 'none';
                 // 清除文本选择
