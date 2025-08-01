@@ -23,12 +23,6 @@ let annotations = [];
 // 添加当前页面引用，用于切换时重新标注
 let currentLocation = null;
 
-// 朗读功能相关变量
-let isTTSPlaying = false;
-let currentTTSText = '';
-let autoPageTurn = false;
-const ttsPanel = document.getElementById('tts-panel');
-
 // 应用翻译到HTML元素
 function applyTranslations() {
     if (!i18n || !i18n.reader) return;
@@ -47,12 +41,6 @@ function applyTranslations() {
     document.getElementById('highlight-btn').textContent = i18n.reader.highlight;
     document.getElementById('underline-btn').textContent = i18n.reader.underline;
     document.getElementById('delete-annotation-btn').textContent = i18n.reader.delete;
-    
-    // 更新朗读相关按钮
-    document.getElementById('tts-button').textContent = i18n.reader.read_aloud || '朗读';
-    document.getElementById('tts-play-btn').textContent = i18n.reader.tts_play || '播放';
-    document.getElementById('tts-pause-btn').textContent = i18n.reader.tts_pause || '暂停';
-    document.getElementById('tts-stop-btn').textContent = i18n.reader.tts_stop || '停止';
 
     document.getElementById('progress-container').textContent = i18n.reader.progress_loading;
 }
@@ -381,12 +369,6 @@ function initializeSelection() {
 
     // 添加目录按钮点击事件
     document.getElementById('toc-button').addEventListener('click', toggleToc);
-    
-    // 添加朗读按钮点击事件
-    document.getElementById('tts-button').addEventListener('click', toggleTTSPanel);
-    
-    // 添加朗读控制按钮事件
-    initTTSControls();
 
     rendition.hooks.content.register((contents) => {
         currentContents = contents;
@@ -398,37 +380,57 @@ function initializeSelection() {
         // 应用主题样式
         applyThemeToContent(contents);
 
-        // 触摸事件处理
+        // 统一的触摸事件处理 - 替换原有的分离处理逻辑
+        let touchStartX, touchStartY;
+        let touchStartTime = 0;
+        let longPressTimer = null;
+        let hasMoved = false;
+        const MOVE_THRESHOLD = 10; // 移动阈值，用于区分点击和滑动
+        const SWIPE_THRESHOLD = 50; // 滑动阈值
+        const LONG_PRESS_THRESHOLD = 500; // 长按阈值
+
         doc.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
             touchStartTime = Date.now();
+            hasMoved = false;
             isSelecting = false;
 
-            // 添加长按定时器
+            // 设置长按定时器
             longPressTimer = setTimeout(() => {
+                // 长按时间到达，开始文本选择模式
                 isSelecting = true;
                 // 启用文本选择
-                const range = doc.caretRangeFromPoint(startX, startY);
+                const range = doc.caretRangeFromPoint(touchStartX, touchStartY);
                 if (range) {
                     const selection = doc.getSelection();
                     selection.removeAllRanges();
                     selection.addRange(range);
+                    // 添加触觉反馈（如果支持）
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
                 }
             }, LONG_PRESS_THRESHOLD);
         }, { passive: true });
 
         doc.addEventListener('touchmove', (e) => {
-            // 如果移动距离超过阈值，取消长按定时器
-            const moveX = e.touches[0].clientX;
-            const moveY = e.touches[0].clientY;
-            if (Math.abs(moveX - startX) > SWIPE_THRESHOLD ||
-                Math.abs(moveY - startY) > SWIPE_THRESHOLD) {
-                clearTimeout(longPressTimer);
+            const touch = e.touches[0];
+            const moveX = Math.abs(touch.clientX - touchStartX);
+            const moveY = Math.abs(touch.clientY - touchStartY);
+            
+            // 检查是否有明显移动
+            if (moveX > MOVE_THRESHOLD || moveY > MOVE_THRESHOLD) {
+                hasMoved = true;
+                // 只有在还没开始选择时才清除长按定时器
+                if (!isSelecting) {
+                    clearTimeout(longPressTimer);
+                }
             }
 
+            // 如果正在选择文本，允许扩展选择范围
             if (isSelecting) {
-                const touch = e.touches[0];
                 const range = doc.caretRangeFromPoint(touch.clientX, touch.clientY);
                 const selection = doc.getSelection();
 
@@ -438,14 +440,49 @@ function initializeSelection() {
             }
         }, { passive: true });
 
-        doc.addEventListener('touchend', () => {
+        doc.addEventListener('touchend', (e) => {
             clearTimeout(longPressTimer);
-            // 在选择结束后，添加一个短暂延迟再重置isSelecting
-            // 这样可以确保selectionchange事件有足够时间处理
+            
+            const touch = e.changedTouches[0];
+            const touchEndTime = Date.now();
+            const touchDuration = touchEndTime - touchStartTime;
+            const swipeDistance = touchStartX - touch.clientX;
+            
+            // 只有在以下条件下才处理翻页：
+            // 1. 不在选择模式
+            // 2. 有明显的水平滑动距离
+            // 3. 触摸时间较短（不是长按）
+            // 4. 垂直移动距离不大（主要是水平滑动）
+            // 5. 没有选中任何文本
+            const selection = doc.getSelection();
+            const hasSelectedText = selection && selection.toString().trim().length > 0;
+            
+            if (!isSelecting && 
+                !hasSelectedText &&
+                Math.abs(swipeDistance) > SWIPE_THRESHOLD && 
+                touchDuration < LONG_PRESS_THRESHOLD &&
+                Math.abs(touch.clientY - touchStartY) < SWIPE_THRESHOLD) {
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (swipeDistance > 0) {
+                    rendition.next();
+                } else {
+                    rendition.prev();
+                }
+            }
+            
+            // 延迟重置选择状态，确保selectionchange事件有时间处理
+            // 只有在没有选中文本时才重置选择状态
             setTimeout(() => {
-                isSelecting = false;
-            }, 300);
-        }, { passive: true });
+                const selection = doc.getSelection();
+                const hasSelectedText = selection && selection.toString().trim().length > 0;
+                if (!hasSelectedText) {
+                    isSelecting = false;
+                }
+            }, 200);
+        }, { passive: false }); // 注意这里改为非passive，以便可以preventDefault
 
         // 修改选择变化监听
         doc.addEventListener('selectionchange', () => {
@@ -481,14 +518,20 @@ function initializeSelection() {
             }
         });
 
-        // 点击空白区域隐藏菜单
+        // 点击空白区域隐藏菜单和清除选择
         doc.addEventListener('click', (e) => {
             // 检查点击是否在菜单内
             const isClickInMenu = e.target.closest('#selection-menu') || e.target.closest('#annotation-menu');
-            // 如果点击不在菜单内，则隐藏所有菜单
+            // 如果点击不在菜单内，则隐藏所有菜单并清除选择
             if (!isClickInMenu) {
                 selectionMenu.style.display = 'none';
                 annotationMenu.style.display = 'none';
+                // 清除文本选择
+                const selection = doc.getSelection();
+                if (selection) {
+                    selection.removeAllRanges();
+                }
+                isSelecting = false;
             }
         });
 
@@ -501,7 +544,6 @@ function initializeSelection() {
 }
 
 function loadBook(bookUrl, cfi) {
-    let touchStartX;
     //console.log("bookUrl: " + bookUrl);
     book = ePub(bookUrl, {
         openAs: "epub",
@@ -537,35 +579,12 @@ function loadBook(bookUrl, cfi) {
             let progressPercent = Math.round(progress * 100);
             updateProgressText(progressPercent);
 
-            // 启用手势支持
-            rendition.on("touchstart", event => {
-                // 只有当不在选择模式时才记录起始位置用于翻页
-                if (!isSelecting) {
-                    const touches = event.changedTouches[0];
-                    touchStartX = touches.screenX;
-                }
-            });
-
-            rendition.on("touchend", event => {
-                // 只有当不在选择模式时才处理翻页
-                if (!isSelecting) {
-                    const touches = event.changedTouches[0];
-                    const swipeDistance = touchStartX - touches.screenX;
-                    if (Math.abs(swipeDistance) > 50) {
-                        if (swipeDistance > 0) {
-                            rendition.next();
-                        } else {
-                            rendition.prev();
-                        }
-                    }
-                }
-            });
+            // 移除原有的rendition级别的触摸事件处理
+            // 所有触摸事件现在都在initializeSelection中的content hook里统一处理
 
             // 添加章节变化监听
             rendition.on('relocated', (location) => {
                 currentLocation = location;
-                // 清空当前文本，确保获取新页面内容
-                currentTTSText = '';
                 
                 // 获取当前章节信息
                 for(let item of book.navigation.toc) {
@@ -642,140 +661,4 @@ async function toggleToc() {
 function closeToc() {
     const tocContainer = document.getElementById('toc-container');
     tocContainer.classList.remove('active');
-}
-
-// 朗读功能相关函数
-function toggleTTSPanel() {
-    const ttsPanel = document.getElementById('tts-panel');
-    ttsPanel.classList.toggle('active');
-}
-
-function closeTTSPanel() {
-    const ttsPanel = document.getElementById('tts-panel');
-    ttsPanel.classList.remove('active');
-}
-
-function initTTSControls() {
-    const playBtn = document.getElementById('tts-play-btn');
-    const stopBtn = document.getElementById('tts-stop-btn');
-    const speedSlider = document.getElementById('speed-slider');
-    const speedValue = document.getElementById('speed-value');
-    const autoPageCheckbox = document.getElementById('auto-page-checkbox');
-    
-    playBtn.addEventListener('click', function() {
-        if (isTTSPlaying) {
-            pauseTTS();
-        } else {
-            startTTS();
-        }
-    });
-    
-    stopBtn.addEventListener('click', stopTTS);
-    
-    speedSlider.addEventListener('input', function() {
-        const rate = parseFloat(this.value);
-        speedValue.textContent = rate + 'x';
-        if (window.Android) {
-            window.Android.setSpeechRate(rate);
-        }
-        // 如果正在播放，停止并重新开始以应用新语速
-        if (isTTSPlaying) {
-            window.Android.stopTTS();
-            setTimeout(() => {
-                if (currentTTSText) {
-                    window.Android.startTTS(currentTTSText);
-                }
-            }, 100);
-        }
-    });
-    
-    autoPageCheckbox.addEventListener('change', function() {
-        autoPageTurn = this.checked;
-    });
-}
-
-function startTTS() {
-    if (!rendition || !rendition.manager || !rendition.manager.views) {
-        updateTTSStatus('请先加载书籍');
-        return;
-    }
-    
-    // 每次都重新获取当前页面的文本
-    let visibleText = '';
-    
-    if (currentContents && currentContents.document) {
-        const doc = currentContents.document;
-        const body = doc.body;
-        if (body) {
-            visibleText = body.innerText || body.textContent || '';
-        }
-    }
-    
-    if (!visibleText.trim()) {
-        updateTTSStatus('没有可朗读的文本');
-        return;
-    }
-    
-    // 限制文本长度，只读前1000个字符
-    currentTTSText = visibleText.trim().substring(0, 1000);
-    
-    if (window.Android) {
-        window.Android.startTTS(currentTTSText);
-    }
-}
-
-function pauseTTS() {
-    if (window.Android) {
-        window.Android.pauseTTS();
-        isTTSPlaying = false;
-        updateTTSStatus('已暂停 - 点击继续将重新开始');
-        document.getElementById('tts-play-btn').textContent = '继续';
-    }
-}
-
-function stopTTS() {
-    if (window.Android) {
-        window.Android.stopTTS();
-    }
-    isTTSPlaying = false;
-    currentTTSText = '';
-    updateTTSStatus('已停止');
-    document.getElementById('tts-play-btn').textContent = '播放';
-}
-
-function updateTTSStatus(status) {
-    const statusElement = document.getElementById('tts-status');
-    if (statusElement) {
-        statusElement.textContent = status;
-    }
-}
-
-// Android回调函数
-function onTTSStart() {
-    isTTSPlaying = true;
-    updateTTSStatus('正在朗读...');
-    document.getElementById('tts-play-btn').textContent = '暂停';
-}
-
-function onTTSFinished() {
-    isTTSPlaying = false;
-    updateTTSStatus('朗读完成');
-    document.getElementById('tts-play-btn').textContent = '播放';
-    
-    // 自动翻页功能
-    if (autoPageTurn && rendition) {
-        setTimeout(() => {
-            rendition.next().then(() => {
-                setTimeout(() => {
-                    startTTS();
-                }, 500);
-            });
-        }, 1000);
-    }
-}
-
-function onTTSError() {
-    isTTSPlaying = false;
-    updateTTSStatus('朗读出错');
-    document.getElementById('tts-play-btn').textContent = '播放';
 }
