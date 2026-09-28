@@ -9,7 +9,9 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-    private static final String BASE_URL = "https://tx.zhangjh.cn/";
+    // 服务端已迁移到 Cloudflare Workers。tx.zhangjh.cn 是作者本机的 VPN/SSH 入口，
+    // 不能用于 APP 接口调用。
+    private static final String BASE_URL = "https://zy-worker.zhangjh.cn/";
     private static final String TAG = "ApiClient";
     private static Retrofit retrofit = null;
 
